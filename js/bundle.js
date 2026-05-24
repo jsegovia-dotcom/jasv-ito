@@ -18,7 +18,7 @@ function irA(n) {
   }
   window.scrollTo({ top: 0, behavior: 'smooth' });
   // Auto-guardar silencioso al navegar entre secciones
-  if (typeof obraActual !== 'undefined' && obraActual && informeActual) {
+  if (typeof obraActual !== 'undefined' && obraActual && informeActual && !window._cargandoFormulario) {
     (function(){
       var obras=cargarObras();
       var obra=obras.find(function(o){return o.id===obraActual.id;});
@@ -2086,8 +2086,78 @@ function actualizarSgPreview() {
   }
 
   // ── Abrir formulario ──
+
+  // ══ RESET COMPLETO DEL FORMULARIO ══
+  function resetFormulario() {
+    // Campos de texto simples
+    var camposSemanales = [
+      'nro-informe','fecha-emision','semana-informe',
+      'nombre-obra','nombre-edificio','direccion','mandante','contratista',
+      'nro-oficina','fecha-inicio','plazo-dias','fecha-termino','moneda',
+      'monto-valor','monto-desc','descripcion-proyecto','superficie',
+      'aumento-dias','aumento-motivo','fecha-termino-nueva',
+      'cs-inicio','cs-termino','dia-control','cs-nota',
+      'sg-fecha-visita','sg-nro-visita',
+      'lo-version','lo-fecha','lo-autor','lo-desc'
+    ];
+    camposSemanales.forEach(function(id){
+      var el=document.getElementById(id);
+      if(el){ el.value=''; }
+    });
+    // Checkbox aumento
+    var chk=document.getElementById('chk-aumento');
+    if(chk){ chk.checked=false; if(typeof toggleAumento==='function') toggleAumento(); }
+    // Estatus documentación
+    var docTbody=document.getElementById('doc-tbody');
+    if(docTbody) docTbody.innerHTML='';
+    // Estatus proyectos
+    var proyTbody=document.getElementById('proy-tbody');
+    if(proyTbody) proyTbody.innerHTML='';
+    // Curva S
+    var csTbody=document.getElementById('cs-tbody');
+    if(csTbody) csTbody.innerHTML='';
+    if(typeof actualizarGrafico==='function') setTimeout(actualizarGrafico,100);
+    // Situación general - puntos nuevos
+    var sgList=document.getElementById('sg-puntos-list');
+    if(sgList){ sgList.innerHTML=''; sgPuntoCount=0; }
+    // Situación general - puntos arrastre
+    var sgPend=document.getElementById('sg-pendientes-list');
+    if(sgPend) sgPend.innerHTML='<div style="font-size:13px;color:#aaa;font-style:italic;padding:8px 0">Los puntos no cerrados aparecerán aquí automáticamente.</div>';
+    // Partidas en ejecución
+    var partList=document.getElementById('partidas-list');
+    if(partList) partList.innerHTML='';
+    if(typeof addPartida==='function') addPartida();
+    // Lay Out
+    var loImg=document.getElementById('lo-preview-img');
+    var loWrap=document.getElementById('lo-preview-wrap');
+    var loDz=document.getElementById('lo-dropzone');
+    if(loImg){ loImg.src=''; loImg.style.display='none'; }
+    if(loWrap) loWrap.style.display='none';
+    if(loDz) loDz.style.display='';
+    // Fotos y grupos
+    fotos=[]; fotoGrupos=[];
+    if(typeof renderFotos==='function') renderFotos();
+    if(typeof renderGrupos==='function') renderGrupos();
+    // Anexos
+    anexos=[];
+    if(typeof renderAnexos==='function') renderAnexos();
+    // Resumen
+    var sgRes=document.getElementById('sg-resumen');
+    if(sgRes) sgRes.innerHTML='';
+    var sgResEmpty=document.getElementById('sg-resumen-empty');
+    if(sgResEmpty) sgResEmpty.style.display='block';
+    // Profesionales: limpiar nombres (mantener cargos por defecto)
+    document.querySelectorAll('.prof-row input:not(.cargo)').forEach(function(inp){ inp.value=''; });
+    // Portada preview
+    if(typeof actualizarPortada==='function') actualizarPortada();
+  }
+  // ══ FIN RESET ══
+
   function abrirFormulario(obra, inf, esNuevo) {
     informeActual = inf;
+    // Reset completo del formulario antes de cargar datos
+    window._cargandoFormulario = true;
+    resetFormulario();
     // Mostrar app
     document.getElementById('pantalla-obras').style.display = 'none';
     document.getElementById('pantalla-informes').style.display = 'none';
@@ -2123,7 +2193,10 @@ function actualizarSgPreview() {
         if(ftEl) ftEl.value=fi2.toISOString().split('T')[0];
       }
       actualizarPortada();
-      if(typeof actualizarP1==='function') setTimeout(actualizarP1,100);;
+      // Limpiar punto 1 con valores por defecto
+    var p1el=document.getElementById('sg-p1-texto');
+    if(p1el) p1el.innerHTML='Con fecha <em>—</em> se realizó la visita N° <em>—</em> a la obra.';
+    if(typeof actualizarP1==='function') setTimeout(actualizarP1,100);;
 
       // ══ Buscar informe anterior ══
       var prevInf = null;
@@ -2341,12 +2414,14 @@ function actualizarSgPreview() {
       var sgResEmpty=document.getElementById('sg-resumen-empty');
       if(sgResEmpty) sgResEmpty.style.display='block';
       // Navegar a portada después de cargar todos los datos
+      setTimeout(function(){ window._cargandoFormulario = false; }, 500);
       irA(0);
 
     } else {
       // Restaurar estado guardado
       if (inf.estado && Object.keys(inf.estado).length > 0) {
         restaurarEstado(inf.estado);
+        setTimeout(function(){ window._cargandoFormulario = false; }, 500);
         irA(0);
       } else {
         // Solo datos fijos
@@ -2363,6 +2438,7 @@ function actualizarSgPreview() {
         });
         var nroEl2=document.getElementById('nro-informe'); if(nroEl2) nroEl2.value=inf.nro;
         actualizarPortada();
+        setTimeout(function(){ window._cargandoFormulario = false; }, 500);
         irA(0);
       }
     }
