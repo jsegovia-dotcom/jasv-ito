@@ -360,13 +360,17 @@ function actualizarGrafico() {
 
   // Recolectar pendientes de arrastre
   function recolectarPendientes() {
-    var items=[];
-    document.querySelectorAll('#sg-pendientes-list .pend-card').forEach(function(card){
-      var ta=card.querySelector('.pend-texto');
-      var txt=ta?ta.value.trim():'';
-      if(txt) items.push({texto:txt, estado:card.dataset.estado||'pendiente'});
-    });
-    return items;
+    try {
+      var items=[];
+      var list=document.getElementById('sg-pendientes-list');
+      if(!list) return items;
+      list.querySelectorAll('.pend-card').forEach(function(card){
+        var ta=card.querySelector('.pend-texto');
+        var txt=ta?ta.value.trim():'';
+        if(txt) items.push({texto:txt, estado:card.dataset.estado||'pendiente'});
+      });
+      return items;
+    } catch(e){ return []; }
   }
 
 function onEnterSituacion() {
@@ -464,7 +468,8 @@ function actualizarSgPreview() {
     var txt = row.querySelector('.sg-punto-text').value.trim();
     var est = row.dataset.estado || '';
     var badgeMap={'cerrado':'Cerrado','proceso':'En proceso','pendiente':'Pendiente','urgente':'URGENTE'};
-    var badge = est ? '<span class="badge '+est+'">'+(badgeMap[est]||est)+'</span>' : '';
+    var badgeStyles={urgente:'background:#d93a3a;color:#fff;',pendiente:'background:#d93a3a;color:#fff;',proceso:'background:#CC8800;color:#fff;',cerrado:'background:#2d9e5f;color:#fff;'};
+    var badge = est ? '<span class="badge '+est+'" style="font-size:11px;font-weight:700;border-radius:4px;padding:2px 7px;margin-left:6px;'+(badgeStyles[est]||'')+'">'+(badgeMap[est]||est)+'</span>' : '';
     html += '<li>' + (txt || '<em style="color:#aaa">Sin texto</em>') + badge + '</li>';
   });
   html += '</ol>';
@@ -1780,10 +1785,10 @@ function actualizarSgPreview() {
     // Curva S
     if(estado.csRows && estado.csRows.length>0){
       var cstbody=document.getElementById('cs-tbody'); if(cstbody) cstbody.innerHTML='';
-      estado.csRows.forEach(function(r){
+      estado.csRows.forEach(function(r,rIdx){
         if(typeof addCsRow==='function'){
           var tr2=document.createElement('tr');
-          tr2.innerHTML='<td><span class="cs-lbl">'+r.lbl+'</span></td>'+
+          tr2.innerHTML='<td><span class="cs-lbl">'+(rIdx===0?'Inicio obra':r.lbl)+'</span></td>'+
             '<td><input class="cs-fi" type="date" value="'+r.fi+'" readonly></td>'+
             '<td><div class="pct-row"><input class="cs-prog" type="number" min="0" max="100" step="0.1" value="'+r.prog+'" oninput="actualizarGrafico()"><span>%</span></div></td>'+
             '<td><div class="pct-row"><input class="cs-real real-inp" type="number" min="0" max="100" step="0.1" value="'+r.real+'" oninput="actualizarGrafico()"><span>%</span></div></td>';
@@ -2345,9 +2350,9 @@ function actualizarSgPreview() {
         if(csDiaEl && prev.diaControl) csDiaEl.value=prev.diaControl;
         var csnota=document.getElementById('cs-nota'); if(csnota) csnota.value='';
         var cstbody=document.getElementById('cs-tbody'); if(cstbody) cstbody.innerHTML='';
-        prev.csRows.forEach(function(r){
+        prev.csRows.forEach(function(r,rIdx){
           var tr2=document.createElement('tr');
-          tr2.innerHTML='<td><span class="cs-lbl">'+r.lbl+'</span></td>'+
+          tr2.innerHTML='<td><span class="cs-lbl">'+(rIdx===0?'Inicio obra':r.lbl)+'</span></td>'+
             '<td><input class="cs-fi" type="date" value="'+r.fi+'" readonly></td>'+
             '<td><div class="pct-row"><input class="cs-prog" type="number" min="0" max="100" step="0.1" value="'+r.prog+'" oninput="actualizarGrafico()"><span>%</span></div></td>'+
             '<td><div class="pct-row"><input class="cs-real real-inp" type="number" min="0" max="100" step="0.1" value="'+r.real+'" placeholder="—" oninput="actualizarGrafico()"><span>%</span></div></td>';
@@ -3286,10 +3291,10 @@ setTimeout(function(){ mostrarPantallaObras(); iniciarBackup(); }, 50);
     // Curva S
     if(estado.csRows && estado.csRows.length>0){
       var cstbody=document.getElementById('cs-tbody'); if(cstbody) cstbody.innerHTML='';
-      estado.csRows.forEach(function(r){
+      estado.csRows.forEach(function(r,rIdx){
         if(typeof addCsRow==='function'){
           var tr2=document.createElement('tr');
-          tr2.innerHTML='<td><span class="cs-lbl">'+r.lbl+'</span></td>'+
+          tr2.innerHTML='<td><span class="cs-lbl">'+(rIdx===0?'Inicio obra':r.lbl)+'</span></td>'+
             '<td><input class="cs-fi" type="date" value="'+r.fi+'" readonly></td>'+
             '<td><div class="pct-row"><input class="cs-prog" type="number" min="0" max="100" step="0.1" value="'+r.prog+'" oninput="actualizarGrafico()"><span>%</span></div></td>'+
             '<td><div class="pct-row"><input class="cs-real real-inp" type="number" min="0" max="100" step="0.1" value="'+r.real+'" oninput="actualizarGrafico()"><span>%</span></div></td>';
