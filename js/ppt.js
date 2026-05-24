@@ -539,20 +539,21 @@
     if(loW>SW-0.4) { loW=SW-0.4; } // no superar ancho disponible
     var loX=(SW-loW)/2; // centrado horizontal
     if(hasImg){
-      // Usar loImg directamente (ya decodificado en el DOM)
-      var loCv=document.createElement('canvas');
-      var loNW=loImg.naturalWidth||1050, loNH=loImg.naturalHeight||675;
+      // Crear imagen temporal para garantizar decodificación
+      var tmpLoImg=new Image();
+      tmpLoImg.src=loSrc2;
+      // Si ya está decodificada (naturalWidth>0) usar directamente, si no usar loImg
+      var srcImg=(loImg&&loImg.naturalWidth>0)?loImg:tmpLoImg;
+      var loNW=srcImg.naturalWidth||800, loNH=srcImg.naturalHeight||600;
       var loAR=loNW/loNH;
       var loTH=675, loTW=Math.min(Math.round(loTH*loAR),1050);
+      var loCv=document.createElement('canvas');
       loCv.width=loTW; loCv.height=loTH;
       var loCtx=loCv.getContext('2d');
       loCtx.fillStyle='#ffffff'; loCtx.fillRect(0,0,loTW,loTH);
-      loCtx.drawImage(loImg,0,0,loTW,loTH);
+      loCtx.drawImage(srcImg,0,0,loTW,loTH);
       var loData=loCv.toDataURL('image/jpeg',0.85);
-      // Recalcular loW con dimensiones reales
-      loW=loH*loAR;
-      if(loW>SW-0.4){loW=SW-0.4;}
-      loX=(SW-loW)/2;
+      loW=loH*loAR; if(loW>SW-0.4){loW=SW-0.4;} loX=(SW-loW)/2;
       s8.addImage({data:loData,x:loX,y:loY,w:loW,h:loH});
     } else {
       // Sin imagen — aviso

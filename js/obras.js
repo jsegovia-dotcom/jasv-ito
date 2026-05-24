@@ -247,7 +247,8 @@
         var proyTbody=document.getElementById('proy-tbody'); if(proyTbody) proyTbody.innerHTML='';
         prev.proyRows.forEach(function(r){
           addProyRow(r.especialidad||'');
-          var lastTr2=document.querySelector('#proy-tbody tr:last-child'); if(!lastTr2) return;
+          var allTrs=document.querySelectorAll('#proy-tbody tr');
+          var lastTr2=allTrs[allTrs.length-1]; if(!lastTr2) return;
           var tds=lastTr2.querySelectorAll('td');
           if(tds[3]&&tds[3].querySelector('input')) tds[3].querySelector('input').value=r.fechaAprobacion||'';
           var sem2=lastTr2.querySelector('.sem-btn');
@@ -378,6 +379,10 @@
       }
       if(typeof renderFotos==='function') renderFotos();
       if(typeof renderGrupos==='function') renderGrupos();
+
+      // ══ Anexos: vacíos para nuevo informe ══
+      anexos=[];
+      if(typeof renderAnexos==='function') renderAnexos();
 
       // ══ Resumen: limpiar ══
       var sgRes=document.getElementById('sg-resumen'); if(sgRes) sgRes.innerHTML='';
@@ -594,3 +599,4 @@
     }
   };
   // ══ FIN SISTEMA OBRAS ══════════════════════════════════
+

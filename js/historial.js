@@ -74,7 +74,10 @@
       var el=document.getElementById(id); if(el) estado[id]=el.value;
     });
     var loImg=document.getElementById('lo-preview-img');
-    estado.loImgSrc = loImg&&loImg.src&&loImg.src.length>100?loImg.src:'';
+    var loImgEl2=document.getElementById('lo-preview-img');
+    estado.loImgSrc = loImgEl2&&loImgEl2.src&&loImgEl2.src.length>100?loImgEl2.src:'';
+    estado.loImgW = loImgEl2?loImgEl2.naturalWidth:0;
+    estado.loImgH = loImgEl2?loImgEl2.naturalHeight:0;
     // Fotografías (con dataUrl ya comprimido)
     estado.fotos = fotos.map(function(f){
       return { dataUrl:f.dataUrl, pie:f.pie, grupo:f.grupo,
@@ -195,7 +198,8 @@
     if(typeof renderFotos==='function') renderFotos();
     if(typeof renderGrupos==='function') renderGrupos();
     // Anexos
-    anexos = (estado.anexos||[]).map(function(a){ return Object.assign({},a); });
+    // Anexos: siempre vacíos — cada informe gestiona los suyos
+    anexos = [];
     if(typeof renderAnexos==='function') renderAnexos();
     // Ir a portada
     if(typeof irA==='function') irA(0);
@@ -318,3 +322,5 @@
   function cerrarHistorial() {
     document.getElementById('hist-modal').style.display='none';
   }
+
+  // ── TOAST ──
