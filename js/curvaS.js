@@ -1,116 +1,124 @@
-// ══ SITUACIÓN GENERAL ══
-function onEnterSituacion() {
-  var fe = document.getElementById('fecha-emision').value;
-  var nv = document.getElementById('nro-informe').value;
-  if (fe && !document.getElementById('sg-fecha-visita').value) document.getElementById('sg-fecha-visita').value = fe;
-  if (nv && !document.getElementById('sg-nro-visita').value) document.getElementById('sg-nro-visita').value = nv;
-  actualizarP1();
+// ══ CURVA S ══
+function onEnterCurvaS() {
+  var fi = document.getElementById('fecha-inicio').value;
+  // Usar fecha término actualizada si hay aumento de plazo
+  var chkA = document.getElementById('chk-aumento');
+  var ftNva = chkA && chkA.checked ? document.getElementById('fecha-termino-nueva').value : '';
+  var ft = ftNva || document.getElementById('fecha-termino').value;
+  if (fi && !document.getElementById('cs-inicio').value) document.getElementById('cs-inicio').value = fi;
+  if (ft && !document.getElementById('cs-termino').value) document.getElementById('cs-termino').value = ft;
+  if (document.getElementById('cs-tbody').children.length === 0 && fi && ft) generarSemanas();
+  else actualizarGrafico();
 }
-function actualizarP1() {
-  var fecha = document.getElementById('sg-fecha-visita').value;
-  var nro = document.getElementById('sg-nro-visita').value;
-  var fechaStr = fecha ? new Date(fecha+'T12:00:00').toLocaleDateString('es-CL',{day:'2-digit',month:'long',year:'numeric'}) : '—';
-  document.getElementById('sg-p1-texto').innerHTML = 'Con fecha <strong>' + fechaStr + '</strong> se realizó la visita N° <strong>' + (nro||'—') + '</strong> a la obra por parte de esta ITO.';
-  actualizarSgPreview();
+function proximoDiaCtrl(fecha, dia) {
+  var d = new Date(fecha); var actual = d.getDay();
+  var diff = dia - actual; if (diff < 0) diff += 7; if (diff === 0) diff = 0;
+  d.setDate(d.getDate() + diff); return d;
 }
-function addPartida() {
-  var div = document.createElement('div'); div.className = 'partida-row';
-  div.innerHTML = '<span class="partida-bullet">—</span><input type="text" placeholder="Ej: Instalación de cielo continuo" class="partida-input" oninput="actualizarSgPreview()"><button class="btn-rm" onclick="rmPartida(this)">×</button>';
-  document.getElementById('partidas-list').appendChild(div);
-}
-function rmPartida(btn) {
-  var list = document.getElementById('partidas-list');
-  if (list.querySelectorAll('.partida-row').length > 1) { btn.closest('.partida-row').remove(); actualizarSgPreview(); }
-}
-function addSgPunto(texto, estado) {
-  sgPuntoCount++;
-  var div = document.createElement('div');
-  div.className = 'sg-punto-row';
-  div.dataset.estado = estado || '';
-  if (estado === 'proceso') div.classList.add('estado-proceso');
-  if (estado === 'pendiente') div.classList.add('estado-pendiente');
-  // Build using DOM to avoid quote escaping issues
-  var top = document.createElement('div'); top.className = 'sg-punto-top';
-  var semIco = document.createElement('span'); semIco.className = 'sg-sem-ico'; semIco.textContent = '';
-  var num = document.createElement('span'); num.className = 'sg-punto-num'; num.textContent = '?.';
-  var ta = document.createElement('textarea'); ta.className = 'sg-punto-text';
-  ta.placeholder = 'Describe la observación o gestión...';
-  ta.setAttribute('oninput', 'actualizarSgPreview()');
-  ta.value = texto || '';
-  top.appendChild(semIco); top.appendChild(num); top.appendChild(ta);
-  var bot = document.createElement('div'); bot.className = 'sg-punto-bottom';
-  var sel = document.createElement('div'); sel.className = 'sg-estado-sel';
-  var estados = [['cerrado','✓ Cerrado'],['proceso','⟳ En proceso'],['pendiente','⚠ Pendiente'],['urgente','🔴 Urgente']];
-  estados.forEach(function(e) {
-    var btn = document.createElement('button');
-    btn.className = 'sg-estado-btn' + (estado === e[0] ? ' active-' + e[0] : '');
-    btn.textContent = e[1];
-    btn.onclick = function() { setSgEstado(btn, e[0]); };
-    sel.appendChild(btn);
+function generarSemanas() {
+  var iniVal = document.getElementById('cs-inicio').value;
+  var terVal = document.getElementById('cs-termino').value;
+  var diaCtrl = parseInt(document.getElementById('dia-control').value);
+  if (!iniVal || !terVal) { alert('Ingresa primero las fechas de inicio y término.'); return; }
+  var ini = new Date(iniVal + 'T12:00:00');
+  var ter = new Date(terVal + 'T12:00:00');
+  var prev = {};
+  document.querySelectorAll('#cs-tbody tr').forEach(function(tr) {
+    var fi2 = tr.querySelector('.cs-fi'); var fp = tr.querySelector('.cs-prog'); var fr = tr.querySelector('.cs-real');
+    if (fi2 && fi2.value) prev[fi2.value] = { prog: fp ? fp.value : '', real: fr ? fr.value : '' };
   });
-  var rmBtn = document.createElement('button'); rmBtn.className = 'sg-rm-btn'; rmBtn.textContent = '×';
-  rmBtn.onclick = function() { rmSgPunto(rmBtn); };
-  bot.appendChild(sel); bot.appendChild(rmBtn);
-  div.appendChild(top); div.appendChild(bot);
-  document.getElementById('sg-puntos-list').appendChild(div);
-  actualizarSgNums(); actualizarSgPreview();
-}
-function setSgEstado(btn, estado) {
-  var row = btn.closest('.sg-punto-row');
-  // Limpiar TODOS los estados posibles
-  row.classList.remove('estado-proceso','estado-pendiente','estado-urgente');
-  row.dataset.estado = estado;
-  row.querySelectorAll('.sg-estado-btn').forEach(function(b){
-    b.classList.remove('active-cerrado','active-proceso','active-pendiente','active-urgente');
+  var primera = proximoDiaCtrl(ini, diaCtrl);
+  var fechas = []; var c2 = new Date(primera);
+  while (c2 <= ter) { fechas.push(new Date(c2)); c2.setDate(c2.getDate() + 7); }
+  var ultima = fechas[fechas.length - 1];
+  if (ultima.toISOString().split('T')[0] !== terVal) fechas.push(new Date(ter));
+  var tbody = document.getElementById('cs-tbody'); tbody.innerHTML = '';
+  fechas.forEach(function(f, i) {
+    var fs = f.toISOString().split('T')[0];
+    var esSaldo = i === fechas.length - 1 && fs === terVal && fechas.length > 1 && fechas[fechas.length-2].toISOString().split('T')[0] !== terVal;
+    var semLbl = esSaldo ? 'Término obra' : 'S' + String(i+1).padStart(2,'0');
+    var p = prev[fs] || { prog:'', real:'' };
+    var tr2 = document.createElement('tr'); if (esSaldo) tr2.classList.add('saldo');
+    tr2.innerHTML = '<td><span class="cs-lbl' + (esSaldo?' saldo-lbl':'') + '">' + semLbl + '</span></td>' +
+      '<td><input class="cs-fi" type="date" value="' + fs + '" readonly></td>' +
+      '<td><div class="pct-row"><input class="cs-prog" type="number" min="0" max="100" step="0.1" placeholder="0.0" value="' + p.prog + '" oninput="actualizarGrafico()"><span>%</span></div></td>' +
+      '<td><div class="pct-row"><input class="cs-real real-inp" type="number" min="0" max="100" step="0.1" placeholder="—" value="' + p.real + '" oninput="actualizarGrafico()"><span>%</span></div></td>';
+    tbody.appendChild(tr2);
   });
-  btn.classList.add('active-' + estado);
-  if (estado !== 'cerrado') row.classList.add('estado-' + estado);
-  // Actualizar semáforo icono
-  var semEl = row.querySelector('.sg-sem-ico');
-  if (semEl) {
-    if (estado === 'urgente')        { semEl.textContent = '🔴'; semEl.title = 'Urgente'; }
-    else if (estado === 'pendiente') { semEl.textContent = '🔴'; semEl.title = 'Pendiente'; }
-    else if (estado === 'proceso')   { semEl.textContent = '🟡'; semEl.title = 'En proceso'; }
-    else if (estado === 'cerrado')   { semEl.textContent = '🟢'; semEl.title = 'Cerrado'; }
-    else                             { semEl.textContent = ''; }
-  }
-  actualizarSgPreview();
+  var nSem = fechas.filter(function(f,i){ return !(i===fechas.length-1 && f.toISOString().split('T')[0]===terVal && fechas.length>1 && fechas[fechas.length-2].toISOString().split('T')[0]!==terVal); }).length;
+  document.getElementById('cs-resumen').textContent = nSem + ' semanas' + (fechas.length > nSem ? ' + saldo final' : '');
+  actualizarGrafico();
 }
-function rmSgPunto(btn) { btn.closest('.sg-punto-row').remove(); actualizarSgNums(); actualizarSgPreview(); }
-function actualizarSgNums() {
-  document.querySelectorAll('#sg-puntos-list .sg-punto-row').forEach(function(row, i){
-    var num = row.querySelector('.sg-punto-num'); if (num) num.textContent = (i+3)+'.';
+function addCsRow() {
+  var n = document.getElementById('cs-tbody').querySelectorAll('tr').length + 1;
+  var tr2 = document.createElement('tr');
+  tr2.innerHTML = '<td><span class="cs-lbl">S'+String(n).padStart(2,'0')+'</span></td><td><input class="cs-fi" type="date"></td><td><div class="pct-row"><input class="cs-prog" type="number" min="0" max="100" step="0.1" placeholder="0.0" oninput="actualizarGrafico()"><span>%</span></div></td><td><div class="pct-row"><input class="cs-real real-inp" type="number" min="0" max="100" step="0.1" placeholder="—" oninput="actualizarGrafico()"><span>%</span></div></td>';
+  document.getElementById('cs-tbody').appendChild(tr2);
+}
+function limpiarReales() {
+  document.querySelectorAll('.cs-real').forEach(function(i){ i.value=''; }); actualizarGrafico();
+}
+function actualizarGrafico() {
+  if (typeof Chart === 'undefined') return;
+  var labels=[], prog=[], real=[];
+  document.querySelectorAll('#cs-tbody tr').forEach(function(tr,i){
+    var lbl=tr.querySelector('.cs-lbl'); var pv=tr.querySelector('.cs-prog'); var rv=tr.querySelector('.cs-real');
+    labels.push(lbl ? lbl.textContent : 'S'+(i+1));
+    prog.push(pv && pv.value !== '' ? parseFloat(pv.value) : null);
+    real.push(rv && rv.value !== '' ? parseFloat(rv.value) : null);
+  });
+  var lastRealIdx = -1;
+  for (var i = real.length-1; i>=0; i--) { if (real[i] !== null) { lastRealIdx = i; break; } }
+  var lastReal = lastRealIdx >= 0 ? real[lastRealIdx] : null;
+  var progEnSemana = (lastRealIdx >= 0 && prog[lastRealIdx] !== null) ? prog[lastRealIdx] : null;
+  document.getElementById('lbl-prog').textContent = 'Avance Programado ' + (progEnSemana !== null ? progEnSemana.toFixed(1)+'%' : '—%');
+  document.getElementById('lbl-real').textContent = 'Avance Real ' + (lastReal !== null ? lastReal.toFixed(1)+'%' : '—%');
+  var desvEl = document.getElementById('lbl-desv');
+  if (progEnSemana !== null && lastReal !== null) {
+    var desv = lastReal - progEnSemana;
+    desvEl.textContent = 'Desviación ' + (desv>=0?'+':'') + desv.toFixed(1)+'%';
+    desvEl.style.color = desv>=0 ? '#2d9e5f' : '#d93a3a';
+  } else { desvEl.textContent='Desviación —%'; desvEl.style.color='var(--negro)'; }
+  var datalabelPlugin = { id:'dl', afterDatasetsDraw: function(chart){
+    if (lastRealIdx < 0) return;
+    var ctx2 = chart.ctx;
+    chart.data.datasets.forEach(function(ds, di){
+      var meta = chart.getDatasetMeta(di); if (meta.hidden) return;
+      var point = meta.data[lastRealIdx]; var val = ds.data[lastRealIdx];
+      if (val === null || !point) return;
+      var color = di===0 ? '#888' : '#1a5fa8';
+      var txt = val.toFixed(1)+'%'; var tw = ctx2.measureText(txt).width;
+      var offsetY = di===0 ? -16 : 16;
+      ctx2.save();
+      ctx2.font = 'bold 12px "Segoe UI",system-ui,sans-serif';
+      ctx2.fillStyle = 'rgba(255,255,255,0.85)';
+      ctx2.fillRect(point.x - tw/2 - 3, point.y + offsetY - (di===0?13:0), tw+6, 14);
+      ctx2.fillStyle = color; ctx2.textAlign='center';
+      ctx2.textBaseline = di===0 ? 'bottom' : 'top';
+      ctx2.fillText(txt, point.x, point.y + offsetY); ctx2.restore();
+    });
+  }};
+  var ctx = document.getElementById('cs-chart').getContext('2d');
+  if (csChart) csChart.destroy();
+  csChart = new Chart(ctx, {
+    type:'line',
+    data:{ labels:labels, datasets:[
+      { label:'% Programado', data:prog, borderColor:'#888', backgroundColor:'transparent', borderWidth:2.5,
+        pointRadius:function(c3){return c3.dataIndex===lastRealIdx?7:0;},
+        pointHoverRadius:function(c3){return c3.dataIndex===lastRealIdx?9:0;},
+        pointBackgroundColor:'#888888', pointBorderColor:'#ffffff', pointBorderWidth:2,
+        tension:0.35, fill:false, spanGaps:false },
+      { label:'% Real', data:real, borderColor:'#1a5fa8', backgroundColor:'transparent', borderWidth:2.5,
+        pointRadius:function(c3){return c3.dataIndex===lastRealIdx?8:0;},
+        pointHoverRadius:function(c3){return c3.dataIndex===lastRealIdx?10:0;},
+        pointBackgroundColor:'#1a5fa8', pointBorderColor:'#ffffff', pointBorderWidth:2,
+        tension:0.35, fill:false, spanGaps:false }
+    ]},
+    plugins:[datalabelPlugin],
+    options:{ responsive:true, maintainAspectRatio:false, layout:{padding:{top:12,right:12,bottom:8,left:8}},
+      interaction:{mode:'index',intersect:false},
+      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:function(c3){return c3.dataset.label+': '+(c3.parsed.y!==null?c3.parsed.y.toFixed(1)+'%':'—');}}}},
+      scales:{ x:{grid:{color:'rgba(0,0,0,.05)'},ticks:{font:{size:11},color:'#888',maxRotation:45}}, y:{min:0,max:100,grid:{color:'rgba(0,0,0,.05)'},ticks:{font:{size:11},color:'#888',callback:function(v){return v+'%';}}}}
+    }
   });
 }
-function actualizarSgPreview() {
-  var html = '<ol>';
-  html += '<li>' + (document.getElementById('sg-p1-texto') ? document.getElementById('sg-p1-texto').innerHTML : '') + '</li>';
-  var partidas = [];
-  document.querySelectorAll('#partidas-list .partida-input').forEach(function(inp){ if(inp.value.trim()) partidas.push(inp.value.trim()); });
-  html += '<li>Se verifican los siguientes trabajos en ejecución:';
-  if (partidas.length) { html += '<ul>'; partidas.forEach(function(p){ html += '<li>'+p+'</li>'; }); html += '</ul>'; }
-  html += '</li>';
-  document.querySelectorAll('#sg-puntos-list .sg-punto-row').forEach(function(row){
-    var txt = row.querySelector('.sg-punto-text').value.trim();
-    var est = row.dataset.estado || '';
-    var badgeMap={'cerrado':'Cerrado','proceso':'En proceso','pendiente':'Pendiente','urgente':'URGENTE'};
-    var badge = est ? '<span class="badge '+est+'">'+(badgeMap[est]||est)+'</span>' : '';
-    html += '<li>' + (txt || '<em style="color:#aaa">Sin texto</em>') + badge + '</li>';
-  });
-  html += '</ol>';
-  document.getElementById('sg-preview').innerHTML = html;
-}
-
-
-  // ══ LAY OUT ══
-  function toggleLoCambio() {
-    var chk = document.getElementById('lo-chk-cambio').checked;
-    document.getElementById('lo-cambio-box').style.display = chk ? 'block' : 'none';
-  }
-  function loDragOver(e) { e.preventDefault(); document.getElementById('lo-dropzone').classList.add('dragover'); }
-  function loDrop(e) {
-    e.preventDefault();
-    document.getElementById('lo-dropzone').classList.remove('dragover');
-    var files = e.dataTransfer.files;
-    if (files.length > 0) loProcessFile(files[0]);
-  }

@@ -302,7 +302,7 @@
             '<td><div class="pct-row"><input class="cs-real real-inp" type="number" min="0" max="100" step="0.1" value="'+r.real+'" placeholder="—" oninput="actualizarGrafico()"><span>%</span></div></td>';
           var csb=document.getElementById('cs-tbody'); if(csb) csb.appendChild(tr2);
         });
-        if(typeof actualizarGrafico==='function') actualizarGrafico();
+        setTimeout(function(){ if(typeof actualizarGrafico==='function') actualizarGrafico(); },300);
       }
 
       // ══ Lay Out: mantener del informe anterior ══
@@ -310,7 +310,11 @@
         var loImg2=document.getElementById('lo-preview-img');
         var loWrap=document.getElementById('lo-preview-wrap');
         var loDz=document.getElementById('lo-dropzone');
-        if(loImg2){ loImg2.src=prev.loImgSrc; loImg2.style.display='block'; }
+        if(loImg2){
+          loImg2.onload=function(){ loImg2.style.display='block'; };
+          loImg2.src=prev.loImgSrc;
+          if(loImg2.complete) loImg2.style.display='block'; // already cached
+        }
         if(loWrap) loWrap.style.display='block';
         if(loDz) loDz.style.display='none';
         ['lo-version','lo-fecha','lo-autor','lo-desc'].forEach(function(id){
