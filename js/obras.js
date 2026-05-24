@@ -156,7 +156,7 @@
     if (mainTop3) mainTop3.style.display = '';
     var tb = document.getElementById('inf-topbar');
     if (tb) tb.style.display = '';
-    irA(0);
+    // irA(0) will be called after data is loaded
     if (esNuevo) {
       // ══ Datos FIJOS de la obra (siempre pre-cargados) ══
       var fixedMap = {
@@ -392,11 +392,14 @@
       var sgRes=document.getElementById('sg-resumen'); if(sgRes) sgRes.innerHTML='';
       var sgResEmpty=document.getElementById('sg-resumen-empty');
       if(sgResEmpty) sgResEmpty.style.display='block';
+      // Navegar a portada después de cargar todos los datos
+      irA(0);
 
     } else {
       // Restaurar estado guardado
       if (inf.estado && Object.keys(inf.estado).length > 0) {
         restaurarEstado(inf.estado);
+        irA(0);
       } else {
         // Solo datos fijos
         var map2 = {
@@ -412,6 +415,7 @@
         });
         var nroEl2=document.getElementById('nro-informe'); if(nroEl2) nroEl2.value=inf.nro;
         actualizarPortada();
+        irA(0);
       }
     }
     // Actualizar botones del hist-topbar
