@@ -5,8 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>JASV — Generador de Informes ITO</title>
   <link rel="stylesheet" href="css/estilos.css">
-  <script src="js/chart.umd.min.js"></script>
-  <script src="js/pptxgen.bundle.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
 <body>
@@ -16,7 +14,7 @@
   <span class="topbar-badge">Habilitación de Oficinas</span>
 </div>
 <div class="hist-topbar" id="inf-topbar" style="display:none;background:#f0f4f6;border-top:1px solid #d0d8dc;border-bottom:1px solid #d0d8dc;padding:7px 28px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-  <button class="btn btn-sec" onclick="typeof obraActual!=='undefined'&&obraActual?volverDesdeFormulario():mostrarPantallaObras()" style="font-size:12px;padding:5px 13px;">🏗 Mis obras</button>
+  <button class="btn btn-sec" onclick="if(typeof guardarEstadoInformeActual==='function') guardarEstadoInformeActual(); mostrarPantallaObras();" style="font-size:12px;padding:5px 13px;">🏗 Mis obras</button>
   <span id="inf-topbar-titulo" style="font-size:12px;color:#5a5a5a;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
   <button class="btn btn-sec" onclick="typeof guardarEstadoInformeActual==='function'?guardarEstadoInformeActual():guardarEnHistorial()" style="font-size:12px;padding:5px 13px;border-color:#2d7a4f;color:#2d7a4f;font-weight:600">💾 Guardar</button>
   <button class="btn btn-sec" onclick="exportarInformeActualJSON()" style="font-size:12px;padding:5px 13px" title="Exportar informe actual como JSON">📥 Exportar</button>
@@ -471,6 +469,8 @@
 
 <!-- TOAST -->
 <div id="jasv-toast" class="jasv-toast"></div>
+  <script src="js/chart.umd.min.js"></script>
+  <script src="js/pptxgen.bundle.js"></script>
   <script src="js/bundle.js"></script>
 </body>
 </html>
