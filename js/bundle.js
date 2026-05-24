@@ -237,8 +237,8 @@ function generarSemanas() {
   fechas.forEach(function(f, i) {
     var fs = f.toISOString().split('T')[0];
     var esSaldo = i === fechas.length - 1 && fs === terVal && fechas.length > 1 && fechas[fechas.length-2].toISOString().split('T')[0] !== terVal;
-    var semLbl = esSaldo ? 'Término obra' : 'S' + String(i+1).padStart(2,'0');
-    var p = prev[fs] || { prog:'', real:'' };
+    var semLbl = esSaldo ? 'Término obra' : (i===0 ? 'Inicio obra' : 'S' + String(i).padStart(2,'0'));
+    var p = prev[fs] || { prog: (i===0?'0':''), real:'' };
     var tr2 = document.createElement('tr'); if (esSaldo) tr2.classList.add('saldo');
     tr2.innerHTML = '<td><span class="cs-lbl' + (esSaldo?' saldo-lbl':'') + '">' + semLbl + '</span></td>' +
       '<td><input class="cs-fi" type="date" value="' + fs + '" readonly></td>' +
@@ -1100,28 +1100,44 @@ function actualizarSgPreview() {
         'ito': Array.from(document.querySelectorAll('#ito-profs .prof-row')),
         'pm': Array.from(document.querySelectorAll('#pm-profs .prof-row'))
       };
-      function getProfTexts(rows){
-        return rows.map(function(r){
+      // Obtener nombres por sección (cargo solo en primera, resto con " | ")
+      function getProfNombres(rows){
+        var res=[];
+        rows.forEach(function(r,i){
           var ins=r.querySelectorAll('input');
           var cargo=ins[0]?ins[0].value:''; var nombre=ins[1]?ins[1].value:'';
-          return nombre?(cargo+': '+nombre):'';
-        }).filter(Boolean);
+          if(!nombre) return;
+          res.push(i===0?(cargo+': '+nombre):nombre);
+        });
+        return res;
       }
-      // Combinar múltiples en misma categoría con " | "
       function joinProfs(arr){ return arr.join(' | '); }
-      var mandTxt=joinProfs(getProfTexts(profSecs.mandante));
-      var pmTxt=joinProfs(getProfTexts(profSecs.pm));
-      var constTxt=joinProfs(getProfTexts(profSecs.constructora));
-      var arqTxt=joinProfs(getProfTexts(profSecs.arq));
-      var itoTxt=joinProfs(getProfTexts(profSecs.ito));
-      // Layout fijo: fila1=Mandante|PM, fila2=Constructora, fila3=Arq|ITO
-      var profLayout=[
-        [mandTxt, pmTxt],
-        [constTxt, ''],
-        [arqTxt, itoTxt]
-      ];
+      var mandArr=getProfNombres(profSecs.mandante);
+      var pmArr=getProfNombres(profSecs.pm);
+      var arqArr=getProfNombres(profSecs.arq);
+      var itoArr=getProfNombres(profSecs.ito);
+      // Visitador y Administrador: cada uno en su propia fila (roles distintos)
+      var constRows=Array.from(profSecs.constructora);
+      var visArr=[],admArr=[];
+      constRows.forEach(function(r){
+        var ins=r.querySelectorAll('input');
+        var cargo=ins[0]?ins[0].value:''; var nombre=ins[1]?ins[1].value:'';
+        if(!nombre) return;
+        if(cargo.toLowerCase().indexOf('visitador')>=0) visArr.push(cargo+': '+nombre);
+        else admArr.push(cargo+': '+nombre);
+      });
+      // Layout: fila1=Mandante(s)|PM, fila2=Visitador|Administrador, fila3=Arq|ITO
+      var allRows=[];
+      // Fila mandante+PM (múltiples con |)
+      allRows.push([joinProfs(mandArr), joinProfs(pmArr)]);
+      // Visitador y Administrador: cada uno separado
+      var maxVA=Math.max(visArr.length,admArr.length);
+      if(maxVA===0) maxVA=1;
+      for(var vi=0;vi<maxVA;vi++) allRows.push([visArr[vi]||'',admArr[vi]||'']);
+      // Arq | ITO (múltiples con |)
+      allRows.push([joinProfs(arqArr), joinProfs(itoArr)]);
       var pRowH=0.26, pY=6.16;
-      profLayout.forEach(function(row,ri){
+      allRows.forEach(function(row,ri){
         if(row[0]||row[1]){
           if(row[0]) s3.addText(row[0],{x:0.3,y:pY+ri*pRowH,w:4.5,h:pRowH,fontSize:10,fontFace:FONT,color:NEGRO,wrap:true});
           if(row[1]) s3.addText(row[1],{x:5.0,y:pY+ri*pRowH,w:4.5,h:pRowH,fontSize:10,fontFace:FONT,color:NEGRO,wrap:true});
