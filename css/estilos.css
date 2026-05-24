@@ -125,6 +125,9 @@ body{font-family:"Segoe UI",system-ui,sans-serif;background:#f0efed;color:var(--
 .sg-punto-row.estado-proceso{border-left-color:#e6b800;}
 .sg-punto-row.estado-pendiente{border-left-color:#d93a3a;}
   .sg-punto-row.estado-urgente{border-left-color:#d93a3a;background:#fff3cd;}
+  .sg-punto-row[data-estado="urgente"]{border-left-color:#d93a3a;background:#fff3cd;}
+  .sg-punto-row[data-estado="urgente"] .sg-punto-text{background:#fff3cd;}
+  .badge-urgente{background:#d93a3a;color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;margin-right:6px;}
   .sg-estado-btn.active-urgente{background:#d93a3a;border-color:#b02828;color:#fff;}
 .sg-punto-top{display:flex;gap:10px;align-items:flex-start;}
 .sg-punto-num{font-weight:700;color:var(--rojo);font-size:14px;flex-shrink:0;padding-top:7px;min-width:28px;}
