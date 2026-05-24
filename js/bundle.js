@@ -325,6 +325,50 @@ function actualizarGrafico() {
 }
 
 // ══ SITUACIÓN GENERAL ══
+
+  // Crear card editable de punto pendiente de arrastre
+  function crearPendCard(texto, estado, idx) {
+    var estados2=[
+      {v:'proceso',l:'⟳ En proceso'},
+      {v:'pendiente',l:'⚠ Pendiente'},
+      {v:'urgente',l:'🔴 Urgente'},
+      {v:'cerrado',l:'✓ Cerrado'}
+    ];
+    var card=document.createElement('div');
+    card.className='pend-card estado-'+(estado||'pendiente');
+    card.dataset.estado=estado||'pendiente';
+    var btnsDiv=document.createElement('div'); btnsDiv.className='pend-card-btns';
+    btnsDiv.style.marginBottom='8px';
+    estados2.forEach(function(e){
+      var btn=document.createElement('button');
+      btn.className='pend-est-btn'+(card.dataset.estado===e.v?' active-'+e.v:'');
+      btn.textContent=e.l;
+      btn.addEventListener('click',function(){
+        card.dataset.estado=e.v;
+        card.className='pend-card estado-'+e.v;
+        btnsDiv.querySelectorAll('.pend-est-btn').forEach(function(b){b.className='pend-est-btn';});
+        btn.className='pend-est-btn active-'+e.v;
+      });
+      btnsDiv.appendChild(btn);
+    });
+    var ta=document.createElement('textarea');
+    ta.className='pend-texto'; ta.value=texto||'';
+    ta.placeholder='Descripción del punto...';
+    card.appendChild(btnsDiv); card.appendChild(ta);
+    return card;
+  }
+
+  // Recolectar pendientes de arrastre
+  function recolectarPendientes() {
+    var items=[];
+    document.querySelectorAll('#sg-pendientes-list .pend-card').forEach(function(card){
+      var ta=card.querySelector('.pend-texto');
+      var txt=ta?ta.value.trim():'';
+      if(txt) items.push({texto:txt, estado:card.dataset.estado||'pendiente'});
+    });
+    return items;
+  }
+
 function onEnterSituacion() {
   var fe = document.getElementById('fecha-emision').value;
   var nv = document.getElementById('nro-informe').value;
@@ -1063,24 +1107,25 @@ function actualizarSgPreview() {
           return nombre?(cargo+': '+nombre):'';
         }).filter(Boolean);
       }
-      var mandTexts=getProfTexts(profSecs.mandante);
-      var constTexts=getProfTexts(profSecs.constructora);
-      var arqTexts=getProfTexts(profSecs.arq);
-      var itoTexts=getProfTexts(profSecs.ito);
-      var pmTexts=getProfTexts(profSecs.pm);
-      // Layout: col izq = mandante+pm, col der = constructora, fila3 = arq+ito
-      var colL=[].concat(mandTexts, pmTexts);
-      var colR=[].concat(constTexts);
-      var colL2=arqTexts, colR2=itoTexts;
-      var allRows=[];
-      var maxTop=Math.max(colL.length,colR.length);
-      for(var pi=0;pi<maxTop;pi++) allRows.push([colL[pi]||'',colR[pi]||'']);
-      var maxBot=Math.max(colL2.length,colR2.length);
-      for(var pi2=0;pi2<maxBot;pi2++) allRows.push([colL2[pi2]||'',colR2[pi2]||'']);
-      var pRowH=0.22, pY=6.16;
-      allRows.forEach(function(row,ri){
-        if(row[0]) s3.addText(row[0],{x:0.3,y:pY+ri*pRowH,w:4.5,h:pRowH,fontSize:10,fontFace:FONT,color:NEGRO});
-        if(row[1]) s3.addText(row[1],{x:5.0,y:pY+ri*pRowH,w:4.5,h:pRowH,fontSize:10,fontFace:FONT,color:NEGRO});
+      // Combinar múltiples en misma categoría con " | "
+      function joinProfs(arr){ return arr.join(' | '); }
+      var mandTxt=joinProfs(getProfTexts(profSecs.mandante));
+      var pmTxt=joinProfs(getProfTexts(profSecs.pm));
+      var constTxt=joinProfs(getProfTexts(profSecs.constructora));
+      var arqTxt=joinProfs(getProfTexts(profSecs.arq));
+      var itoTxt=joinProfs(getProfTexts(profSecs.ito));
+      // Layout fijo: fila1=Mandante|PM, fila2=Constructora, fila3=Arq|ITO
+      var profLayout=[
+        [mandTxt, pmTxt],
+        [constTxt, ''],
+        [arqTxt, itoTxt]
+      ];
+      var pRowH=0.26, pY=6.16;
+      profLayout.forEach(function(row,ri){
+        if(row[0]||row[1]){
+          if(row[0]) s3.addText(row[0],{x:0.3,y:pY+ri*pRowH,w:4.5,h:pRowH,fontSize:10,fontFace:FONT,color:NEGRO,wrap:true});
+          if(row[1]) s3.addText(row[1],{x:5.0,y:pY+ri*pRowH,w:4.5,h:pRowH,fontSize:10,fontFace:FONT,color:NEGRO,wrap:true});
+        }
       });
     }
 
@@ -1306,6 +1351,17 @@ function actualizarSgPreview() {
     var p1txt=document.getElementById('sg-p1-texto').textContent;
     var partidas=[];
     document.querySelectorAll('#partidas-list .partida-input').forEach(function(inp){if(inp.value.trim())partidas.push(inp.value.trim());});
+
+    // ── Puntos de arrastre (informe anterior) ──
+    var pendArrastre=[];
+    document.querySelectorAll('#sg-pendientes-list .pend-card').forEach(function(card){
+      var ta=card.querySelector('.pend-texto');
+      var est=card.dataset.estado||'pendiente';
+      var txt=ta?ta.value.trim():'';
+      if(txt) pendArrastre.push({texto:txt,estado:est});
+    });
+
+    // ── Puntos nuevos de la semana ──
     var pList=[];
     pList.push({n:1,texto:p1txt,estado:'',warning:'',isP2:false});
     pList.push({n:2,texto:'',estado:'',warning:'',isP2:true});
@@ -1382,6 +1438,25 @@ function actualizarSgPreview() {
           addSgText(sgCtx,fullTxt,h,textOpts); }
       }
     });
+    // ══ PUNTOS DE ARRASTRE (slide adicional si hay) ══
+    if(pendArrastre.length>0){
+      var sgCtxA=newSgSlide();
+      sgCtxA.slide.addText('⟵ Puntos de arrastre del informe anterior',
+        {x:COL_L,y:CONT_Y-0.18,w:SW-0.5,h:0.18,fontSize:9,fontFace:FONT,color:GRIS,italic:true});
+      var yPA=CONT_Y+0.05;
+      pendArrastre.forEach(function(p){
+        if(yPA>=MAX_Y-0.1){ var nxA=newSgSlide(); sgCtxA.slide=nxA.slide; yPA=nxA.yPosL; }
+        var semIco=p.estado==='pendiente'||p.estado==='urgente'?'🔴 ':p.estado==='proceso'?'🟡 ':p.estado==='cerrado'?'🟢 ':'';
+        var txt2=semIco+p.texto;
+        var h2=Math.max(0.22,Math.ceil(txt2.length/92)*0.165+0.05);
+        var txtC2=p.estado==='urgente'?'d93a3a':NEGRO;
+        var opts2={x:COL_L,y:yPA,w:SW-0.5,h:h2,fontSize:10,fontFace:FONT,color:txtC2,wrap:true,valign:'top'};
+        if(p.estado==='urgente') opts2.highlight='FFF3CD';
+        sgCtxA.slide.addText(txt2,opts2);
+        yPA+=h2+0.03;
+      });
+    }
+
     // ══ LAY OUT ARQUITECTURA ══
     slideNum++;
     var s8=prs.addSlide();
@@ -1474,9 +1549,9 @@ function actualizarSgPreview() {
           if(foto.pie) sf.addText(foto.pie,{x:fx,y:pY+(gN?0.22:0),w:FOTO_W,h:0.44,fontSize:12,fontFace:FONT,color:NEGRO,wrap:true});
           var dY=pY+(gN?0.22:0)+(foto.pie?0.4:0);
           if(foto.warning&&foto.warningTxt&&dY<MAX_Y)
-            sf.addText('⚠ '+foto.warningTxt,{x:fx,y:dY,w:FOTO_W,h:0.28,fontSize:8,fontFace:FONT,color:'7a6010',italic:true,wrap:true});
+            sf.addText('⚠ '+foto.warningTxt,{x:fx,y:dY,w:FOTO_W,h:0.28,fontSize:12,fontFace:FONT,color:'7a6010',italic:true,wrap:true});
           if(foto.resuelto&&foto.resueltoTxt&&dY<MAX_Y)
-            sf.addText('✓ '+foto.resueltoTxt,{x:fx,y:dY+(foto.warning&&foto.warningTxt?0.3:0),w:FOTO_W,h:0.28,fontSize:8,fontFace:FONT,color:'2d7a4f',italic:true,wrap:true});
+            sf.addText('✓ '+foto.resueltoTxt,{x:fx,y:dY+(foto.warning&&foto.warningTxt?0.3:0),w:FOTO_W,h:0.28,fontSize:12,fontFace:FONT,color:'2d7a4f',italic:true,wrap:true});
         });
       }
     }
@@ -1596,7 +1671,7 @@ function actualizarSgPreview() {
       var ta=r.querySelector('.sg-punto-text');
       return { texto:ta?ta.value:'', estado:r.dataset.estado||'' };
     });
-    estado.sgPendientesAnterior = document.getElementById('sg-pendientes-anterior')?document.getElementById('sg-pendientes-anterior').value:'';
+    estado.sgPendientesAnterior = typeof recolectarPendientes==='function' ? recolectarPendientes() : [];
     // Lay Out
     ['lo-version','lo-fecha','lo-autor','lo-desc'].forEach(function(id){
       var el=document.getElementById(id); if(el) estado[id]=el.value;
@@ -2203,11 +2278,19 @@ function actualizarSgPreview() {
       var partList=document.getElementById('partidas-list');
       if(partList) partList.innerHTML='';
       if(typeof addPartida==='function') addPartida();
-      var sgFecha=document.getElementById('sg-fecha-visita'); if(sgFecha) sgFecha.value='';
-      var sgNroV=document.getElementById('sg-nro-visita'); if(sgNroV) sgNroV.value='';
+      var sgFecha=document.getElementById('sg-fecha-visita');
+      if(sgFecha) sgFecha.value=new Date().toISOString().split('T')[0]; // fecha de hoy
+      var sgNroV=document.getElementById('sg-nro-visita');
+      // Nº visita = anterior + 1
+      if(sgNroV && prev && prev.sgNroVisita){
+        sgNroV.value=String(parseInt(prev.sgNroVisita||0)+1);
+      } else if(sgNroV){
+        sgNroV.value='';
+      }
 
       // Pendientes del informe anterior: puntos en proceso/pendiente/urgente
       // Pendientes del informe anterior: mostrar en sg-pendientes-list
+      // Cargar pendientes anteriores como cards editables
       var sgPendList=document.getElementById('sg-pendientes-list');
       if(sgPendList){
         if(prev && prev.sgPuntos && prev.sgPuntos.length>0){
@@ -2216,23 +2299,14 @@ function actualizarSgPreview() {
           });
           if(pendItems.length>0){
             sgPendList.innerHTML='';
-            pendItems.forEach(function(p){
-              var div=document.createElement('div');
-              var bgMap={urgente:'#fff3cd',pendiente:'#fdecea',proceso:'#e8f4fd'};
-              var colMap={urgente:'#d93a3a',pendiente:'#b02828',proceso:'#1a5fa8'};
-              var lblMap={urgente:'🔴 URGENTE',pendiente:'⚠ Pendiente',proceso:'⟳ En proceso'};
-              div.style.cssText='padding:10px 14px;border-radius:8px;background:'+(bgMap[p.estado]||'#f5f5f5')+
-                ';border-left:4px solid '+(colMap[p.estado]||'#888')+';margin-bottom:8px;';
-              div.innerHTML='<span style="font-size:11px;font-weight:700;color:'+(colMap[p.estado]||'#888')+'">'+
-                (lblMap[p.estado]||p.estado)+'</span><div style="font-size:13px;margin-top:4px;color:#1a1a1a">'+
-                p.texto.replace(/</g,'&lt;')+'</div>';
-              sgPendList.appendChild(div);
+            pendItems.forEach(function(p,pi){
+              sgPendList.appendChild(crearPendCard(p.texto, p.estado, pi));
             });
           } else {
             sgPendList.innerHTML='<div style="font-size:13px;color:#2d7a4f;padding:8px 0">✅ Sin puntos pendientes del informe anterior.</div>';
           }
         } else {
-          sgPendList.innerHTML='<div style="font-size:13px;color:#aaa;font-style:italic;padding:8px 0">Los puntos no cerrados aparecerán aquí la próxima semana.</div>';
+          sgPendList.innerHTML='<div style="font-size:13px;color:#aaa;font-style:italic;padding:8px 0">Los puntos no cerrados aparecerán aquí automáticamente.</div>';
         }
       }
       if(typeof actualizarSgPreview==='function') actualizarSgPreview();
@@ -3015,7 +3089,7 @@ setTimeout(function(){ mostrarPantallaObras(); iniciarBackup(); }, 50);
       var ta=r.querySelector('.sg-punto-text');
       return { texto:ta?ta.value:'', estado:r.dataset.estado||'' };
     });
-    estado.sgPendientesAnterior = document.getElementById('sg-pendientes-anterior')?document.getElementById('sg-pendientes-anterior').value:'';
+    estado.sgPendientesAnterior = typeof recolectarPendientes==='function' ? recolectarPendientes() : [];
     // Lay Out
     ['lo-version','lo-fecha','lo-autor','lo-desc'].forEach(function(id){
       var el=document.getElementById(id); if(el) estado[id]=el.value;
