@@ -19,17 +19,19 @@ function irA(n) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
   // Auto-guardar silencioso al navegar entre secciones
   if (typeof obraActual !== 'undefined' && obraActual && informeActual && !window._cargandoFormulario) {
-    (function(){
-      var obras=cargarObras();
-      var obra=obras.find(function(o){return o.id===obraActual.id;});
-      if(!obra) return;
-      var inf=(obra.informes||[]).find(function(i){return i.id===informeActual.id;});
-      if(!inf) return;
-      inf.estado=recolectarEstado();
-      inf.semana=document.getElementById('semana-informe')?document.getElementById('semana-informe').value:'';
-      obraActual=obra;
-      guardarObras(obras);
-    })();
+    try {
+      (function(){
+        var obras=cargarObras();
+        var obra=obras.find(function(o){return o.id===obraActual.id;});
+        if(!obra) return;
+        var inf=(obra.informes||[]).find(function(i){return i.id===informeActual.id;});
+        if(!inf) return;
+        inf.estado=recolectarEstado();
+        inf.semana=document.getElementById('semana-informe')?document.getElementById('semana-informe').value:'';
+        obraActual=obra;
+        guardarObras(obras);
+      })();
+    } catch(e){ console.warn('Auto-save error:', e); }
   }
   // Hooks por sección
   if (n === 4) onEnterCurvaS();
@@ -234,11 +236,19 @@ function generarSemanas() {
   var ultima = fechas[fechas.length - 1];
   if (ultima.toISOString().split('T')[0] !== terVal) fechas.push(new Date(ter));
   var tbody = document.getElementById('cs-tbody'); tbody.innerHTML = '';
+  // Fila S0: Inicio obra con 0% fijo (ancla la curva en el origen)
+  var tr0 = document.createElement('tr');
+  var fs0 = ini.toISOString().split('T')[0];
+  tr0.innerHTML = '<td><span class="cs-lbl">S0</span></td>' +
+    '<td><input class="cs-fi" type="date" value="' + fs0 + '" readonly></td>' +
+    '<td><div class="pct-row"><input class="cs-prog" type="number" min="0" max="100" step="0.1" value="0" readonly oninput="actualizarGrafico()"><span>%</span></div></td>' +
+    '<td><div class="pct-row"><input class="cs-real real-inp" type="number" min="0" max="100" step="0.1" value="0" readonly oninput="actualizarGrafico()"><span>%</span></div></td>';
+  tbody.appendChild(tr0);
   fechas.forEach(function(f, i) {
     var fs = f.toISOString().split('T')[0];
     var esSaldo = i === fechas.length - 1 && fs === terVal && fechas.length > 1 && fechas[fechas.length-2].toISOString().split('T')[0] !== terVal;
-    var semLbl = esSaldo ? 'Término obra' : (i===0 ? 'Inicio obra' : 'S' + String(i).padStart(2,'0'));
-    var p = prev[fs] || { prog: (i===0?'0':''), real:'' };
+    var semLbl = esSaldo ? 'Término obra' : 'S' + String(i+1).padStart(2,'0');
+    var p = prev[fs] || { prog:'', real:'' };
     var tr2 = document.createElement('tr'); if (esSaldo) tr2.classList.add('saldo');
     tr2.innerHTML = '<td><span class="cs-lbl' + (esSaldo?' saldo-lbl':'') + '">' + semLbl + '</span></td>' +
       '<td><input class="cs-fi" type="date" value="' + fs + '" readonly></td>' +
@@ -1627,6 +1637,7 @@ function actualizarSgPreview() {
 
   // ── Recolectar todo el estado del formulario ──
   function recolectarEstado() {
+    try {
     var estado = {};
     // Portada
     ['nro-informe','fecha-emision','semana-informe','nombre-obra','nombre-edificio',
@@ -1715,6 +1726,7 @@ function actualizarSgPreview() {
                desc:a.desc, icono:a.icono, previewUrl:a.previewUrl||null };
     });
     return estado;
+    } catch(e){ console.error('recolectar error:',e); return {}; }
   }
 
   // ── Restaurar estado completo ──
@@ -1785,10 +1797,10 @@ function actualizarSgPreview() {
     // Curva S
     if(estado.csRows && estado.csRows.length>0){
       var cstbody=document.getElementById('cs-tbody'); if(cstbody) cstbody.innerHTML='';
-      estado.csRows.forEach(function(r,rIdx){
+      estado.csRows.forEach(function(r){
         if(typeof addCsRow==='function'){
           var tr2=document.createElement('tr');
-          tr2.innerHTML='<td><span class="cs-lbl">'+(rIdx===0?'Inicio obra':r.lbl)+'</span></td>'+
+          tr2.innerHTML='<td><span class="cs-lbl">'+r.lbl+'</span></td>'+
             '<td><input class="cs-fi" type="date" value="'+r.fi+'" readonly></td>'+
             '<td><div class="pct-row"><input class="cs-prog" type="number" min="0" max="100" step="0.1" value="'+r.prog+'" oninput="actualizarGrafico()"><span>%</span></div></td>'+
             '<td><div class="pct-row"><input class="cs-real real-inp" type="number" min="0" max="100" step="0.1" value="'+r.real+'" oninput="actualizarGrafico()"><span>%</span></div></td>';
@@ -2352,7 +2364,7 @@ function actualizarSgPreview() {
         var cstbody=document.getElementById('cs-tbody'); if(cstbody) cstbody.innerHTML='';
         prev.csRows.forEach(function(r,rIdx){
           var tr2=document.createElement('tr');
-          tr2.innerHTML='<td><span class="cs-lbl">'+(rIdx===0?'Inicio obra':r.lbl)+'</span></td>'+
+          tr2.innerHTML='<td><span class="cs-lbl">'+r.lbl+'</span></td>'+
             '<td><input class="cs-fi" type="date" value="'+r.fi+'" readonly></td>'+
             '<td><div class="pct-row"><input class="cs-prog" type="number" min="0" max="100" step="0.1" value="'+r.prog+'" oninput="actualizarGrafico()"><span>%</span></div></td>'+
             '<td><div class="pct-row"><input class="cs-real real-inp" type="number" min="0" max="100" step="0.1" value="'+r.real+'" placeholder="—" oninput="actualizarGrafico()"><span>%</span></div></td>';
@@ -3133,6 +3145,7 @@ setTimeout(function(){ mostrarPantallaObras(); iniciarBackup(); }, 50);
 
   // ── Recolectar todo el estado del formulario ──
   function recolectarEstado() {
+    try {
     var estado = {};
     // Portada
     ['nro-informe','fecha-emision','semana-informe','nombre-obra','nombre-edificio',
@@ -3221,6 +3234,7 @@ setTimeout(function(){ mostrarPantallaObras(); iniciarBackup(); }, 50);
                desc:a.desc, icono:a.icono, previewUrl:a.previewUrl||null };
     });
     return estado;
+    } catch(e){ console.error('recolectar error:',e); return {}; }
   }
 
   // ── Restaurar estado completo ──
@@ -3291,10 +3305,10 @@ setTimeout(function(){ mostrarPantallaObras(); iniciarBackup(); }, 50);
     // Curva S
     if(estado.csRows && estado.csRows.length>0){
       var cstbody=document.getElementById('cs-tbody'); if(cstbody) cstbody.innerHTML='';
-      estado.csRows.forEach(function(r,rIdx){
+      estado.csRows.forEach(function(r){
         if(typeof addCsRow==='function'){
           var tr2=document.createElement('tr');
-          tr2.innerHTML='<td><span class="cs-lbl">'+(rIdx===0?'Inicio obra':r.lbl)+'</span></td>'+
+          tr2.innerHTML='<td><span class="cs-lbl">'+r.lbl+'</span></td>'+
             '<td><input class="cs-fi" type="date" value="'+r.fi+'" readonly></td>'+
             '<td><div class="pct-row"><input class="cs-prog" type="number" min="0" max="100" step="0.1" value="'+r.prog+'" oninput="actualizarGrafico()"><span>%</span></div></td>'+
             '<td><div class="pct-row"><input class="cs-real real-inp" type="number" min="0" max="100" step="0.1" value="'+r.real+'" oninput="actualizarGrafico()"><span>%</span></div></td>';
