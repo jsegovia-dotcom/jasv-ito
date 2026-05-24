@@ -1048,25 +1048,39 @@ function actualizarSgPreview() {
       s3.addText('Profesionales a cargo',{x:0.3,y:5.9055,w:9.4,h:0.22,fontSize:8,fontFace:FONT,color:GRIS,bold:true});
       s3.addShape(prs.ShapeType.rect,{x:0.3,y:6.13,w:9.4,h:0.01,fill:{color:'D0D8DC'},line:{color:'D0D8DC'}});
       // Layout fijo por rol: fila1=Mandante|PM, fila2=Visitador|Admin, fila3=Arq|ITO
-      var profMap={};
-      document.querySelectorAll('#mandante-profs .prof-row,#constructora-profs .prof-row,#arq-profs .prof-row,#ito-profs .prof-row,#pm-profs .prof-row').forEach(function(row){
-        var ins=row.querySelectorAll('input');
-        var cargo=ins[0]?ins[0].value:''; var nombre=ins[1]?ins[1].value:'';
-        if(nombre) profMap[cargo]=nombre;
-      });
-      var profRows=[
-        ['Rep. Mandante','Project Manager'],
-        ['Visitador de obra','Administrador de obra'],
-        ['Arquitecto','ITO']
-      ];
-      var pRowH=0.26, pY=6.16;
-      profRows.forEach(function(row,ri){
-        var txtL=row[0]+(profMap[row[0]]?': '+profMap[row[0]]:'');
-        var txtR=row[1]+(profMap[row[1]]?': '+profMap[row[1]]:'');
-        if(profMap[row[0]]||profMap[row[1]]){
-          if(profMap[row[0]]) s3.addText(txtL,{x:0.3,y:pY+ri*pRowH,w:4.5,h:pRowH,fontSize:10,fontFace:FONT,color:NEGRO});
-          if(profMap[row[1]]) s3.addText(txtR,{x:5.0,y:pY+ri*pRowH,w:4.5,h:pRowH,fontSize:10,fontFace:FONT,color:NEGRO});
-        }
+      // Recopilar profesionales por sección (soporte múltiples por cargo)
+      var profSecs={
+        'mandante': Array.from(document.querySelectorAll('#mandante-profs .prof-row')),
+        'constructora': Array.from(document.querySelectorAll('#constructora-profs .prof-row')),
+        'arq': Array.from(document.querySelectorAll('#arq-profs .prof-row')),
+        'ito': Array.from(document.querySelectorAll('#ito-profs .prof-row')),
+        'pm': Array.from(document.querySelectorAll('#pm-profs .prof-row'))
+      };
+      function getProfTexts(rows){
+        return rows.map(function(r){
+          var ins=r.querySelectorAll('input');
+          var cargo=ins[0]?ins[0].value:''; var nombre=ins[1]?ins[1].value:'';
+          return nombre?(cargo+': '+nombre):'';
+        }).filter(Boolean);
+      }
+      var mandTexts=getProfTexts(profSecs.mandante);
+      var constTexts=getProfTexts(profSecs.constructora);
+      var arqTexts=getProfTexts(profSecs.arq);
+      var itoTexts=getProfTexts(profSecs.ito);
+      var pmTexts=getProfTexts(profSecs.pm);
+      // Layout: col izq = mandante+pm, col der = constructora, fila3 = arq+ito
+      var colL=[].concat(mandTexts, pmTexts);
+      var colR=[].concat(constTexts);
+      var colL2=arqTexts, colR2=itoTexts;
+      var allRows=[];
+      var maxTop=Math.max(colL.length,colR.length);
+      for(var pi=0;pi<maxTop;pi++) allRows.push([colL[pi]||'',colR[pi]||'']);
+      var maxBot=Math.max(colL2.length,colR2.length);
+      for(var pi2=0;pi2<maxBot;pi2++) allRows.push([colL2[pi2]||'',colR2[pi2]||'']);
+      var pRowH=0.22, pY=6.16;
+      allRows.forEach(function(row,ri){
+        if(row[0]) s3.addText(row[0],{x:0.3,y:pY+ri*pRowH,w:4.5,h:pRowH,fontSize:10,fontFace:FONT,color:NEGRO});
+        if(row[1]) s3.addText(row[1],{x:5.0,y:pY+ri*pRowH,w:4.5,h:pRowH,fontSize:10,fontFace:FONT,color:NEGRO});
       });
     }
 
@@ -2139,6 +2153,12 @@ function actualizarSgPreview() {
           // Actualizar semáforo automáticamente según historial cargado
           updateProySemaforo(lastTr2);
         });
+      } else if(typeof addProyRow==='function'){
+        // Primer informe: cargar especialidades por defecto
+        var proyTbodyD=document.getElementById('proy-tbody'); if(proyTbodyD) proyTbodyD.innerHTML='';
+        if(typeof PROY_DEFAULT!=='undefined'){
+          PROY_DEFAULT.forEach(function(p){ addProyRow(p); });
+        }
       }
 
       // ══ Curva S: cargar programado + real del anterior ══
