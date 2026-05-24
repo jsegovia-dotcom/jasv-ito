@@ -2034,6 +2034,7 @@ function actualizarSgPreview() {
         if(ftEl) ftEl.value=fi2.toISOString().split('T')[0];
       }
       actualizarPortada();
+      if(typeof actualizarP1==='function') setTimeout(actualizarP1,100);;
 
       // ══ Buscar informe anterior ══
       var prevInf = null;
@@ -2095,6 +2096,8 @@ function actualizarSgPreview() {
       }
 
       // ══ Estatus proyectos: cargar del informe anterior ══
+      // Siempre limpiar primero (evita duplicados con filas por defecto)
+      var proyTbody0=document.getElementById('proy-tbody'); if(proyTbody0) proyTbody0.innerHTML='';
       if(prev && prev.proyRows && prev.proyRows.length>0 && typeof addProyRow==='function'){
         var proyTbody=document.getElementById('proy-tbody'); if(proyTbody) proyTbody.innerHTML='';
         prev.proyRows.forEach(function(r){
