@@ -27,10 +27,11 @@
     // Ocultar barra de informe — no hay informe activo en el dashboard
     var tb = document.getElementById('inf-topbar');
     if (tb) tb.style.display = 'none';
+    // Sincronizar logo ANTES de ocultar topbar
+    sincronizarLogoObras();
     // Ocultar topbar principal — pantalla obras tiene su propio header
     var mainTop = document.querySelector('.topbar');
     if (mainTop) mainTop.style.display = 'none';
-    sincronizarLogoObras();
     renderObras();
   }
 
@@ -311,9 +312,8 @@
         var loWrap=document.getElementById('lo-preview-wrap');
         var loDz=document.getElementById('lo-dropzone');
         if(loImg2){
-          loImg2.onload=function(){ loImg2.style.display='block'; };
+          loImg2.style.display='block';
           loImg2.src=prev.loImgSrc;
-          if(loImg2.complete) loImg2.style.display='block'; // already cached
         }
         if(loWrap) loWrap.style.display='block';
         if(loDz) loDz.style.display='none';
