@@ -225,6 +225,20 @@ body{font-family:"Segoe UI",system-ui,sans-serif;background:#f0efed;color:var(--
   .resumen-row{display:flex;gap:12px;align-items:baseline;padding:4px 0;border-bottom:1px solid var(--gris-b);}
   .resumen-lbl{font-size:10px;font-weight:700;color:var(--gris);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:4px;padding-bottom:2px;border-bottom:1px solid #d8dce0;}
   .resumen-val{font-size:13px;color:var(--negro);;display:block;}
+  /* Pendientes arrastre */
+  .pend-card{background:#fff;border:1.5px solid var(--gris-b);border-radius:10px;padding:12px 14px;margin-bottom:10px;border-left:4px solid #ccc;}
+  .pend-card.estado-pendiente{border-left-color:#d93a3a;}
+  .pend-card.estado-urgente{border-left-color:#d93a3a;background:#fffbf0;}
+  .pend-card.estado-proceso{border-left-color:#CC8800;}
+  .pend-card.estado-cerrado{border-left-color:#2d9e5f;opacity:.75;}
+  .pend-card-btns{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px;}
+  .pend-est-btn{border:1.5px solid var(--gris-b);background:#fff;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;font-weight:600;transition:all .15s;}
+  .pend-est-btn:hover{border-color:var(--rojo);color:var(--rojo);}
+  .pend-est-btn.active-cerrado{background:#2d9e5f;border-color:#2d9e5f;color:#fff;}
+  .pend-est-btn.active-proceso{background:#CC8800;border-color:#CC8800;color:#fff;}
+  .pend-est-btn.active-pendiente{background:#d93a3a;border-color:#d93a3a;color:#fff;}
+  .pend-est-btn.active-urgente{background:#d93a3a;border-color:#d93a3a;color:#fff;}
+  .pend-texto{width:100%;border:1.5px solid var(--gris-b);border-radius:7px;padding:7px 10px;font-size:13px;resize:vertical;min-height:52px;font-family:inherit;box-sizing:border-box;}
   .resumen-ok{color:#2d9e5f;font-weight:600;}
   .resumen-no{color:#d93a3a;}
   /* ── Obras y informes ── */
