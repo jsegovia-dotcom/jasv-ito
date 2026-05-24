@@ -2107,12 +2107,22 @@ function actualizarSgPreview() {
     // Checkbox aumento
     var chk=document.getElementById('chk-aumento');
     if(chk){ chk.checked=false; if(typeof toggleAumento==='function') toggleAumento(); }
-    // Estatus documentación
+    // Estatus documentación — recargar lista predefinida
     var docTbody=document.getElementById('doc-tbody');
-    if(docTbody) docTbody.innerHTML='';
-    // Estatus proyectos
+    if(docTbody){
+      docTbody.innerHTML='';
+      if(typeof DOC_DEFAULT!=='undefined' && typeof addDocRow==='function'){
+        DOC_DEFAULT.forEach(function(d){ addDocRow(d); });
+      }
+    }
+    // Estatus proyectos — recargar lista predefinida
     var proyTbody=document.getElementById('proy-tbody');
-    if(proyTbody) proyTbody.innerHTML='';
+    if(proyTbody){
+      proyTbody.innerHTML='';
+      if(typeof PROY_DEFAULT!=='undefined' && typeof addProyRow==='function'){
+        PROY_DEFAULT.forEach(function(p){ addProyRow(p); });
+      }
+    }
     // Curva S
     var csTbody=document.getElementById('cs-tbody');
     if(csTbody) csTbody.innerHTML='';
@@ -2313,8 +2323,10 @@ function actualizarSgPreview() {
       if(prev && prev.csRows && prev.csRows.length>0){
         var csInEl=document.getElementById('cs-inicio');
         var csTerEl=document.getElementById('cs-termino');
+        var csDiaEl=document.getElementById('dia-control');
         if(csInEl && prev.csInicio) csInEl.value=prev.csInicio;
         if(csTerEl && prev.csTermino) csTerEl.value=prev.csTermino;
+        if(csDiaEl && prev.diaControl) csDiaEl.value=prev.diaControl;
         var csnota=document.getElementById('cs-nota'); if(csnota) csnota.value='';
         var cstbody=document.getElementById('cs-tbody'); if(cstbody) cstbody.innerHTML='';
         prev.csRows.forEach(function(r){
