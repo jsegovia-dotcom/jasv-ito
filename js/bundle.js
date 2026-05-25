@@ -210,8 +210,23 @@ function onEnterCurvaS() {
   var ft = ftNva || document.getElementById('fecha-termino').value;
   if (fi && !document.getElementById('cs-inicio').value) document.getElementById('cs-inicio').value = fi;
   if (ft && !document.getElementById('cs-termino').value) document.getElementById('cs-termino').value = ft;
-  if (document.getElementById('cs-tbody').children.length === 0 && fi && ft) generarSemanas();
-  else actualizarGrafico();
+  var csTbodyEl = document.getElementById('cs-tbody');
+  if (csTbodyEl && csTbodyEl.children.length === 0 && fi && ft) {
+    generarSemanas(); // generates S0 + weeks
+  } else if (csTbodyEl) {
+    // Ensure S0 row exists as first row
+    var firstLbl = csTbodyEl.firstElementChild && csTbodyEl.firstElementChild.querySelector('.cs-lbl');
+    if (!firstLbl || firstLbl.textContent !== 'S0') {
+      var s0fi = document.getElementById('cs-inicio') ? document.getElementById('cs-inicio').value : '';
+      var s0tr = document.createElement('tr');
+      s0tr.innerHTML = '<td><span class="cs-lbl">S0</span></td>' +
+        '<td><input class="cs-fi" type="date" value="' + s0fi + '" readonly></td>' +
+        '<td><div class="pct-row"><input class="cs-prog" type="number" value="0" readonly oninput="actualizarGrafico()"><span>%</span></div></td>' +
+        '<td><div class="pct-row"><input class="cs-real real-inp" type="number" value="0" readonly oninput="actualizarGrafico()"><span>%</span></div></td>';
+      csTbodyEl.insertBefore(s0tr, csTbodyEl.firstChild);
+    }
+    actualizarGrafico();
+  }
 }
 function proximoDiaCtrl(fecha, dia) {
   var d = new Date(fecha); var actual = d.getDay();
@@ -1637,8 +1652,8 @@ function actualizarSgPreview() {
 
   // ── Recolectar todo el estado del formulario ──
   function recolectarEstado() {
-    try {
     var estado = {};
+    try {
     // Portada
     ['nro-informe','fecha-emision','semana-informe','nombre-obra','nombre-edificio',
      'direccion-obra','mandante','contratista'].forEach(function(id){
@@ -1727,8 +1742,8 @@ function actualizarSgPreview() {
       return { nombre:a.nombre, size:a.size, tipo:a.tipo, titulo:a.titulo,
                desc:a.desc, icono:a.icono, previewUrl:a.previewUrl||null };
     });
+    } catch(e){ console.error('recolectar error:',e); }
     return estado;
-    } catch(e){ console.error('recolectar error:',e); return {}; }
   }
 
   // ── Restaurar estado completo ──
@@ -1800,7 +1815,9 @@ function actualizarSgPreview() {
     if(estado.csRows && estado.csRows.length>0){
       var cstbody=document.getElementById('cs-tbody'); if(cstbody) cstbody.innerHTML='';
       // S0 fija (ancla en 0%)
-      (function(){ var s0=document.createElement('tr'); s0.innerHTML='<td><span class="cs-lbl">S0</span></td><td><input class="cs-fi" type="date" value="" readonly></td><td><div class="pct-row"><input class="cs-prog" type="number" value="0" readonly oninput="actualizarGrafico()"><span>%</span></div></td><td><div class="pct-row"><input class="cs-real real-inp" type="number" value="0" readonly oninput="actualizarGrafico()"><span>%</span></div></td>'; var csb=document.getElementById('cs-tbody'); if(csb) csb.appendChild(s0); })();
+      (function(){ var s0=document.createElement('tr');
+        var s0fi=document.getElementById('cs-inicio')?document.getElementById('cs-inicio').value:'';
+        s0.innerHTML='<td><span class="cs-lbl">S0</span></td><td><input class="cs-fi" type="date" value="'+s0fi+'" readonly></td><td><div class="pct-row"><input class="cs-prog" type="number" value="0" readonly oninput="actualizarGrafico()"><span>%</span></div></td><td><div class="pct-row"><input class="cs-real real-inp" type="number" value="0" readonly oninput="actualizarGrafico()"><span>%</span></div></td>'; var csb=document.getElementById('cs-tbody'); if(csb) csb.appendChild(s0); })();
       estado.csRows.forEach(function(r){
         if(typeof addCsRow==='function'){
           var tr2=document.createElement('tr');
@@ -2367,8 +2384,10 @@ function actualizarSgPreview() {
         var csnota=document.getElementById('cs-nota'); if(csnota) csnota.value='';
         var cstbody=document.getElementById('cs-tbody'); if(cstbody) cstbody.innerHTML='';
         // S0 fija (ancla en 0%)
-        (function(){ var s0=document.createElement('tr'); s0.innerHTML='<td><span class="cs-lbl">S0</span></td><td><input class="cs-fi" type="date" value="" readonly></td><td><div class="pct-row"><input class="cs-prog" type="number" value="0" readonly oninput="actualizarGrafico()"><span>%</span></div></td><td><div class="pct-row"><input class="cs-real real-inp" type="number" value="0" readonly oninput="actualizarGrafico()"><span>%</span></div></td>'; var csb=document.getElementById('cs-tbody'); if(csb) csb.appendChild(s0); })();
-        prev.csRows.forEach(function(r,rIdx){
+        (function(){ var s0=document.createElement('tr');
+        var s0fi=document.getElementById('cs-inicio')?document.getElementById('cs-inicio').value:'';
+        s0.innerHTML='<td><span class="cs-lbl">S0</span></td><td><input class="cs-fi" type="date" value="'+s0fi+'" readonly></td><td><div class="pct-row"><input class="cs-prog" type="number" value="0" readonly oninput="actualizarGrafico()"><span>%</span></div></td><td><div class="pct-row"><input class="cs-real real-inp" type="number" value="0" readonly oninput="actualizarGrafico()"><span>%</span></div></td>'; var csb=document.getElementById('cs-tbody'); if(csb) csb.appendChild(s0); })();
+        prev.csRows.filter(function(r){ return r.lbl !== 'S0'; }).forEach(function(r,rIdx){
           var tr2=document.createElement('tr');
           tr2.innerHTML='<td><span class="cs-lbl">'+r.lbl+'</span></td>'+
             '<td><input class="cs-fi" type="date" value="'+r.fi+'" readonly></td>'+
@@ -2527,8 +2546,15 @@ function actualizarSgPreview() {
   }
 
   // ── Guardar estado del informe actual ──
+  function btnGuardar() {
+    try {
+      if (typeof guardarEstadoInformeActual === 'function') guardarEstadoInformeActual();
+      else if (typeof guardarEnHistorial === 'function') guardarEnHistorial();
+    } catch(e) { console.error('btnGuardar error:', e); mostrarToast('Error al guardar', 'err'); }
+  }
+
   function guardarEstadoInformeActual() {
-    if (!obraActual || !informeActual) return;
+    if (!obraActual || !informeActual) { mostrarToast('Sin informe activo', 'err'); return; }
     var obras = cargarObras();
     var obra = obras.find(function(o){ return o.id === obraActual.id; });
     if (!obra) return;
@@ -3139,6 +3165,10 @@ function actualizarSgPreview() {
   }
 
   // ══ INIT ══
+window.onerror = function(msg, src, line, col, err) {
+  console.error('JS Error:', msg, 'Line:', line, err);
+  return false;
+};
 document.getElementById('fecha-emision').value = new Date().toISOString().split('T')[0];
 actualizarPortada();
 actualizarSgPreview();
@@ -3151,8 +3181,8 @@ setTimeout(function(){ mostrarPantallaObras(); iniciarBackup(); }, 50);
 
   // ── Recolectar todo el estado del formulario ──
   function recolectarEstado() {
-    try {
     var estado = {};
+    try {
     // Portada
     ['nro-informe','fecha-emision','semana-informe','nombre-obra','nombre-edificio',
      'direccion-obra','mandante','contratista'].forEach(function(id){
@@ -3241,8 +3271,8 @@ setTimeout(function(){ mostrarPantallaObras(); iniciarBackup(); }, 50);
       return { nombre:a.nombre, size:a.size, tipo:a.tipo, titulo:a.titulo,
                desc:a.desc, icono:a.icono, previewUrl:a.previewUrl||null };
     });
+    } catch(e){ console.error('recolectar error:',e); }
     return estado;
-    } catch(e){ console.error('recolectar error:',e); return {}; }
   }
 
   // ── Restaurar estado completo ──
@@ -3314,7 +3344,9 @@ setTimeout(function(){ mostrarPantallaObras(); iniciarBackup(); }, 50);
     if(estado.csRows && estado.csRows.length>0){
       var cstbody=document.getElementById('cs-tbody'); if(cstbody) cstbody.innerHTML='';
       // S0 fija (ancla en 0%)
-      (function(){ var s0=document.createElement('tr'); s0.innerHTML='<td><span class="cs-lbl">S0</span></td><td><input class="cs-fi" type="date" value="" readonly></td><td><div class="pct-row"><input class="cs-prog" type="number" value="0" readonly oninput="actualizarGrafico()"><span>%</span></div></td><td><div class="pct-row"><input class="cs-real real-inp" type="number" value="0" readonly oninput="actualizarGrafico()"><span>%</span></div></td>'; var csb=document.getElementById('cs-tbody'); if(csb) csb.appendChild(s0); })();
+      (function(){ var s0=document.createElement('tr');
+        var s0fi=document.getElementById('cs-inicio')?document.getElementById('cs-inicio').value:'';
+        s0.innerHTML='<td><span class="cs-lbl">S0</span></td><td><input class="cs-fi" type="date" value="'+s0fi+'" readonly></td><td><div class="pct-row"><input class="cs-prog" type="number" value="0" readonly oninput="actualizarGrafico()"><span>%</span></div></td><td><div class="pct-row"><input class="cs-real real-inp" type="number" value="0" readonly oninput="actualizarGrafico()"><span>%</span></div></td>'; var csb=document.getElementById('cs-tbody'); if(csb) csb.appendChild(s0); })();
       estado.csRows.forEach(function(r){
         if(typeof addCsRow==='function'){
           var tr2=document.createElement('tr');
@@ -3489,6 +3521,10 @@ setTimeout(function(){ mostrarPantallaObras(); iniciarBackup(); }, 50);
   // ══ FIN HISTORIAL ══════════════════════════════════════
 
   // ══ INIT ══
+window.onerror = function(msg, src, line, col, err) {
+  console.error('JS Error:', msg, 'Line:', line, err);
+  return false;
+};
 document.getElementById('fecha-emision').value = new Date().toISOString().split('T')[0];
 actualizarPortada();
 actualizarSgPreview();
