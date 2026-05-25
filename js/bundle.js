@@ -1690,7 +1690,9 @@ function actualizarSgPreview() {
     estado.csTermino = document.getElementById('cs-termino')?document.getElementById('cs-termino').value:'';
     estado.diaControl = document.getElementById('dia-control')?document.getElementById('dia-control').value:'4';
     estado.csNota = document.getElementById('cs-nota')?document.getElementById('cs-nota').value:'';
-    estado.csRows = Array.from(document.querySelectorAll('#cs-tbody tr')).map(function(tr){
+    estado.csRows = Array.from(document.querySelectorAll('#cs-tbody tr')).filter(function(tr){
+      var l=tr.querySelector('.cs-lbl'); return !(l&&l.textContent==='S0');
+    }).map(function(tr){
       var lbl=tr.querySelector('.cs-lbl'); var fi=tr.querySelector('.cs-fi');
       var prog=tr.querySelector('.cs-prog'); var real=tr.querySelector('.cs-real');
       return { lbl:lbl?lbl.textContent:'', fi:fi?fi.value:'', prog:prog?prog.value:'', real:real?real.value:'' };
@@ -1797,6 +1799,8 @@ function actualizarSgPreview() {
     // Curva S
     if(estado.csRows && estado.csRows.length>0){
       var cstbody=document.getElementById('cs-tbody'); if(cstbody) cstbody.innerHTML='';
+      // S0 fija (ancla en 0%)
+      (function(){ var s0=document.createElement('tr'); s0.innerHTML='<td><span class="cs-lbl">S0</span></td><td><input class="cs-fi" type="date" value="" readonly></td><td><div class="pct-row"><input class="cs-prog" type="number" value="0" readonly oninput="actualizarGrafico()"><span>%</span></div></td><td><div class="pct-row"><input class="cs-real real-inp" type="number" value="0" readonly oninput="actualizarGrafico()"><span>%</span></div></td>'; var csb=document.getElementById('cs-tbody'); if(csb) csb.appendChild(s0); })();
       estado.csRows.forEach(function(r){
         if(typeof addCsRow==='function'){
           var tr2=document.createElement('tr');
@@ -2362,6 +2366,8 @@ function actualizarSgPreview() {
         if(csDiaEl && prev.diaControl) csDiaEl.value=prev.diaControl;
         var csnota=document.getElementById('cs-nota'); if(csnota) csnota.value='';
         var cstbody=document.getElementById('cs-tbody'); if(cstbody) cstbody.innerHTML='';
+        // S0 fija (ancla en 0%)
+        (function(){ var s0=document.createElement('tr'); s0.innerHTML='<td><span class="cs-lbl">S0</span></td><td><input class="cs-fi" type="date" value="" readonly></td><td><div class="pct-row"><input class="cs-prog" type="number" value="0" readonly oninput="actualizarGrafico()"><span>%</span></div></td><td><div class="pct-row"><input class="cs-real real-inp" type="number" value="0" readonly oninput="actualizarGrafico()"><span>%</span></div></td>'; var csb=document.getElementById('cs-tbody'); if(csb) csb.appendChild(s0); })();
         prev.csRows.forEach(function(r,rIdx){
           var tr2=document.createElement('tr');
           tr2.innerHTML='<td><span class="cs-lbl">'+r.lbl+'</span></td>'+
@@ -3198,7 +3204,9 @@ setTimeout(function(){ mostrarPantallaObras(); iniciarBackup(); }, 50);
     estado.csTermino = document.getElementById('cs-termino')?document.getElementById('cs-termino').value:'';
     estado.diaControl = document.getElementById('dia-control')?document.getElementById('dia-control').value:'4';
     estado.csNota = document.getElementById('cs-nota')?document.getElementById('cs-nota').value:'';
-    estado.csRows = Array.from(document.querySelectorAll('#cs-tbody tr')).map(function(tr){
+    estado.csRows = Array.from(document.querySelectorAll('#cs-tbody tr')).filter(function(tr){
+      var l=tr.querySelector('.cs-lbl'); return !(l&&l.textContent==='S0');
+    }).map(function(tr){
       var lbl=tr.querySelector('.cs-lbl'); var fi=tr.querySelector('.cs-fi');
       var prog=tr.querySelector('.cs-prog'); var real=tr.querySelector('.cs-real');
       return { lbl:lbl?lbl.textContent:'', fi:fi?fi.value:'', prog:prog?prog.value:'', real:real?real.value:'' };
@@ -3305,6 +3313,8 @@ setTimeout(function(){ mostrarPantallaObras(); iniciarBackup(); }, 50);
     // Curva S
     if(estado.csRows && estado.csRows.length>0){
       var cstbody=document.getElementById('cs-tbody'); if(cstbody) cstbody.innerHTML='';
+      // S0 fija (ancla en 0%)
+      (function(){ var s0=document.createElement('tr'); s0.innerHTML='<td><span class="cs-lbl">S0</span></td><td><input class="cs-fi" type="date" value="" readonly></td><td><div class="pct-row"><input class="cs-prog" type="number" value="0" readonly oninput="actualizarGrafico()"><span>%</span></div></td><td><div class="pct-row"><input class="cs-real real-inp" type="number" value="0" readonly oninput="actualizarGrafico()"><span>%</span></div></td>'; var csb=document.getElementById('cs-tbody'); if(csb) csb.appendChild(s0); })();
       estado.csRows.forEach(function(r){
         if(typeof addCsRow==='function'){
           var tr2=document.createElement('tr');
