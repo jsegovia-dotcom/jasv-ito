@@ -30,10 +30,11 @@
         <div style="font-size:12px;color:var(--color-text-secondary);">Generador de Informes ITO</div>
       </div>
     </div>
-    <div style="display:flex;gap:8px;align-items:center;">
-      <button id="btn-backup" class="btn btn-sec" onclick="manejarBackup()" style="font-size:12px;padding:6px 14px;" title="Activar auto-backup a archivo">📁 Backup: OFF</button>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <button id="btn-archivo-db" onclick="configurarArchivoBaseDatos()" style="font-size:12px;padding:6px 14px;border:1.5px solid #8B1A1A;color:#8B1A1A;font-weight:700;border-radius:8px;background:#fff;cursor:pointer;" title="Usar su PC como base de datos">📁 Conectar archivo</button>
+      <button class="btn btn-sec" onclick="abrirArchivoBaseDatos()" style="font-size:12px;padding:6px 14px;" title="Abrir archivo de datos existente">📂 Abrir archivo</button>
       <label class="btn btn-sec" style="cursor:pointer;font-size:12px;padding:6px 14px;">📤 Importar<input type="file" accept=".json" style="display:none" onchange="importarObrasJSON(this)"></label>
-      <button class="btn btn-sec" style="font-size:12px;padding:6px 14px;" onclick="exportarObrasJSON()">📥 Exportar todo</button>
+      <button class="btn btn-sec" style="font-size:12px;padding:6px 14px;" onclick="exportarObrasJSON()">📥 Exportar</button>
     </div>
   </div>
   <div style="max-width:780px;margin:0 auto;padding:32px 20px;width:100%;">
@@ -446,14 +447,7 @@
   <div class="nav-btns">
     <button class="btn btn-sec" onclick="irA(7)">← Anterior</button>
     <button class="btn btn-sec" onclick="btnGuardar()" style="font-size:14px;padding:10px 20px;border-color:#2d7a4f;color:#2d7a4f;font-weight:600">💾 Guardar informe</button>
-    <button class="btn btn-sec" onclick="abrirPreview()" style="font-size:14px;padding:10px 20px;">👁 Vista previa</button>
-    <button class="btn btn-pri" style="background:#2d7a4f;font-size:14px;padding:10px 28px" onclick="try{generarPPT();}catch(e){console.error(e);mostrarToast('Error PPT: '+e.message,'err');}">Generar PPT →</button>
-  </div>
-</div>
-
-</main>
-</div>
-
+    <button class="btn btn-sec" onclick="abrirPreview()" style="font-size:14px;padding
 
 
 <!-- VISTA PREVIA MODAL -->
