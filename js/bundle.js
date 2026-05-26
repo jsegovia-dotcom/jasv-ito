@@ -1257,7 +1257,7 @@ function actualizarSgPreview() {
           // columna comentarios eliminada
         } else {
           row.push({text:'',options:{fontSize:9,fontFace:FONT,fill:{color:bg}}});
-          row.push({text:'',options:{fontSize:9,fontFace:FONT,fill:{color:bg}}});
+
         }
         proyTD.push(row);
         globalRow++;
