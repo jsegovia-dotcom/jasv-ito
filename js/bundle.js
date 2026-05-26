@@ -2242,10 +2242,7 @@ function actualizarSgPreview() {
   var informeActual = null; // {id, nro, fechaCreacion, estado:…}
   var modoEdicionObra = false;
 
-  function cargarObras() {
-    try { return JSON.parse(localStorage.getItem(OBRAS_KEY) || '[]'); }
-    catch(e) { return []; }
-  }
+
 
   // ── Logo en pantalla obras ──
   function sincronizarLogoObras() {
