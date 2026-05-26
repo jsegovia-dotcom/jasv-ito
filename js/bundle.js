@@ -624,7 +624,7 @@ function actualizarSgPreview() {
         var dx=Math.round((targetFW-dw)/2),dy=Math.round((targetFH-dh)/2);
         ctx150.drawImage(tmpImg,dx,dy,dw,dh);
         URL.revokeObjectURL(blobUrl);
-        fotos.push({ dataUrl: cv.toDataURL('image/jpeg',0.85), pie: '', grupo: '', warning: false, warningTxt: '', resuelto: false, resueltoTxt: '' });
+        fotos.push({ dataUrl: cv.toDataURL('image/jpeg',0.5), pie: '', grupo: '', warning: false, warningTxt: '', resuelto: false, resueltoTxt: '' });
         pending--;
         if (pending === 0) renderFotos();
       };
@@ -1993,7 +1993,251 @@ function actualizarSgPreview() {
 
 
   // ══ SISTEMA DE OBRAS ══════════════════════════════════
+
+  // ══ ALMACENAMIENTO EN ARCHIVO (PC como base de datos) ══
   var OBRAS_KEY = 'jasv_obras_v1';
+  var _dbFileHandle = null;   // FileSystemFileHandle para lectura/escritura
+  var _dbEnabled = false;     // true = usando archivo en disco
+  var _dbIdb = null;          // IndexedDB para persistir el handle
+  var _obrasCache = null;     // Cache en memoria
+
+  // ── IndexedDB para persistir el FileHandle ──
+  function _dbInitIdb() {
+    return new Promise(function(resolve) {
+      if (!window.indexedDB) { resolve(null); return; }
+      var req = indexedDB.open('jasv_db_v2', 1);
+      req.onupgradeneeded = function(e) {
+        e.target.result.createObjectStore('handles', {keyPath:'id'});
+      };
+      req.onsuccess = function(e) { _dbIdb = e.target.result; resolve(_dbIdb); };
+      req.onerror = function() { resolve(null); };
+    });
+  }
+
+  function _dbSaveHandle(handle) {
+    if (!_dbIdb) return;
+    try {
+      _dbIdb.transaction('handles','readwrite').objectStore('handles').put({id:'dbfile', handle:handle});
+    } catch(e) {}
+  }
+
+  function _dbLoadHandle() {
+    return new Promise(function(resolve) {
+      if (!_dbIdb) { resolve(null); return; }
+      try {
+        var req = _dbIdb.transaction('handles','readonly').objectStore('handles').get('dbfile');
+        req.onsuccess = function(e) { resolve(e.target.result ? e.target.result.handle : null); };
+        req.onerror = function() { resolve(null); };
+      } catch(e) { resolve(null); }
+    });
+  }
+
+  // ── Leer obras desde archivo ──
+  async function _dbLeerArchivo() {
+    if (!_dbFileHandle) return null;
+    try {
+      var file = await _dbFileHandle.getFile();
+      var text = await file.text();
+      var data = JSON.parse(text);
+      return Array.isArray(data) ? data : (data.obras || []);
+    } catch(e) { return null; }
+  }
+
+  // ── Escribir obras al archivo ──
+  async function _dbEscribirArchivo(obras) {
+    if (!_dbFileHandle) return false;
+    try {
+      var json = JSON.stringify({version:2, fecha:new Date().toISOString(), obras:obras}, null, 2);
+      var writable = await _dbFileHandle.createWritable();
+      await writable.write(json);
+      await writable.close();
+      return true;
+    } catch(e) {
+      console.error('Error escribiendo archivo:', e);
+      return false;
+    }
+  }
+
+  // ── Iniciar sistema de archivo ──
+  async function iniciarSistemaArchivo() {
+    await _dbInitIdb();
+    // Intentar recuperar handle guardado
+    var handle = await _dbLoadHandle();
+    if (handle) {
+      var perm = await handle.queryPermission({mode:'readwrite'});
+      if (perm === 'granted') {
+        _dbFileHandle = handle; _dbEnabled = true;
+        _obrasCache = await _dbLeerArchivo() || _obrasCache || [];
+        actualizarBtnArchivo();
+        return;
+      }
+      // Pedir permiso con banner
+      _mostrarBannerArchivo(handle);
+    }
+    // Sin archivo configurado: cargar desde localStorage como respaldo
+    if (!_obrasCache) {
+      try { _obrasCache = JSON.parse(localStorage.getItem(OBRAS_KEY) || '[]'); }
+      catch(e) { _obrasCache = []; }
+    }
+  }
+
+  function _mostrarBannerArchivo(handle) {
+    var ex = document.getElementById('db-banner'); if (ex) ex.remove();
+    var banner = document.createElement('div');
+    banner.id = 'db-banner';
+    banner.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#1a3a4b;color:#fff;padding:16px 24px;border-radius:14px;z-index:9999;display:flex;align-items:center;gap:14px;box-shadow:0 4px 24px rgba(0,0,0,.4);font-size:14px;';
+    banner.innerHTML = '<span>📁 Conectar con archivo de datos JASV en su PC</span>';
+    var btn = document.createElement('button');
+    btn.textContent = 'Conectar';
+    btn.style.cssText = 'background:#2d7a4f;border:none;color:#fff;padding:8px 18px;border-radius:8px;cursor:pointer;font-weight:700;font-size:14px;';
+    btn.addEventListener('click', async function(){
+      banner.remove();
+      try {
+        var perm = await handle.requestPermission({mode:'readwrite'});
+        if (perm === 'granted') {
+          _dbFileHandle = handle; _dbEnabled = true;
+          _dbSaveHandle(handle);
+          _obrasCache = await _dbLeerArchivo() || _obrasCache || [];
+          actualizarBtnArchivo();
+          mostrarToast('✅ Conectado al archivo de datos', 'ok');
+          renderObras();
+        }
+      } catch(e) { mostrarToast('Error: '+e.message, 'err'); }
+    });
+    banner.appendChild(btn);
+    document.body.appendChild(banner);
+  }
+
+  // ── Configurar archivo nuevo ──
+  async function configurarArchivoBaseDatos() {
+    if (!window.showSaveFilePicker) {
+      mostrarToast('⚠ Usa Chrome o Edge para esta función', 'err');
+      return;
+    }
+    try {
+      var handle = await window.showSaveFilePicker({
+        suggestedName: 'JASV_obras_datos.json',
+        types: [{ description: 'Base de datos JASV', accept: {'application/json': ['.json']} }]
+      });
+      _dbFileHandle = handle; _dbEnabled = true;
+      _dbSaveHandle(handle);
+      // Migrar datos existentes al archivo
+      var obras = _obrasCache || [];
+      await _dbEscribirArchivo(obras);
+      actualizarBtnArchivo();
+      mostrarToast('✅ Archivo configurado — datos migrados', 'ok');
+    } catch(e) {
+      if (e.name !== 'AbortError') mostrarToast('Error: '+e.message, 'err');
+    }
+  }
+
+  // ── Cargar archivo existente ──
+  async function abrirArchivoBaseDatos() {
+    if (!window.showOpenFilePicker) {
+      mostrarToast('⚠ Usa Chrome o Edge para esta función', 'err');
+      return;
+    }
+    try {
+      var handles = await window.showOpenFilePicker({
+        types: [{ description: 'Base de datos JASV', accept: {'application/json': ['.json']} }]
+      });
+      var handle = handles[0];
+      // Verificar permiso de escritura
+      var perm = await handle.requestPermission({mode:'readwrite'});
+      if (perm !== 'granted') { mostrarToast('⚠ Se necesita permiso de escritura', 'err'); return; }
+      _dbFileHandle = handle; _dbEnabled = true;
+      _dbSaveHandle(handle);
+      _obrasCache = await _dbLeerArchivo() || [];
+      actualizarBtnArchivo();
+      mostrarToast('✅ Archivo cargado — ' + _obrasCache.length + ' obras', 'ok');
+      renderObras();
+    } catch(e) {
+      if (e.name !== 'AbortError') mostrarToast('Error: '+e.message, 'err');
+    }
+  }
+
+  function actualizarBtnArchivo() {
+    var btn = document.getElementById('btn-archivo-db');
+    if (!btn) return;
+    if (_dbEnabled) {
+      btn.textContent = '💾 Archivo: CONECTADO';
+      btn.style.cssText = 'font-size:12px;padding:6px 14px;border:1.5px solid #2d7a4f;color:#2d7a4f;font-weight:700;border-radius:8px;background:#fff;cursor:pointer;';
+      btn.title = 'Datos guardándose en archivo de su PC';
+    } else {
+      btn.textContent = '📁 Conectar archivo';
+      btn.style.cssText = 'font-size:12px;padding:6px 14px;border:1.5px solid #8B1A1A;color:#8B1A1A;font-weight:700;border-radius:8px;background:#fff;cursor:pointer;';
+      btn.title = 'Clic para conectar su PC como base de datos';
+    }
+  }
+
+  // ── Funciones principales de almacenamiento ──
+  function cargarObras() {
+    return _obrasCache ? JSON.parse(JSON.stringify(_obrasCache)) : [];
+  }
+
+  function guardarObras(obras) {
+    _obrasCache = JSON.parse(JSON.stringify(obras));
+    if (_dbEnabled && _dbFileHandle) {
+      // Guardar en archivo (async, no bloquea UI)
+      _dbEscribirArchivo(_obrasCache).then(function(ok) {
+        if (!ok) {
+          // Falló escritura — guardar en localStorage como respaldo
+          _guardarLocalStorage(_obrasCache);
+        }
+      });
+    } else {
+      // Sin archivo: usar localStorage
+      _guardarLocalStorage(_obrasCache);
+    }
+  }
+
+  function _guardarLocalStorage(obras) {
+    try {
+      // Sin fotos para no llenar localStorage
+      var obrasSinFotos = JSON.parse(JSON.stringify(obras, function(k,v){
+        if (k === 'dataUrl' && typeof v === 'string' && v.length > 1000) return '';
+        if (k === 'loImgSrc' && typeof v === 'string' && v.length > 1000) return '';
+        return v;
+      }));
+      localStorage.setItem(OBRAS_KEY, JSON.stringify(obrasSinFotos));
+    } catch(e) {
+      console.warn('localStorage lleno, solo guardando en archivo');
+    }
+  }
+
+  // ── Exportar todo ──
+  function exportarObrasJSON() {
+    var obras = cargarObras();
+    var blob = new Blob([JSON.stringify({version:2, fecha:new Date().toISOString(), obras:obras},null,2)], {type:'application/json'});
+    var a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = 'JASV_obras_' + new Date().toISOString().split('T')[0] + '.json';
+    a.click(); URL.revokeObjectURL(a.href);
+    mostrarToast('📥 Exportado', 'ok');
+  }
+
+  function importarObrasJSON(input) {
+    if (!input.files.length) return;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        var data = JSON.parse(e.target.result);
+        var obras = Array.isArray(data) ? data : (data.obras || []);
+        if (!Array.isArray(obras)) throw new Error('Formato inválido');
+        var existing = cargarObras();
+        obras.forEach(function(o) {
+          if (!existing.find(function(x){ return x.id===o.id; })) existing.push(o);
+        });
+        guardarObras(existing);
+        _obrasCache = existing;
+        renderObras();
+        mostrarToast('✅ ' + obras.length + ' obras importadas', 'ok');
+      } catch(ex) { mostrarToast('❌ Archivo inválido: '+ex.message, 'err'); }
+    };
+    reader.readAsText(input.files[0]);
+    input.value='';
+  }
+  // ══ FIN ALMACENAMIENTO EN ARCHIVO ══
+
   var obraActual = null;    // {id, nombre, edificio, …, informes:[]}
   var informeActual = null; // {id, nro, fechaCreacion, estado:…}
   var modoEdicionObra = false;
@@ -2001,9 +2245,6 @@ function actualizarSgPreview() {
   function cargarObras() {
     try { return JSON.parse(localStorage.getItem(OBRAS_KEY) || '[]'); }
     catch(e) { return []; }
-  }
-  function guardarObras(obras) {
-    localStorage.setItem(OBRAS_KEY, JSON.stringify(obras));
   }
 
   // ── Logo en pantalla obras ──
@@ -3173,7 +3414,35 @@ document.getElementById('fecha-emision').value = new Date().toISOString().split(
 actualizarPortada();
 actualizarSgPreview();
 // Iniciar en pantalla de obras
-setTimeout(function(){ mostrarPantallaObras(); iniciarBackup(); }, 50);
+setTimeout(function(){
+  // Limpiar localStorage si está casi lleno
+  try {
+    var test = 'x'.repeat(100000);
+    localStorage.setItem('_test', test);
+    localStorage.removeItem('_test');
+  } catch(e) {
+    // localStorage lleno: comprimir fotos existentes
+    var obras = cargarObras();
+    var changed = false;
+    obras.forEach(function(obra) {
+      (obra.informes||[]).forEach(function(inf) {
+        if (inf.estado && inf.estado.fotos && inf.estado.fotos.length > 0) {
+          inf.estado.fotos = inf.estado.fotos.map(function(f) {
+            if (f.dataUrl && f.dataUrl.length > 30000) {
+              changed = true;
+              return Object.assign({}, f, {dataUrl: f.dataUrl.substring(0, 30000)});
+            }
+            return f;
+          });
+        }
+      });
+    });
+    if (changed) {
+      try { localStorage.setItem(OBRAS_KEY, JSON.stringify(obras)); } catch(e2) {}
+    }
+  }
+  mostrarPantallaObras(); iniciarSistemaArchivo().then(function(){ actualizarBtnArchivo(); });
+}, 50);
 
 
   // ══ HISTORIAL DE OBRAS ══════════════════════════════
@@ -3519,14 +3788,3 @@ setTimeout(function(){ mostrarPantallaObras(); iniciarBackup(); }, 50);
     t._timer = setTimeout(function(){ t.classList.remove('show','err'); }, 3200);
   }
   // ══ FIN HISTORIAL ══════════════════════════════════════
-
-  // ══ INIT ══
-window.onerror = function(msg, src, line, col, err) {
-  console.error('JS Error:', msg, 'Line:', line, err);
-  return false;
-};
-document.getElementById('fecha-emision').value = new Date().toISOString().split('T')[0];
-actualizarPortada();
-actualizarSgPreview();
-// Iniciar en pantalla de obras
-setTimeout(function(){ mostrarPantallaObras(); iniciarBackup(); }, 50);
