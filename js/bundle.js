@@ -1265,10 +1265,10 @@ function actualizarSgPreview() {
     });
     // Calcular anchos de columna automáticamente según contenido máximo
     // Cada columna: medir el texto más largo (título o dato) y asignar ancho proporcional
-    var colTitles=['Estado','Especialidad','Iter.','Tipo de revisión','Fecha','Aprobación','Comentarios'];
+    var colTitles=['Estado','Especialidad','Iter.','Tipo de revisión','Fecha','Aprobación'];
     // Aproximar px por char según fuente 9pt (≈0.065" por carácter en Century Gothic 9pt)
     var CPP=0.072; // inches per char
-    var MIN_W=[0.9,1.2,0.45,1.6,0.82,0.95,1.2]; // mínimos por columna
+    var MIN_W=[0.9,1.2,0.45,1.6,0.82,0.95]; // mínimos por columna
     var maxW=[0,0,0,0,0,0];
     // Medir títulos
     colTitles.forEach(function(t,ci){ maxW[ci]=Math.max(maxW[ci],t.length*CPP+0.1); });
