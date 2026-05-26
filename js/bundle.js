@@ -2075,10 +2075,9 @@ function actualizarSgPreview() {
       _mostrarBannerArchivo(handle);
     }
     // Sin archivo configurado: cargar desde localStorage como respaldo
-    if (!_obrasCache) {
-      try { _obrasCache = JSON.parse(localStorage.getItem(OBRAS_KEY) || '[]'); }
-      catch(e) { _obrasCache = []; }
-    }
+    try { _obrasCache = JSON.parse(localStorage.getItem(OBRAS_KEY) || '[]'); }
+    catch(e) { _obrasCache = []; }
+    actualizarBtnArchivo();
   }
 
   function _mostrarBannerArchivo(handle) {
@@ -2122,10 +2121,15 @@ function actualizarSgPreview() {
       _dbFileHandle = handle; _dbEnabled = true;
       _dbSaveHandle(handle);
       // Migrar datos existentes al archivo
-      var obras = _obrasCache || [];
+      if (!_obrasCache) {
+        try { _obrasCache = JSON.parse(localStorage.getItem(OBRAS_KEY) || '[]'); }
+        catch(e) { _obrasCache = []; }
+      }
+      var obras = _obrasCache;
       await _dbEscribirArchivo(obras);
       actualizarBtnArchivo();
-      mostrarToast('✅ Archivo configurado — datos migrados', 'ok');
+      renderObras();
+      mostrarToast('✅ Archivo configurado — ' + obras.length + ' obras disponibles', 'ok');
     } catch(e) {
       if (e.name !== 'AbortError') mostrarToast('Error: '+e.message, 'err');
     }
@@ -2172,7 +2176,12 @@ function actualizarSgPreview() {
 
   // ── Funciones principales de almacenamiento ──
   function cargarObras() {
-    return _obrasCache ? JSON.parse(JSON.stringify(_obrasCache)) : [];
+    if (!_obrasCache) {
+      // inicializar desde localStorage si el archivo no está listo aún
+      try { _obrasCache = JSON.parse(localStorage.getItem(OBRAS_KEY) || '[]'); }
+      catch(e) { _obrasCache = []; }
+    }
+    return JSON.parse(JSON.stringify(_obrasCache));
   }
 
   function guardarObras(obras) {
@@ -2806,12 +2815,7 @@ function actualizarSgPreview() {
     if(lastReal !== null) inf.avanceReal = parseFloat(lastReal).toFixed(1);
     obraActual = obra;
     guardarObras(obras);
-    // Auto-backup si está configurado
-    if (typeof ejecutarBackup === 'function') {
-      ejecutarBackup(true); // true = mostrar toast combinado
-    } else {
-      mostrarToast('💾 Informe guardado', 'ok');
-    }
+    mostrarToast('💾 Informe guardado', 'ok');
   }
 
   // ── Modal Nueva/Editar Obra ──
