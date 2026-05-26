@@ -1307,7 +1307,8 @@ function actualizarSgPreview() {
     var gfxX=3.252, gfxY=2.0433, gfxW=6.4173; // x=8.26cm y=5.19cm w=16.3cm, h calculado por aspecto
     // Tabla: izquierda del gráfico, alineada al top del gráfico
     var tblW=2.8, tblX=0.2;
-    var notaY=5.9055;
+    // Tabla comienza justo después de la leyenda (3 líneas × 0.38 = 1.14")
+    var notaY=5.7; // bajar nota para dar más espacio
     // Tabla avance — fuente 12 encabezado, 10 body
     var csRows=document.querySelectorAll('#cs-tbody tr');
     if(csRows.length>0){
@@ -1333,7 +1334,9 @@ function actualizarSgPreview() {
       });
       // Ajustar rowH para que la tabla no se desborde: desde y=3.1496 hasta comentarios y=5.9055
       // Ajustar automáticamente: desde tblY=3.1496" hasta notas y=5.9055"
-      var tblY=3.1496, tblMaxH=5.9055-tblY-0.05;
+      // Tabla: desde después de leyenda hasta notas
+      var tblY=CONT_Y+0.05+3*leyLH+0.1; // right after 3 legend lines
+      var tblMaxH=notaY-tblY-0.05;
       var nRows=csTD.length; // incluye header
       var rowH=Math.min(0.26, tblMaxH/Math.max(nRows,1));
       // Si rowH < 0.18 reducir fuente para que quepa el texto
@@ -1390,7 +1393,7 @@ function actualizarSgPreview() {
     var csNota=document.getElementById('cs-nota').value;
     if(csNota){
       s6.addText([{text:'Comentarios: ',options:{bold:true}},{text:csNota,options:{bold:false}}],
-        {x:3.252,y:6.2283,w:SW-3.252-0.1,h:0.4,fontSize:10,fontFace:FONT,color:GRIS,wrap:true,valign:'top'});
+        {x:3.252,y:notaY+0.1,w:SW-3.252-0.1,h:0.4,fontSize:10,fontFace:FONT,color:GRIS,wrap:true,valign:'top'});
     }
 
     // ══ SITUACIÓN GENERAL — múltiples slides si es necesario ══
@@ -1656,7 +1659,7 @@ function actualizarSgPreview() {
     try {
     // Portada
     ['nro-informe','fecha-emision','semana-informe','nombre-obra','nombre-edificio',
-     'direccion-obra','mandante','contratista'].forEach(function(id){
+     'direccion','mandante','contratista'].forEach(function(id){
       var el = document.getElementById(id);
       if(el) estado[id] = el.value;
     });
@@ -1750,7 +1753,7 @@ function actualizarSgPreview() {
   function restaurarEstado(estado) {
     // Campos simples
     var camposSimples = ['nro-informe','fecha-emision','semana-informe','nombre-obra',
-      'nombre-edificio','direccion-obra','mandante','contratista',
+      'nombre-edificio','direccion','mandante','contratista',
       'nro-oficina','fecha-inicio','plazo-dias','fecha-termino','moneda','monto-valor',
       'monto-desc','descripcion-proyecto','superficie',
       'aumento-dias','aumento-motivo','fecha-termino-nueva',
@@ -3455,7 +3458,7 @@ setTimeout(function(){
     try {
     // Portada
     ['nro-informe','fecha-emision','semana-informe','nombre-obra','nombre-edificio',
-     'direccion-obra','mandante','contratista'].forEach(function(id){
+     'direccion','mandante','contratista'].forEach(function(id){
       var el = document.getElementById(id);
       if(el) estado[id] = el.value;
     });
@@ -3549,7 +3552,7 @@ setTimeout(function(){
   function restaurarEstado(estado) {
     // Campos simples
     var camposSimples = ['nro-informe','fecha-emision','semana-informe','nombre-obra',
-      'nombre-edificio','direccion-obra','mandante','contratista',
+      'nombre-edificio','direccion','mandante','contratista',
       'nro-oficina','fecha-inicio','plazo-dias','fecha-termino','moneda','monto-valor',
       'monto-desc','descripcion-proyecto','superficie',
       'aumento-dias','aumento-motivo','fecha-termino-nueva',
