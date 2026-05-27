@@ -1439,22 +1439,38 @@ function actualizarSgPreview() {
       return {slide:sl, yPosL:CONT_Y+0.05, yPosR:CONT_Y+0.05, col:0};
     }
 
-    // Slide de arrastre: misma estructura pero con badge en cinta
+    // Slide de arrastre: cinta con título acortado + badge contiguo
     function newSgArrastreSlide(){
       slideNum++;
       var sl=prs.addSlide();
-      addHF(sl,'5. Situación general de la obra',slideNum);
-      // Badge "Puntos de arrastre — informe anterior" en cinta — una línea
-      var badgeX=3.8, badgeW=LOGO_X-badgeX-0.15; // ancho suficiente para una línea
+      // Logo
+      sl.addImage({data:LOGO, x:LOGO_X, y:LOGO_Y, w:LOGO_W, h:LOGO_H});
+      // Cinta completa fondo gris
+      sl.addShape(prs.ShapeType.rect,{x:CX,y:CY,w:CW,h:CH,fill:{color:ENCAB_BG},line:{color:ENCAB_BG}});
+      // Título principal acortado (solo ocupa hasta x=3.6")
+      var titW=3.4;
+      sl.addText('5. Situación general de la obra',{
+        x:CX+0.12, y:CY, w:titW, h:CH,
+        fontSize:18, fontFace:FONT, bold:true, color:'1a1a1a', valign:'middle'
+      });
+      // Badge contiguo: desde x=3.6 hasta LOGO_X
+      var badgeX=CX+0.12+titW+0.08;
+      var badgeW=LOGO_X-badgeX-0.15;
       sl.addShape(prs.ShapeType.rect,{
         x:badgeX, y:CY+0.03, w:badgeW, h:CH-0.06,
         fill:{color:'FFF3CD'}, line:{color:'d93a3a',pt:1.5}
       });
       sl.addText('Puntos de arrastre — informe anterior',{
         x:badgeX+0.1, y:CY+0.03, w:badgeW-0.15, h:CH-0.06,
-        fontSize:12, fontFace:FONT, bold:true, color:'8B1A1A',
+        fontSize:11, fontFace:FONT, bold:true, color:'8B1A1A',
         valign:'middle', align:'center', wrap:false
       });
+      // Cinta roja inferior
+      sl.addShape(prs.ShapeType.rect,{x:0,y:SH-0.04,w:SW,h:0.04,fill:{color:ROJO},line:{color:ROJO}});
+      // Pie
+      sl.addShape(prs.ShapeType.rect,{x:0,y:7.0079-0.02,w:SW,h:0.02,fill:{color:'CCCCCC'},line:{color:'CCCCCC'}});
+      sl.addText(nroStr2+' — '+obra+' — Pág. '+slideNum,
+        {x:0,y:7.0079,w:SW,h:0.32,fontSize:8,fontFace:FONT,color:GRIS,valign:'middle',align:'center'});
       // Línea divisoria vertical entre columnas
       sl.addShape(prs.ShapeType.rect,{
         x:COL_L+COL_W+0.03, y:CONT_Y+0.02,
