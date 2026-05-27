@@ -1487,22 +1487,25 @@ function actualizarSgPreview() {
           addSgText(sgCtx,fullTxt,h,textOpts); }
       }
     });
-    // ══ PUNTOS DE ARRASTRE (slide adicional si hay) ══
+    //// ══ PUNTOS DE ARRASTRE — 2 columnas igual que puntos nuevos ══
     if(pendArrastre.length>0){
       var sgCtxA=newSgSlide();
-      sgCtxA.slide.addText('⟵ Puntos de arrastre del informe anterior',
-        {x:COL_L,y:CONT_Y-0.18,w:SW-0.5,h:0.18,fontSize:9,fontFace:FONT,color:GRIS,italic:true});
-      var yPA=CONT_Y+0.05;
-      pendArrastre.forEach(function(p){
-        if(yPA>=MAX_Y-0.1){ var nxA=newSgSlide(); sgCtxA.slide=nxA.slide; yPA=nxA.yPosL; }
+      sgCtxA.slide.addText('Puntos de arrastre — informe anterior',
+        {x:COL_L,y:CONT_Y-0.22,w:SW-0.5,h:0.2,fontSize:9,fontFace:FONT,color:GRIS,italic:true});
+      pendArrastre.forEach(function(p,pi){
         var semIco=p.estado==='pendiente'||p.estado==='urgente'?'🔴 ':p.estado==='proceso'?'🟡 ':p.estado==='cerrado'?'🟢 ':'';
-        var txt2=semIco+p.texto;
-        var h2=Math.max(0.22,Math.ceil(txt2.length/92)*0.165+0.05);
-        var txtC2=p.estado==='urgente'?'d93a3a':NEGRO;
-        var opts2={x:COL_L,y:yPA,w:SW-0.5,h:h2,fontSize:10,fontFace:FONT,color:txtC2,wrap:true,valign:'top'};
-        if(p.estado==='urgente') opts2.highlight='FFF3CD';
-        sgCtxA.slide.addText(txt2,opts2);
-        yPA+=h2+0.03;
+        var fullTxt=(pi+1)+'.  '+semIco+(p.texto||'').split('\n').join(' ');
+        var nL=Math.ceil(fullTxt.length/46)+1;
+        var h=Math.max(0.22,nL*0.165);
+        var txtC=p.estado==='urgente'?'d93a3a':NEGRO;
+        var textOpts={fontSize:10,fontFace:FONT,color:txtC,bold:p.estado==='urgente'};
+        if(p.estado==='urgente') textOpts.highlight='FFF3CD';
+        var ok=addSgText(sgCtxA,fullTxt,h,textOpts);
+        if(!ok){
+          var nxA=newSgSlide();
+          sgCtxA.slide=nxA.slide; sgCtxA.yPosL=nxA.yPosL; sgCtxA.yPosR=nxA.yPosR; sgCtxA.col=0;
+          addSgText(sgCtxA,fullTxt,h,textOpts);
+        }
       });
     }
 
@@ -2363,6 +2366,8 @@ function actualizarSgPreview() {
   // ── Nuevo informe ──
   function nuevoInforme() {
     if (!obraActual) return;
+    // Auto-guardar informe activo antes de crear el nuevo
+    if (informeActual) { try { guardarEstadoInformeActual(); } catch(e) {} }
     var obras = cargarObras();
     var obra = obras.find(function(o){ return o.id === obraActual.id; });
     if (!obra) return;
