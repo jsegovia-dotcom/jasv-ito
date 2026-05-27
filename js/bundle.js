@@ -1055,6 +1055,15 @@ function actualizarSgPreview() {
     s2.addText(nroStr2+' — '+obra+' — Pág. '+slideNum,
       {x:0,y:7.0079,w:SW,h:0.32,fontSize:8,fontFace:FONT,color:GRIS,valign:'middle',align:'center'});
     // Secciones: fuente 18, interlineado 27pt=0.375"
+    // ── Puntos de arrastre (informe anterior) ──
+    var pendArrastre=[];
+    document.querySelectorAll('#sg-pendientes-list .pend-card').forEach(function(card){
+      var ta=card.querySelector('.pend-texto');
+      var est=card.dataset.estado||'pendiente';
+      var txt=ta?ta.value.trim():'';
+      if(txt) pendArrastre.push({texto:txt,estado:est});
+    });
+
     var secciones=['1. Datos del proyecto','2. Estatus de documentación','3. Estatus de aprobación de proyectos','4. Control Curva S','5. Situación general de la obra'];
     if(pendArrastre.length>0) secciones.push('6. Puntos de arrastre — semana anterior');
     var layNum=pendArrastre.length>0?7:6, fotNum=pendArrastre.length>0?8:7, anxNum=pendArrastre.length>0?9:8;
@@ -1405,14 +1414,7 @@ function actualizarSgPreview() {
     var partidas=[];
     document.querySelectorAll('#partidas-list .partida-input').forEach(function(inp){if(inp.value.trim())partidas.push(inp.value.trim());});
 
-    // ── Puntos de arrastre (informe anterior) ──
-    var pendArrastre=[];
-    document.querySelectorAll('#sg-pendientes-list .pend-card').forEach(function(card){
-      var ta=card.querySelector('.pend-texto');
-      var est=card.dataset.estado||'pendiente';
-      var txt=ta?ta.value.trim():'';
-      if(txt) pendArrastre.push({texto:txt,estado:est});
-    });
+
 
     // ── Puntos nuevos de la semana ──
     var pList=[];
