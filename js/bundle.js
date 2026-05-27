@@ -1055,8 +1055,12 @@ function actualizarSgPreview() {
     s2.addText(nroStr2+' — '+obra+' — Pág. '+slideNum,
       {x:0,y:7.0079,w:SW,h:0.32,fontSize:8,fontFace:FONT,color:GRIS,valign:'middle',align:'center'});
     // Secciones: fuente 18, interlineado 27pt=0.375"
-    var secciones=['1. Datos del proyecto','2. Estatus de documentación','3. Estatus de aprobación de proyectos','4. Control Curva S','5. Situación general de la obra','6. Lay Out Arquitectura vigente','7. Fotografías relevantes'];
-    if(anexos.length>0) secciones.push('8. Anexos');
+    var secciones=['1. Datos del proyecto','2. Estatus de documentación','3. Estatus de aprobación de proyectos','4. Control Curva S','5. Situación general de la obra'];
+    if(pendArrastre.length>0) secciones.push('6. Puntos de arrastre — semana anterior');
+    var layNum=pendArrastre.length>0?7:6, fotNum=pendArrastre.length>0?8:7, anxNum=pendArrastre.length>0?9:8;
+    secciones.push(layNum+'. Lay Out Arquitectura vigente');
+    secciones.push(fotNum+'. Fotografías relevantes');
+    if(anexos.length>0) secciones.push(anxNum+'. Anexos');
     var tocLH=0.375; var tocY=CY+CH+0.15;
     secciones.forEach(function(sec,i){
       var y=tocY+i*(tocLH+0.04);
@@ -1439,38 +1443,11 @@ function actualizarSgPreview() {
       return {slide:sl, yPosL:CONT_Y+0.05, yPosR:CONT_Y+0.05, col:0};
     }
 
-    // Slide de arrastre: cinta con título acortado + badge contiguo
+    // Sección 6: Puntos de arrastre — semana anterior
     function newSgArrastreSlide(){
       slideNum++;
       var sl=prs.addSlide();
-      // Logo
-      sl.addImage({data:LOGO, x:LOGO_X, y:LOGO_Y, w:LOGO_W, h:LOGO_H});
-      // Cinta completa fondo gris
-      sl.addShape(prs.ShapeType.rect,{x:CX,y:CY,w:CW,h:CH,fill:{color:ENCAB_BG},line:{color:ENCAB_BG}});
-      // Título principal acortado (solo ocupa hasta x=3.6")
-      var titW=3.4;
-      sl.addText('5. Situación general de la obra',{
-        x:CX+0.12, y:CY, w:titW, h:CH,
-        fontSize:18, fontFace:FONT, bold:true, color:'1a1a1a', valign:'middle'
-      });
-      // Badge contiguo: desde x=3.6 hasta LOGO_X
-      var badgeX=CX+0.12+titW+0.08;
-      var badgeW=LOGO_X-badgeX-0.15;
-      sl.addShape(prs.ShapeType.rect,{
-        x:badgeX, y:CY+0.03, w:badgeW, h:CH-0.06,
-        fill:{color:'FFF3CD'}, line:{color:'d93a3a',pt:1.5}
-      });
-      sl.addText('Puntos de arrastre — informe anterior',{
-        x:badgeX+0.1, y:CY+0.03, w:badgeW-0.15, h:CH-0.06,
-        fontSize:11, fontFace:FONT, bold:true, color:'8B1A1A',
-        valign:'middle', align:'center', wrap:false
-      });
-      // Cinta roja inferior
-      sl.addShape(prs.ShapeType.rect,{x:0,y:SH-0.04,w:SW,h:0.04,fill:{color:ROJO},line:{color:ROJO}});
-      // Pie
-      sl.addShape(prs.ShapeType.rect,{x:0,y:7.0079-0.02,w:SW,h:0.02,fill:{color:'CCCCCC'},line:{color:'CCCCCC'}});
-      sl.addText(nroStr2+' — '+obra+' — Pág. '+slideNum,
-        {x:0,y:7.0079,w:SW,h:0.32,fontSize:8,fontFace:FONT,color:GRIS,valign:'middle',align:'center'});
+      addHF(sl,'6. Puntos de arrastre — semana anterior',slideNum);
       // Línea divisoria vertical entre columnas
       sl.addShape(prs.ShapeType.rect,{
         x:COL_L+COL_W+0.03, y:CONT_Y+0.02,
@@ -1552,7 +1529,7 @@ function actualizarSgPreview() {
     // ══ LAY OUT ARQUITECTURA ══
     slideNum++;
     var s8=prs.addSlide();
-    addHF(s8,'6. Lay Out Arquitectura vigente',slideNum);
+    addHF(s8,(pendArrastre.length>0?'7':'6')+'. Lay Out Arquitectura vigente',slideNum);
     var loImg=document.getElementById('lo-preview-img');
     var loVer=document.getElementById('lo-version').value;
     var loFecha=document.getElementById('lo-fecha').value;
@@ -1611,7 +1588,7 @@ function actualizarSgPreview() {
       for(var fi3=0;fi3<fotos.length;fi3+=2){
         slideNum++;
         var sf=prs.addSlide();
-        addHF(sf,'7. Fotografías relevantes',slideNum);
+        addHF(sf,(pendArrastre.length>0?'8':'7')+'. Fotografías relevantes',slideNum);
         var batch=fotos.slice(fi3,fi3+2);
         batch.forEach(function(foto,bi){
           var fx=bi===0?FOTO_L_X:FOTO_R_X;
@@ -1652,7 +1629,7 @@ function actualizarSgPreview() {
     if(anexos.length>0){
       slideNum++;
       var sa=prs.addSlide();
-      addHF(sa,'8. Anexos',slideNum);
+      addHF(sa,(pendArrastre.length>0?'9':'8')+'. Anexos',slideNum);
       var anxR=[];
       var anxY=CONT_Y+0.05;
       anexos.forEach(function(a,ai){
