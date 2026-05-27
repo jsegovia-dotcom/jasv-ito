@@ -1438,6 +1438,32 @@ function actualizarSgPreview() {
       });
       return {slide:sl, yPosL:CONT_Y+0.05, yPosR:CONT_Y+0.05, col:0};
     }
+
+    // Slide de arrastre: misma estructura pero con badge en cinta
+    function newSgArrastreSlide(){
+      slideNum++;
+      var sl=prs.addSlide();
+      addHF(sl,'5. Situación general de la obra',slideNum);
+      // Badge "Puntos de arrastre — informe anterior" en cinta
+      // Fondo amarillo desde x=4.5 hasta LOGO_X, h=CH
+      var badgeX=4.5, badgeW=LOGO_X-badgeX-0.1;
+      sl.addShape(prs.ShapeType.rect,{
+        x:badgeX, y:CY+0.03, w:badgeW, h:CH-0.06,
+        fill:{color:'FFF3CD'}, line:{color:'d93a3a',pt:1}
+      });
+      sl.addText('Puntos de arrastre — informe anterior',{
+        x:badgeX+0.08, y:CY+0.03, w:badgeW-0.12, h:CH-0.06,
+        fontSize:14, fontFace:FONT, bold:true, color:'8B1A1A',
+        valign:'middle', align:'center'
+      });
+      // Línea divisoria vertical entre columnas
+      sl.addShape(prs.ShapeType.rect,{
+        x:COL_L+COL_W+0.03, y:CONT_Y+0.02,
+        w:0.01, h:MAX_Y-CONT_Y-0.05,
+        fill:{color:'BFC3C5'}, line:{color:'BFC3C5'}
+      });
+      return {slide:sl, yPosL:CONT_Y+0.05, yPosR:CONT_Y+0.05, col:0};
+    }
     function addSgText(ctx, txt, h, opts){
       // Si la columna activa no tiene espacio, intentar la otra
       if(ctx.col===0 && ctx.yPosL+h > COL_MAX){
@@ -1489,7 +1515,7 @@ function actualizarSgPreview() {
     });
     //// ══ PUNTOS DE ARRASTRE — 2 columnas igual que puntos nuevos ══
     if(pendArrastre.length>0){
-      var sgCtxA=newSgSlide();
+      var sgCtxA=newSgArrastreSlide();
       sgCtxA.slide.addText('Puntos de arrastre — informe anterior',
         {x:COL_L,y:CONT_Y-0.22,w:SW-0.5,h:0.2,fontSize:9,fontFace:FONT,color:GRIS,italic:true});
       pendArrastre.forEach(function(p,pi){
@@ -1502,7 +1528,7 @@ function actualizarSgPreview() {
         if(p.estado==='urgente') textOpts.highlight='FFF3CD';
         var ok=addSgText(sgCtxA,fullTxt,h,textOpts);
         if(!ok){
-          var nxA=newSgSlide();
+          var nxA=newSgArrastreSlide();
           sgCtxA.slide=nxA.slide; sgCtxA.yPosL=nxA.yPosL; sgCtxA.yPosR=nxA.yPosR; sgCtxA.col=0;
           addSgText(sgCtxA,fullTxt,h,textOpts);
         }
