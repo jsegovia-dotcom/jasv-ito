@@ -1444,17 +1444,16 @@ function actualizarSgPreview() {
       slideNum++;
       var sl=prs.addSlide();
       addHF(sl,'5. Situación general de la obra',slideNum);
-      // Badge "Puntos de arrastre — informe anterior" en cinta
-      // Fondo amarillo desde x=4.5 hasta LOGO_X, h=CH
-      var badgeX=4.5, badgeW=LOGO_X-badgeX-0.1;
+      // Badge "Puntos de arrastre — informe anterior" en cinta — una línea
+      var badgeX=3.8, badgeW=LOGO_X-badgeX-0.15; // ancho suficiente para una línea
       sl.addShape(prs.ShapeType.rect,{
         x:badgeX, y:CY+0.03, w:badgeW, h:CH-0.06,
-        fill:{color:'FFF3CD'}, line:{color:'d93a3a',pt:1}
+        fill:{color:'FFF3CD'}, line:{color:'d93a3a',pt:1.5}
       });
       sl.addText('Puntos de arrastre — informe anterior',{
-        x:badgeX+0.08, y:CY+0.03, w:badgeW-0.12, h:CH-0.06,
-        fontSize:14, fontFace:FONT, bold:true, color:'8B1A1A',
-        valign:'middle', align:'center'
+        x:badgeX+0.1, y:CY+0.03, w:badgeW-0.15, h:CH-0.06,
+        fontSize:12, fontFace:FONT, bold:true, color:'8B1A1A',
+        valign:'middle', align:'center', wrap:false
       });
       // Línea divisoria vertical entre columnas
       sl.addShape(prs.ShapeType.rect,{
@@ -1516,8 +1515,7 @@ function actualizarSgPreview() {
     //// ══ PUNTOS DE ARRASTRE — 2 columnas igual que puntos nuevos ══
     if(pendArrastre.length>0){
       var sgCtxA=newSgArrastreSlide();
-      sgCtxA.slide.addText('Puntos de arrastre — informe anterior',
-        {x:COL_L,y:CONT_Y-0.22,w:SW-0.5,h:0.2,fontSize:9,fontFace:FONT,color:GRIS,italic:true});
+
       pendArrastre.forEach(function(p,pi){
         var semIco=p.estado==='pendiente'||p.estado==='urgente'?'🔴 ':p.estado==='proceso'?'🟡 ':p.estado==='cerrado'?'🟢 ':'';
         var fullTxt=(pi+1)+'.  '+semIco+(p.texto||'').split('\n').join(' ');
