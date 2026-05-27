@@ -926,6 +926,12 @@ function actualizarSgPreview() {
   }
 
   function generarPPT() {
+    try { _generarPPT(); } catch(e) {
+      console.error('PPT Error:', e.message, e.stack);
+      mostrarToast('Error PPT: '+e.message+' — Ver consola (F12) para detalle', 'err');
+    }
+  }
+  function _generarPPT() {
     // Auto-guardar antes de generar PPT
     if (typeof obraActual !== 'undefined' && obraActual && informeActual) {
       guardarEstadoInformeActual();
