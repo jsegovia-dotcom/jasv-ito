@@ -1035,7 +1035,7 @@ function actualizarSgPreview() {
           var lw=Math.max(2,Math.round(r*0.08));
           tctx.save();
           tctx.translate(nx,ny);
-          tctx.rotate(ang); // misma rotación que el cono
+          tctx.rotate(ang - Math.PI/2); // -90° para alinear lente con cono
           var bw=Math.round(r*1.7), bh=Math.round(r*1.1), br=Math.round(r*0.15);
           var bx=-Math.round(bw/2);
           // Frente hacia -Y: cuerpo de by=-bh a by=0, lente en by=-bh*0.5
