@@ -341,10 +341,11 @@ body{font-family:"Segoe UI",system-ui,sans-serif;background:#f0efed;color:var(--
 }
 .foto-layout-btn:hover { background: #d8eaf8; }
 .foto-layout-thumb {
-  width: 90px;
-  height: 60px;
-  object-fit: cover;
-  border-radius: 5px;
+  width: 70px;
+  height: 70px;
+  object-fit: contain;
+  background: #ffffff;
+  border-radius: 4px;
   border: 1px solid #c5d5e4;
   cursor: pointer;
   flex-shrink: 0;
