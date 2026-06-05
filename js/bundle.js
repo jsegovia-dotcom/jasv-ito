@@ -788,6 +788,174 @@ function actualizarSgPreview() {
   }
 
   
+  // ══ ESTADOS DE PAGO ══
+  var epFilas = []; // [{cd: número}]
+
+  function epVal(id){ return parseFloat((document.getElementById(id)||{}).value) || 0; }
+  function epSet(id, v){ var el=document.getElementById(id); if(el) el.value = v > 0 ? Math.round(v*100)/100 : ''; }
+  function epFmt(n){ return n !== 0 ? n.toLocaleString('es-CL',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—'; }
+  function epFmtPct(n){ return n.toFixed(2)+'%'; }
+
+  function epRecalcContrato(){
+    var cd  = epVal('ep-cd');
+    var gg  = epVal('ep-gg');
+    var uti = epVal('ep-uti');
+    var desc= epVal('ep-desc');
+    var sub = cd + gg + uti;
+    var neto= sub - desc;
+    var iva = neto * 0.19;
+    var tot = neto + iva;
+    epSet('ep-subtotal', sub);
+    epSet('ep-neto', neto);
+    epSet('ep-iva', iva);
+    epSet('ep-total', tot);
+    epRenderEepp();
+  }
+
+  function epPcts(){
+    var cd   = epVal('ep-cd');
+    var gg   = epVal('ep-gg');
+    var uti  = epVal('ep-uti');
+    var desc = epVal('ep-desc');
+    return {
+      pGG:   cd > 0 ? gg   / cd : 0,
+      pUTI:  cd > 0 ? uti  / cd : 0,
+      pDESC: cd > 0 ? desc / cd : 0,
+      pANT:  epVal('ep-pct-anticipo') / 100,
+      pRET:  epVal('ep-pct-ret')      / 100,
+      cdC:   cd
+    };
+  }
+
+  function epCalcFila(cdEP, p){
+    var gg   = cdEP * p.pGG;
+    var uti  = cdEP * p.pUTI;
+    var sub1 = cdEP + gg + uti;
+    var desc = cdEP * p.pDESC;
+    var sub2 = sub1 - desc;
+    var ant  = sub2 * p.pANT;
+    var ret  = sub2 * p.pRET;
+    var neto = sub2 - ant - ret;
+    var iva  = neto * 0.19;
+    var tot  = neto + iva;
+    return { cdEP:cdEP, gg:gg, uti:uti, sub1:sub1, desc:desc, sub2:sub2, ant:ant, ret:ret, neto:neto, iva:iva, tot:tot };
+  }
+
+  function epAgregarFila(){
+    epFilas.push({ cd: 0 });
+    epRenderEepp();
+  }
+
+  function epEliminarFila(i){
+    epFilas.splice(i,1);
+    epRenderEepp();
+  }
+
+  function epCdChange(i, val){
+    epFilas[i].cd = parseFloat(val) || 0;
+    epRenderEepp();
+  }
+
+  function epRenderEepp(){
+    var tbody = document.getElementById('ep-tbody');
+    var tfoot = document.getElementById('ep-tfoot');
+    if(!tbody) return;
+    var p = epPcts();
+    var acum = 0;
+    var totCD=0, totGG=0, totUTI=0, totSub1=0, totDesc=0, totSub2=0, totAnt=0, totRet=0, totNeto=0, totIva=0, totTot=0;
+
+    tbody.innerHTML = epFilas.map(function(f, i){
+      var r = epCalcFila(f.cd, p);
+      var pct = p.cdC > 0 ? (f.cd / p.cdC * 100) : 0;
+      acum += pct;
+      totCD+=r.cdEP; totGG+=r.gg; totUTI+=r.uti; totSub1+=r.sub1; totDesc+=r.desc;
+      totSub2+=r.sub2; totAnt+=r.ant; totRet+=r.ret; totNeto+=r.neto; totIva+=r.iva; totTot+=r.tot;
+      var bg = i%2===0?'#f5f8fc':'#fff';
+      var acumFinal = p.cdC > 0 ? (totCD / p.cdC * 100) : 0;
+      return '<tr style="background:'+bg+'">'
+        +'<td style="padding:5px 8px;font-weight:600">EEPP'+(i+1)+'</td>'
+        +'<td style="padding:5px 4px;text-align:right"><input type="number" value="'+(f.cd||'')+'" min="0" step="0.01" style="width:90px;text-align:right;border:1px solid #ccc;border-radius:4px;padding:2px 4px;font-size:12px" oninput="epCdChange('+i+',this.value)"></td>'
+        +'<td style="padding:5px 8px;text-align:right;color:#555">'+epFmt(r.gg)+'</td>'
+        +'<td style="padding:5px 8px;text-align:right;color:#555">'+epFmt(r.uti)+'</td>'
+        +'<td style="padding:5px 8px;text-align:right">'+epFmt(r.sub1)+'</td>'
+        +'<td style="padding:5px 8px;text-align:right;color:#c0392b">'+epFmt(r.desc)+'</td>'
+        +'<td style="padding:5px 8px;text-align:right">'+epFmt(r.sub2)+'</td>'
+        +'<td style="padding:5px 8px;text-align:right;color:#c0392b">'+epFmt(r.ant)+'</td>'
+        +'<td style="padding:5px 8px;text-align:right;color:#c0392b">'+epFmt(r.ret)+'</td>'
+        +'<td style="padding:5px 8px;text-align:right;font-weight:700">'+epFmt(r.neto)+'</td>'
+        +'<td style="padding:5px 8px;text-align:right">'+epFmt(r.iva)+'</td>'
+        +'<td style="padding:5px 8px;text-align:right;font-weight:700">'+epFmt(r.tot)+'</td>'
+        +'<td style="padding:5px 8px;text-align:right;background:#e8f5e9;color:#2d7a4f;font-weight:600">'+epFmtPct(pct)+'</td>'
+        +'<td style="padding:5px 8px;text-align:right;background:#e8f5e9;color:#2d7a4f;font-weight:600">'+epFmtPct(acumFinal)+'</td>'
+        +'<td style="padding:5px 8px;text-align:center"><button onclick="epEliminarFila('+i+')" style="background:none;border:none;cursor:pointer;color:#c0392b;font-size:14px">✕</button></td>'
+        +'</tr>';
+    }).join('');
+
+    // Fila de totales
+    var acumTot = p.cdC > 0 ? (totCD / p.cdC * 100) : 0;
+    tfoot.innerHTML = '<tr style="background:#1a3a5c;color:#fff;font-weight:700">'
+      +'<td style="padding:6px 8px">TOTAL</td>'
+      +'<td style="padding:6px 8px;text-align:right">'+epFmt(totCD)+'</td>'
+      +'<td style="padding:6px 8px;text-align:right">'+epFmt(totGG)+'</td>'
+      +'<td style="padding:6px 8px;text-align:right">'+epFmt(totUTI)+'</td>'
+      +'<td style="padding:6px 8px;text-align:right">'+epFmt(totSub1)+'</td>'
+      +'<td style="padding:6px 8px;text-align:right">'+epFmt(totDesc)+'</td>'
+      +'<td style="padding:6px 8px;text-align:right">'+epFmt(totSub2)+'</td>'
+      +'<td style="padding:6px 8px;text-align:right">'+epFmt(totAnt)+'</td>'
+      +'<td style="padding:6px 8px;text-align:right">'+epFmt(totRet)+'</td>'
+      +'<td style="padding:6px 8px;text-align:right">'+epFmt(totNeto)+'</td>'
+      +'<td style="padding:6px 8px;text-align:right">'+epFmt(totIva)+'</td>'
+      +'<td style="padding:6px 8px;text-align:right">'+epFmt(totTot)+'</td>'
+      +'<td style="padding:6px 8px;text-align:right;background:#2d7a4f">'+epFmtPct(acumTot)+'</td>'
+      +'<td style="padding:6px 8px;text-align:right;background:#2d7a4f">'+epFmtPct(acumTot)+'</td>'
+      +'<td></td>'
+      +'</tr>';
+  }
+
+  // ══ CONTROL EEPP POR PROYECTO ══
+  var _conEEPP = false; // estado global del proyecto actual
+
+  function aplicarConfigEEPP(conEEPP) {
+    _conEEPP = !!conEEPP;
+    var stepEP  = document.getElementById('step-ep');
+    var secEP   = document.getElementById('sec-9');
+    var total   = _conEEPP ? 10 : 9;
+
+    // Mostrar/ocultar sección y step
+    if(stepEP) stepEP.style.display = _conEEPP ? '' : 'none';
+    if(secEP)  secEP.style.display  = _conEEPP ? '' : 'none';
+
+    // Actualizar numeración de sec-tags y navegación de botones
+    // sec-0 siempre = "Sección 1 de N"
+    document.querySelectorAll('.sec-tag').forEach(function(el, i){
+      // i = índice de la sección (0-based)
+      // sec-9 se oculta si no conEEPP, así que no importa su texto en ese caso
+      el.textContent = 'Sección ' + (i+1) + ' de ' + total;
+    });
+
+    // Actualizar botón "Siguiente" de sec-8 (Anexos)
+    // Si conEEPP → apunta a irA(9); si no → permanece con acciones finales
+    var navBtns8 = document.querySelectorAll('#sec-8 .nav-btns');
+    if(navBtns8.length > 0){
+      var nb8 = navBtns8[0];
+      if(_conEEPP){
+        // Quitar botones finales de sec-8, agregar Siguiente
+        if(!nb8.querySelector('.ep-siguiente-btn')){
+          var btn = document.createElement('button');
+          btn.className = 'btn btn-pri ep-siguiente-btn';
+          btn.textContent = 'Siguiente →';
+          btn.onclick = function(){ irA(9); };
+          // Insertar antes del botón guardar
+          var firstBtn = nb8.querySelector('button');
+          nb8.insertBefore(btn, firstBtn ? firstBtn.nextSibling : null);
+        }
+      } else {
+        var epBtn = nb8.querySelector('.ep-siguiente-btn');
+        if(epBtn) epBtn.parentNode.removeChild(epBtn);
+      }
+    }
+  }
+
   // ══ LAYOUT MARKER (miniatura de plano) ══
   var layoutGlobal = { img: null, dataUrl: null }; // plano compartido por todas las fotos
 
@@ -1403,6 +1571,7 @@ function actualizarSgPreview() {
     secciones.push(layNum+'. Lay Out Arquitectura vigente');
     secciones.push(fotNum+'. Fotografías relevantes');
     if(anexos.length>0) secciones.push(anxNum+'. Anexos');
+    if(_conEEPP){ var epNum=(anexos.length>0?anxNum+1:anxNum); secciones.push(epNum+'. Control de Estados de Pago'); }
     var tocLH=0.375; var tocY=CY+CH+0.15;
     secciones.forEach(function(sec,i){
       var y=tocY+i*(tocLH+0.04);
@@ -2010,6 +2179,101 @@ function actualizarSgPreview() {
     sfin.addShape(prs.ShapeType.rect,{x:0,y:SH-0.04,w:SW,h:0.04,fill:{color:ROJO},line:{color:ROJO}});
     sfin.addImage({data:LOGO2_DATA,x:(SW-6.9094)/2,y:(SH-1.1102)/2,w:6.9094,h:1.1102});
 
+    // ══ ESTADOS DE PAGO (slide) ══
+    if(_conEEPP){
+    var epP = epPcts();
+    function pptFmt(n){ return n !== 0 ? n.toLocaleString('es-CL',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—'; }
+    function pptPct(n){ return n.toFixed(2)+'%'; }
+
+    // Slide 1: Datos del contrato
+    var sEP1 = prs.addSlide({masterName:'JASV'});
+    addHF(sEP1,'6. Control de Estados de Pago',slideNum++);
+    var epCD2 = epVal('ep-cd'), epGG2=epVal('ep-gg'), epUTI2=epVal('ep-uti'), epDESC2=epVal('ep-desc');
+    var epSUB2=epCD2+epGG2+epUTI2, epNETO2=epSUB2-epDESC2, epIVA2=epNETO2*0.19, epTOT2=epNETO2+epIVA2;
+    var cRows=[
+      [{text:'DATOS DEL CONTRATO',options:{colspan:2,bold:true,fill:'1a3a5c',color:'FFFFFF',align:'center'}}],
+      [{text:'Costo Directo',options:{bold:true}}, pptFmt(epCD2)],
+      ['Gastos Generales ('+Math.round(epP.pGG*10000)/100+'%)', pptFmt(epGG2)],
+      ['Utilidades ('+Math.round(epP.pUTI*10000)/100+'%)', pptFmt(epUTI2)],
+      [{text:'Subtotal',options:{bold:true}},{text:pptFmt(epSUB2),options:{bold:true}}],
+      [{text:'Desc. Comercial',options:{color:'C0392B'}},{text:pptFmt(epDESC2),options:{color:'C0392B'}}],
+      [{text:'Neto',options:{bold:true}},{text:pptFmt(epNETO2),options:{bold:true}}],
+      ['IVA (19%)', pptFmt(epIVA2)],
+      [{text:'TOTAL',options:{bold:true,fill:'EEF4FB',color:'1A3A5C'}},{text:pptFmt(epTOT2),options:{bold:true,fill:'EEF4FB',color:'1A3A5C'}}],
+      ['% Anticipo', pptPct(epP.pANT*100)],
+      ['% Retenciones', pptPct(epP.pRET*100)],
+    ];
+    sEP1.addTable(cRows,{x:CX,y:1.5748,w:4.5,colW:[2.8,1.7],fontSize:12,fontFace:FONT,align:'left',valign:'middle',rowH:0.36,border:{type:'solid',pt:0.5,color:'CCCCCC'},fill:{color:'FFFFFF'}});
+
+    // Slide 2: Tabla EEPP (si hay filas)
+    if(epFilas.length > 0){
+      var sEP2 = prs.addSlide({masterName:'JASV'});
+      addHF(sEP2,'6. Control de Estados de Pago — EEPP',slideNum++);
+      var hdr=[{text:'N°',options:{bold:true,fill:'1a3a5c',color:'FFFFFF'}},
+               {text:'Costo Directo',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right'}},
+               {text:'GG',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right'}},
+               {text:'UTI',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right'}},
+               {text:'Subtotal',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right'}},
+               {text:'Desc.',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right'}},
+               {text:'Sub2',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right'}},
+               {text:'Anticipo',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right'}},
+               {text:'Retenc.',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right'}},
+               {text:'Neto',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right'}},
+               {text:'IVA',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right'}},
+               {text:'Total',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right'}},
+               {text:'Parcial%',options:{bold:true,fill:'2d7a4f',color:'FFFFFF',align:'right'}},
+               {text:'Acum.%',options:{bold:true,fill:'2d7a4f',color:'FFFFFF',align:'right'}}];
+      var eppRows=[hdr];
+      var acumCD=0, tCD=0,tGG=0,tUTI=0,tS1=0,tDC=0,tS2=0,tAT=0,tRT=0,tNT=0,tIV=0,tTT=0;
+      epFilas.forEach(function(f,i){
+        var r=epCalcFila(f.cd,epP);
+        tCD+=r.cdEP; tGG+=r.gg; tUTI+=r.uti; tS1+=r.sub1; tDC+=r.desc;
+        tS2+=r.sub2; tAT+=r.ant; tRT+=r.ret; tNT+=r.neto; tIV+=r.iva; tTT+=r.tot;
+        var pct=epP.cdC>0?(f.cd/epP.cdC*100):0;
+        acumCD+=f.cd;
+        var acumPct=epP.cdC>0?(acumCD/epP.cdC*100):0;
+        var bg=i%2===0?'F5F8FC':'FFFFFF';
+        eppRows.push([
+          {text:'EEPP'+(i+1),options:{bold:true,fill:bg}},
+          {text:pptFmt(r.cdEP),options:{align:'right',fill:bg}},
+          {text:pptFmt(r.gg),options:{align:'right',fill:bg}},
+          {text:pptFmt(r.uti),options:{align:'right',fill:bg}},
+          {text:pptFmt(r.sub1),options:{align:'right',fill:bg}},
+          {text:pptFmt(r.desc),options:{align:'right',color:'C0392B',fill:bg}},
+          {text:pptFmt(r.sub2),options:{align:'right',fill:bg}},
+          {text:pptFmt(r.ant),options:{align:'right',color:'C0392B',fill:bg}},
+          {text:pptFmt(r.ret),options:{align:'right',color:'C0392B',fill:bg}},
+          {text:pptFmt(r.neto),options:{align:'right',bold:true,fill:bg}},
+          {text:pptFmt(r.iva),options:{align:'right',fill:bg}},
+          {text:pptFmt(r.tot),options:{align:'right',bold:true,fill:bg}},
+          {text:pptPct(pct),options:{align:'right',bold:true,fill:'E8F5E9',color:'2D7A4F'}},
+          {text:pptPct(acumPct),options:{align:'right',bold:true,fill:'E8F5E9',color:'2D7A4F'}}
+        ]);
+      });
+      var acumTotPct=epP.cdC>0?(tCD/epP.cdC*100):0;
+      eppRows.push([
+        {text:'TOTAL',options:{bold:true,fill:'1a3a5c',color:'FFFFFF'}},
+        {text:pptFmt(tCD),options:{align:'right',bold:true,fill:'1a3a5c',color:'FFFFFF'}},
+        {text:pptFmt(tGG),options:{align:'right',bold:true,fill:'1a3a5c',color:'FFFFFF'}},
+        {text:pptFmt(tUTI),options:{align:'right',bold:true,fill:'1a3a5c',color:'FFFFFF'}},
+        {text:pptFmt(tS1),options:{align:'right',bold:true,fill:'1a3a5c',color:'FFFFFF'}},
+        {text:pptFmt(tDC),options:{align:'right',bold:true,fill:'1a3a5c',color:'FFFFFF'}},
+        {text:pptFmt(tS2),options:{align:'right',bold:true,fill:'1a3a5c',color:'FFFFFF'}},
+        {text:pptFmt(tAT),options:{align:'right',bold:true,fill:'1a3a5c',color:'FFFFFF'}},
+        {text:pptFmt(tRT),options:{align:'right',bold:true,fill:'1a3a5c',color:'FFFFFF'}},
+        {text:pptFmt(tNT),options:{align:'right',bold:true,fill:'1a3a5c',color:'FFFFFF'}},
+        {text:pptFmt(tIV),options:{align:'right',bold:true,fill:'1a3a5c',color:'FFFFFF'}},
+        {text:pptFmt(tTT),options:{align:'right',bold:true,fill:'1a3a5c',color:'FFFFFF'}},
+        {text:pptPct(acumTotPct),options:{align:'right',bold:true,fill:'2d7a4f',color:'FFFFFF'}},
+        {text:pptPct(acumTotPct),options:{align:'right',bold:true,fill:'2d7a4f',color:'FFFFFF'}}
+      ]);
+      sEP2.addTable(eppRows,{x:0.08,y:1.5748,w:9.84,colW:[0.5,0.8,0.65,0.65,0.8,0.65,0.8,0.75,0.75,0.85,0.7,0.85,0.6,0.6],
+        fontSize:9,fontFace:FONT,align:'right',valign:'middle',rowH:0.32,
+        border:{type:'solid',pt:0.3,color:'CCCCCC'},fill:{color:'FFFFFF'}});
+    }
+
+    } // fin if(_conEEPP)
+
     // ══ DESCARGAR ══
     var nS=String(nroInf).padStart(3,'0');
     var oS=obra.replace(/[^a-zA-Z0-9 ]/g,'').trim().replace(/ +/g,'_').substring(0,30);
@@ -2110,6 +2374,14 @@ function actualizarSgPreview() {
                layoutImg:f.layoutImg||null, layoutMarkers:f.layoutMarkers||[] };
     });
     estado.fotoGrupos = fotoGrupos.map(function(g){ return { nombre:g.nombre }; });
+    // Estados de pago
+    estado.epCD         = (document.getElementById('ep-cd')||{}).value          || '';
+    estado.epGG         = (document.getElementById('ep-gg')||{}).value          || '';
+    estado.epUTI        = (document.getElementById('ep-uti')||{}).value         || '';
+    estado.epDESC       = (document.getElementById('ep-desc')||{}).value        || '';
+    estado.epPctAnticipo= (document.getElementById('ep-pct-anticipo')||{}).value|| '';
+    estado.epPctRet     = (document.getElementById('ep-pct-ret')||{}).value     || '';
+    estado.epFilas      = epFilas.map(function(f){ return {cd: f.cd}; });
     // Anexos (sin rawFile, solo metadata)
     estado.anexos = anexos.map(function(a){
       return { nombre:a.nombre, size:a.size, tipo:a.tipo, titulo:a.titulo,
@@ -2226,6 +2498,17 @@ function actualizarSgPreview() {
     fotos = (estado.fotos||[]).map(function(f){ return Object.assign({},f); });
     fotoGrupos = (estado.fotoGrupos||[]).map(function(g){ return Object.assign({},g); });
     if(typeof renderFotos==='function') renderFotos();
+    // Restaurar estados de pago
+    if(document.getElementById('ep-cd'))          document.getElementById('ep-cd').value           = estado.epCD          || '';
+    if(document.getElementById('ep-gg'))          document.getElementById('ep-gg').value           = estado.epGG          || '';
+    if(document.getElementById('ep-uti'))         document.getElementById('ep-uti').value          = estado.epUTI         || '';
+    if(document.getElementById('ep-desc'))        document.getElementById('ep-desc').value         = estado.epDESC        || '';
+    if(document.getElementById('ep-pct-anticipo'))document.getElementById('ep-pct-anticipo').value = estado.epPctAnticipo || '';
+    if(document.getElementById('ep-pct-ret'))     document.getElementById('ep-pct-ret').value      = estado.epPctRet      || '';
+    epFilas = (estado.epFilas||[]).map(function(f){ return {cd: f.cd||0}; });
+    if(typeof epRecalcContrato==='function') epRecalcContrato();
+    // Re-aplicar config EEPP al cargar informe
+    if(obraActual && typeof aplicarConfigEEPP==='function') aplicarConfigEEPP(obraActual.conEEPP);
     if(typeof renderGrupos==='function') renderGrupos();
     // Anexos
     // Anexos: siempre vacíos — cada informe gestiona los suyos
@@ -2688,6 +2971,7 @@ function actualizarSgPreview() {
     if (mainTop2) mainTop2.style.display = 'none';
     document.getElementById('inf-obra-nombre').textContent = obraActual.nombre || 'Obra sin nombre';
     document.getElementById('inf-obra-sub').textContent = [obraActual.edificio, obraActual.mandante].filter(Boolean).join(' · ');
+    aplicarConfigEEPP(obraActual.conEEPP);
     renderInformes();
   }
 
@@ -3202,6 +3486,8 @@ function actualizarSgPreview() {
      'mo-superficie','mo-monto','mo-monto-desc','mo-descripcion'].forEach(function(id){
       var el=document.getElementById(id); if(el) el.value='';
     });
+    var eppChk=document.getElementById('mo-con-eepp');
+    if(eppChk) eppChk.checked=false;
     var fi=document.getElementById('mo-fecha-inicio'); if(fi) fi.value='';
     var pl=document.getElementById('mo-plazo'); if(pl) pl.value='';
     document.getElementById('modal-obra').style.display='flex';
@@ -3224,6 +3510,8 @@ function actualizarSgPreview() {
     });
     var monSel=document.getElementById('mo-moneda');
     if(monSel && obraActual.moneda) monSel.value=obraActual.moneda;
+    var eppChk=document.getElementById('mo-con-eepp');
+    if(eppChk) eppChk.checked = !!obraActual.conEEPP;
     document.getElementById('modal-obra').style.display='flex';
   }
 
@@ -3245,7 +3533,8 @@ function actualizarSgPreview() {
       moneda: document.getElementById('mo-moneda').value,
       monto: document.getElementById('mo-monto').value.trim(),
       montoDesc: document.getElementById('mo-monto-desc').value.trim(),
-      descripcion: document.getElementById('mo-descripcion').value.trim()
+      descripcion: document.getElementById('mo-descripcion').value.trim(),
+      conEEPP: document.getElementById('mo-con-eepp') ? document.getElementById('mo-con-eepp').checked : false
     };
     var obras = cargarObras();
     if (modoEdicionObra && obraActual) {
@@ -3409,6 +3698,7 @@ function actualizarSgPreview() {
     var secciones2=['1. Datos del proyecto','2. Estatus de documentación','3. Estatus de aprobación de proyectos',
       '4. Control Curva S','5. Situación general de la obra','6. Lay Out Arquitectura vigente','7. Fotografías relevantes'];
     if(anexos.length>0) secciones2.push('8. Anexos');
+    if(_conEEPP) secciones2.push((anexos.length>0?'9':'8')+'. Control de Estados de Pago');
     var tocHtml=secciones2.map(function(s,i){
       return '<div style="display:flex;align-items:center;gap:0.6em;padding:0.35em 0.2em;border-bottom:1px solid #eee;">'
         +'<div style="width:0.3em;height:1.4em;background:#8B1A1A;flex-shrink:0;"></div>'
@@ -3571,7 +3861,49 @@ function actualizarSgPreview() {
       slides.push(pvShell(pvCinta('8. Anexos')+pvAbs(1,25,98,67,'overflow:auto;',anxHtml)));
     }
 
-    return slides;
+    // Slide EP vista previa
+    if(_conEEPP){
+    var pvP = epPcts();
+    var pvCD2=epVal('ep-cd'),pvGG2=epVal('ep-gg'),pvUTI2=epVal('ep-uti'),pvDESC2=epVal('ep-desc');
+    var pvSUB2=pvCD2+pvGG2+pvUTI2, pvNETO2=pvSUB2-pvDESC2, pvIVA2=pvNETO2*0.19, pvTOT2=pvNETO2+pvIVA2;
+    function pvFmt(n){ return n!==0?n.toLocaleString('es-CL',{minimumFractionDigits:2,maximumFractionDigits:2}):'—'; }
+    function pvPct(n){ return n.toFixed(2)+'%'; }
+    var epContratoHtml='<table style="border-collapse:collapse;font-size:0.85em;margin-bottom:12px">'
+      +'<tr style="background:#1a3a5c;color:#fff"><th style="padding:5px 10px;text-align:left">Contrato</th><th style="padding:5px 10px;text-align:right">Monto</th></tr>'
+      +[['Costo Directo',pvFmt(pvCD2)],['GG ('+Math.round(pvP.pGG*10000)/100+'%)',pvFmt(pvGG2)],
+        ['UTI ('+Math.round(pvP.pUTI*10000)/100+'%)',pvFmt(pvUTI2)],['<b>Subtotal</b>','<b>'+pvFmt(pvSUB2)+'</b>'],
+        ['<span style="color:#c0392b">Desc. Comercial</span>','<span style="color:#c0392b">'+pvFmt(pvDESC2)+'</span>'],
+        ['<b>Neto</b>','<b>'+pvFmt(pvNETO2)+'</b>'],['IVA 19%',pvFmt(pvIVA2)],
+        ['<b style="color:#1a3a5c">TOTAL</b>','<b style="color:#1a3a5c">'+pvFmt(pvTOT2)+'</b>'],
+        ['% Anticipo',pvPct(pvP.pANT*100)],['% Retenciones',pvPct(pvP.pRET*100)]
+       ].map(function(r,i){ return '<tr style="background:'+(i%2===0?'#f5f8fc':'#fff')+'"><td style="padding:4px 10px">'+r[0]+'</td><td style="padding:4px 10px;text-align:right">'+r[1]+'</td></tr>'; }).join('')
+      +'</table>';
+    var acumPvCD=0;
+    var epEeppHtml = epFilas.length===0 ? '<p style="color:#888;font-style:italic">Sin estados de pago ingresados.</p>'
+      :'<table style="border-collapse:collapse;font-size:0.75em;width:100%">'
+      +'<thead><tr style="background:#1a3a5c;color:#fff">'
+      +'<th style="padding:4px 5px">N°</th><th style="padding:4px 5px;text-align:right">CD</th><th style="padding:4px 5px;text-align:right">GG</th><th style="padding:4px 5px;text-align:right">UTI</th>'
+      +'<th style="padding:4px 5px;text-align:right">Sub1</th><th style="padding:4px 5px;text-align:right">Desc</th><th style="padding:4px 5px;text-align:right">Sub2</th>'
+      +'<th style="padding:4px 5px;text-align:right">Antici.</th><th style="padding:4px 5px;text-align:right">Retenc.</th>'
+      +'<th style="padding:4px 5px;text-align:right;font-weight:700">Neto</th><th style="padding:4px 5px;text-align:right">IVA</th><th style="padding:4px 5px;text-align:right;font-weight:700">Total</th>'
+      +'<th style="padding:4px 5px;text-align:right;background:#2d7a4f">Parcial%</th><th style="padding:4px 5px;text-align:right;background:#2d7a4f">Acum.%</th>'
+      +'</tr></thead><tbody>'
+      +epFilas.map(function(f,i){
+        var r=epCalcFila(f.cd,pvP);
+        var pct=pvP.cdC>0?(f.cd/pvP.cdC*100):0;
+        acumPvCD+=f.cd; var acumPct=pvP.cdC>0?(acumPvCD/pvP.cdC*100):0;
+        var bg=i%2===0?'#f5f8fc':'#fff';
+        return '<tr style="background:'+bg+'"><td style="padding:3px 5px;font-weight:600">EEPP'+(i+1)+'</td>'
+          +'<td style="padding:3px 5px;text-align:right">'+pvFmt(r.cdEP)+'</td><td style="padding:3px 5px;text-align:right">'+pvFmt(r.gg)+'</td><td style="padding:3px 5px;text-align:right">'+pvFmt(r.uti)+'</td>'
+          +'<td style="padding:3px 5px;text-align:right">'+pvFmt(r.sub1)+'</td><td style="padding:3px 5px;text-align:right;color:#c0392b">'+pvFmt(r.desc)+'</td><td style="padding:3px 5px;text-align:right">'+pvFmt(r.sub2)+'</td>'
+          +'<td style="padding:3px 5px;text-align:right;color:#c0392b">'+pvFmt(r.ant)+'</td><td style="padding:3px 5px;text-align:right;color:#c0392b">'+pvFmt(r.ret)+'</td>'
+          +'<td style="padding:3px 5px;text-align:right;font-weight:700">'+pvFmt(r.neto)+'</td><td style="padding:3px 5px;text-align:right">'+pvFmt(r.iva)+'</td><td style="padding:3px 5px;text-align:right;font-weight:700">'+pvFmt(r.tot)+'</td>'
+          +'<td style="padding:3px 5px;text-align:right;color:#2d7a4f;font-weight:600;background:#e8f5e9">'+pvPct(pct)+'</td><td style="padding:3px 5px;text-align:right;color:#2d7a4f;font-weight:600;background:#e8f5e9">'+pvPct(acumPct)+'</td>'
+          +'</tr>';}).join('')+'</tbody></table>';
+    slides.push(pvShell(pvCinta('9. Control de Estados de Pago')
+      +pvAbs(1,20,38,75,'overflow:auto;',epContratoHtml)
+      +pvAbs(41,20,58,75,'overflow-x:auto;',epEeppHtml)));
+    } // fin if(_conEEPP)
   }
   // ══ FIN VISTA PREVIA ══════════════════════════════════
 
