@@ -1005,37 +1005,39 @@ function actualizarSgPreview() {
         var ox=Math.round((tw-edCanvas.width*sc)/2);
         var oy=Math.round((th-edCanvas.height*sc)/2);
         tctx.drawImage(layoutGlobal.img,ox,oy,Math.round(edCanvas.width*sc),Math.round(edCanvas.height*sc));
-        // Dibujar marcadores escalados
+        // Dibujar marcadores — tamaño relativo al canvas miniatura
+        var iconR = Math.round(tw * 0.022); // radio ícono: 2.2% de 336 ≈ 7px
+        var coneR = Math.round(tw * 0.10);  // radio cono: 10% de 336 ≈ 34px
         currentMarkers.forEach(function(m,i){
           var nx=m.x*sc+ox, ny=m.y*sc+oy;
-          var origRay=Math.min(edCanvas.width,edCanvas.height)*0.12;
-          var newRay=Math.max(origRay*sc, 32);
           function hr2(h,a){var r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return 'rgba('+r+','+g+','+b+','+a+')';}
           // Cono de visión
           tctx.save(); tctx.translate(nx,ny); tctx.rotate((m.angle-90)*Math.PI/180);
           var fov=70,half=(fov/2)*Math.PI/180;
           tctx.beginPath(); tctx.moveTo(0,0);
-          tctx.lineTo(Math.cos(-half)*newRay,Math.sin(-half)*newRay);
-          tctx.arc(0,0,newRay,-half,half);
+          tctx.lineTo(Math.cos(-half)*coneR,Math.sin(-half)*coneR);
+          tctx.arc(0,0,coneR,-half,half);
           tctx.lineTo(0,0); tctx.closePath();
-          tctx.fillStyle=hr2(m.color,0.3); tctx.strokeStyle=m.color; tctx.lineWidth=1.5;
+          tctx.fillStyle=hr2(m.color,0.3); tctx.strokeStyle=m.color; tctx.lineWidth=1;
           tctx.fill(); tctx.stroke(); tctx.restore();
-          // Ícono cámara: radio 13px (~1mm en miniatura)
+          // Ícono cámara proporcional
           tctx.save(); tctx.translate(nx,ny);
-          tctx.beginPath(); tctx.arc(0,0,13,0,Math.PI*2);
+          // Círculo de fondo
+          tctx.beginPath(); tctx.arc(0,0,iconR,0,Math.PI*2);
           tctx.fillStyle=m.color; tctx.fill();
           // Cuerpo cámara
+          var cb=Math.round(iconR*0.85), ch=Math.round(iconR*0.6);
           tctx.fillStyle='#ffffff';
-          tctx.fillRect(-11,-8,22,16);
+          tctx.fillRect(-cb,-ch,cb*2,ch*2);
           // Lente
-          tctx.beginPath(); tctx.arc(0,0,5,0,Math.PI*2);
+          tctx.beginPath(); tctx.arc(0,0,Math.round(iconR*0.38),0,Math.PI*2);
           tctx.fillStyle=m.color; tctx.fill();
           // Reflejo lente
-          tctx.beginPath(); tctx.arc(0,0,2,0,Math.PI*2);
+          tctx.beginPath(); tctx.arc(0,0,Math.round(iconR*0.16),0,Math.PI*2);
           tctx.fillStyle='#ffffff'; tctx.fill();
-          // Botón superior cámara
+          // Botón superior
           tctx.fillStyle='#ffffff';
-          tctx.fillRect(2,-14,6,4);
+          tctx.fillRect(Math.round(iconR*0.15),-Math.round(iconR*1.05),Math.round(iconR*0.5),Math.round(iconR*0.28));
           tctx.restore();
         });
       }
