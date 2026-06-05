@@ -1022,19 +1022,19 @@ function actualizarSgPreview() {
           tctx.fill(); tctx.stroke(); tctx.restore();
           // Ícono cámara (círculo + símbolo)
           tctx.save(); tctx.translate(nx,ny);
-          // Círculo de fondo
-          tctx.beginPath(); tctx.arc(0,0,9,0,Math.PI*2);
+          // Círculo de fondo (doble)
+          tctx.beginPath(); tctx.arc(0,0,18,0,Math.PI*2);
           tctx.fillStyle=m.color; tctx.fill();
-          // Ícono cámara simplificado: cuerpo rectangular + lente
+          // Ícono cámara al doble de tamaño
           tctx.fillStyle='#ffffff';
-          tctx.fillRect(-5,-3.5,10,7); // cuerpo
-          tctx.beginPath(); tctx.arc(0,0,2.8,0,Math.PI*2); // lente
+          tctx.fillRect(-10,-7,20,14); // cuerpo (doble)
+          tctx.beginPath(); tctx.arc(0,0,5.6,0,Math.PI*2); // lente (doble)
           tctx.fillStyle=m.color; tctx.fill();
-          tctx.beginPath(); tctx.arc(0,0,1.2,0,Math.PI*2);
+          tctx.beginPath(); tctx.arc(0,0,2.4,0,Math.PI*2);
           tctx.fillStyle='#ffffff'; tctx.fill();
-          // Botón superior cámara
+          // Botón superior cámara (doble)
           tctx.fillStyle='#ffffff';
-          tctx.fillRect(1,-5,3,2);
+          tctx.fillRect(2,-10,6,4);
           tctx.restore();
         });
       }
@@ -1909,19 +1909,17 @@ function actualizarSgPreview() {
             sf.addText('✓ '+foto.resueltoTxt,{x:fx,y:dY+(foto.warning&&foto.warningTxt?0.3:0),w:FOTO_W,h:0.28,fontSize:12,fontFace:FONT,color:'2d7a4f',italic:true,wrap:true});
           // Miniatura lay out (posición en plano) — esquina inferior derecha de la foto
           if(foto.layoutImg){
-            // Miniatura plano: 2.8x2.8cm = 1.1024", posición fija por columna
-            var MINI_SZ=1.1024; // 2.8cm cuadrado
-            var miniX=bi===0?2.3228:5.8465; // 5.9cm / 14.85cm desde borde izq slide
-            var miniY=fy+FOTO_H+0.04; // justo debajo de la foto
+            // Miniatura plano: 2.8x2.8cm = 1.1024"
+            // Izq: X=5.89cm=2.3189" Der: X=17.06cm=6.7165" Y=14.85cm=5.8465"
+            var MINI_SZ=1.1024;
+            var miniX=bi===0?2.3189:6.7165;
+            var miniY=5.8465;
             // Fondo blanco cuadrado con borde gris
             sf.addShape(prs.ShapeType.rect,{x:miniX,y:miniY,w:MINI_SZ,h:MINI_SZ,
               fill:{color:'FFFFFF'},line:{color:'CCCCCC',pt:1}});
-            // Imagen del plano centrada dentro del cuadrado blanco
+            // Imagen del plano
             sf.addImage({data:foto.layoutImg,x:miniX,y:miniY,w:MINI_SZ,h:MINI_SZ,
               sizing:{type:'contain',w:MINI_SZ,h:MINI_SZ}});
-            // Ícono cámara (📷) — texto emoji sobre la miniatura, esquina sup izq
-            sf.addText('📷',{x:miniX+0.04,y:miniY+0.04,w:0.25,h:0.2,
-              fontSize:9,fontFace:'Segoe UI Emoji',align:'left',valign:'top'});
           }
         });
       }
