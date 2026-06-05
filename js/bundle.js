@@ -1023,13 +1023,16 @@ function actualizarSgPreview() {
           tctx.fillStyle=hr2(m.color,0.3); tctx.strokeStyle=m.color; tctx.lineWidth=1;
           tctx.fill(); tctx.stroke(); tctx.restore();
           // Ícono cámara — contorno negro, girado en dirección del cono
+          // El ícono se desplaza hacia atrás del cono (lente apunta hacia el cono)
           tctx.save(); tctx.translate(nx,ny);
           tctx.rotate((m.angle-90)*Math.PI/180);
+          // Desplazar el ícono hacia atrás (Y positivo = alejarse del cono)
+          tctx.translate(0, Math.round(iconR*0.6));
           var r=iconR;
           var lw=Math.max(2, Math.round(r*0.09)); // grosor trazo
-          // Dimensiones cuerpo
+          // Dimensiones cuerpo — lente centrada en Y=0, cuerpo hacia Y positivo
           var bw=Math.round(r*1.9), bh=Math.round(r*1.25), br=Math.round(r*0.2);
-          var bx=-Math.round(bw/2), by=-Math.round(bh*0.38);
+          var bx=-Math.round(bw/2), by=-Math.round(bh*0.52);
           // — Fondo blanco del ícono completo —
           tctx.beginPath();
           tctx.moveTo(bx+br, by);
