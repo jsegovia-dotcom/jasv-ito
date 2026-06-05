@@ -827,6 +827,9 @@ function actualizarSgPreview() {
     epRenderEepp();
   }
 
+  function epFmtN(n){
+    return (n||0).toLocaleString('es-CL',{minimumFractionDigits:2,maximumFractionDigits:2});
+  }
   function epPcts(){
     var cd   = epVal('ep-cd');
     var gg   = epVal('ep-gg');
@@ -867,8 +870,59 @@ function actualizarSgPreview() {
   }
 
   function epCdChange(i, val){
-    epFilas[i].cd = parseFloat(val) || 0;
-    epRenderEepp();
+    // Limpiar y parsear el valor (acepta comas y puntos como separador)
+    var cleaned = (val||'').toString().replace(/[^0-9.,]/g,'').replace(',','.');
+    epFilas[i].cd = parseFloat(cleaned) || 0;
+    // NO re-renderizar (perdería el foco). Solo actualizar los totales visibles.
+    epActualizarTotales();
+  }
+
+  function epActualizarTotales(){
+    // Recalcular totales sin re-renderizar filas
+    var p = epPcts();
+    var acum=0, totCD=0,totGG=0,totUTI=0,totSub1=0,totDesc=0,totSub2=0,totAnt=0,totRet=0,totNeto=0,totIva=0,totTot=0;
+    var tbody=document.getElementById('ep-tbody');
+    if(tbody){
+      var rows=tbody.querySelectorAll('tr');
+      epFilas.forEach(function(f,i){
+        var r=epCalcFila(f.cd,p);
+        totCD+=r.cdEP; totGG+=r.gg; totUTI+=r.uti; totSub1+=r.sub1; totDesc+=r.desc;
+        totSub2+=r.sub2; totAnt+=r.ant; totRet+=r.ret; totNeto+=r.neto; totIva+=r.iva; totTot+=r.tot;
+        acum+=f.cd;
+        var pct=p.cdC>0?(f.cd/p.cdC*100):0;
+        var ap=p.cdC>0?(acum/p.cdC*100):0;
+        // Actualizar celdas numéricas de la fila sin tocar el input
+        if(rows[i]){
+          var cells=rows[i].querySelectorAll('td');
+          function setCell(td,v){ if(td){ var sp=td.querySelector('.ep-val'); if(sp) sp.textContent=v; } }
+          setCell(cells[2], epFmtN(r.gg));
+          setCell(cells[3], epFmtN(r.uti));
+          setCell(cells[4], epFmtN(r.sub1));
+          setCell(cells[5], r.desc>0?epFmtN(r.desc):'—');
+          setCell(cells[6], epFmtN(r.sub2));
+          setCell(cells[7], r.ant>0?epFmtN(r.ant):'—');
+          setCell(cells[8], r.ret>0?epFmtN(r.ret):'—');
+          setCell(cells[9], epFmtN(r.neto));
+          setCell(cells[10], epFmtN(r.iva));
+          setCell(cells[11], epFmtN(r.tot));
+          setCell(cells[12], pct.toFixed(2)+'%');
+          setCell(cells[13], ap.toFixed(2)+'%');
+        }
+      });
+    }
+    // Actualizar tfoot
+    var tfoot=document.getElementById('ep-tfoot');
+    if(tfoot){
+      var fc=tfoot.querySelectorAll('td');
+      function setF(td,v){if(td)td.textContent=v;}
+      setF(fc[1],epFmtN(totCD)); setF(fc[2],epFmtN(totGG)); setF(fc[3],epFmtN(totUTI));
+      setF(fc[4],epFmtN(totSub1)); setF(fc[5],totDesc>0?epFmtN(totDesc):'—');
+      setF(fc[6],epFmtN(totSub2)); setF(fc[7],totAnt>0?epFmtN(totAnt):'—');
+      setF(fc[8],totRet>0?epFmtN(totRet):'—'); setF(fc[9],epFmtN(totNeto));
+      setF(fc[10],epFmtN(totIva)); setF(fc[11],epFmtN(totTot));
+      var acumTot=p.cdC>0?(totCD/p.cdC*100):0;
+      setF(fc[12],acumTot.toFixed(2)+'%'); setF(fc[13],acumTot.toFixed(2)+'%');
+    }
   }
 
   function epRenderEepp(){
@@ -889,19 +943,19 @@ function actualizarSgPreview() {
       var acumFinal = p.cdC > 0 ? (totCD / p.cdC * 100) : 0;
       return '<tr style="background:'+bg+'">'
         +'<td style="padding:5px 8px;font-weight:600">EEPP'+(i+1)+'</td>'
-        +'<td style="padding:5px 4px;text-align:right"><input type="text" inputmode="decimal" value="'+(f.cd||'')+'" style="width:90px;text-align:right;border:1px solid #ccc;border-radius:4px;padding:2px 4px;font-size:12px" oninput="epCdChange('+i+',this.value)"></td>'
-        +'<td style="padding:5px 8px;text-align:right;color:#555">'+epFmt(r.gg)+'</td>'
-        +'<td style="padding:5px 8px;text-align:right;color:#555">'+epFmt(r.uti)+'</td>'
-        +'<td style="padding:5px 8px;text-align:right">'+epFmt(r.sub1)+'</td>'
-        +'<td style="padding:5px 8px;text-align:right;color:#c0392b">'+epFmt(r.desc)+'</td>'
-        +'<td style="padding:5px 8px;text-align:right">'+epFmt(r.sub2)+'</td>'
-        +'<td style="padding:5px 8px;text-align:right;color:#c0392b">'+epFmt(r.ant)+'</td>'
-        +'<td style="padding:5px 8px;text-align:right;color:#c0392b">'+epFmt(r.ret)+'</td>'
-        +'<td style="padding:5px 8px;text-align:right;font-weight:700">'+epFmt(r.neto)+'</td>'
-        +'<td style="padding:5px 8px;text-align:right">'+epFmt(r.iva)+'</td>'
-        +'<td style="padding:5px 8px;text-align:right;font-weight:700">'+epFmt(r.tot)+'</td>'
-        +'<td style="padding:5px 8px;text-align:right;background:#e8f5e9;color:#2d7a4f;font-weight:600">'+epFmtPct(pct)+'</td>'
-        +'<td style="padding:5px 8px;text-align:right;background:#e8f5e9;color:#2d7a4f;font-weight:600">'+epFmtPct(acumFinal)+'</td>'
+        +'<td style="padding:5px 4px;text-align:right"><input type="text" inputmode="decimal" value="'+(f.cd||'')+'" style="width:90px;text-align:right;border:1px solid #ccc;border-radius:4px;padding:2px 4px;font-size:12px" oninput="epCdChange('+i+',this.value)" onblur="epRenderEepp()"></td>'
+        +'<td style="padding:5px 8px;text-align:right;color:#555"><span class="ep-val">'+epFmt(r.gg)+'</span></td>'
+        +'<td style="padding:5px 8px;text-align:right;color:#555"><span class="ep-val">'+epFmt(r.uti)+'</span></td>'
+        +'<td style="padding:5px 8px;text-align:right"><span class="ep-val">'+epFmt(r.sub1)+'</span></td>'
+        +'<td style="padding:5px 8px;text-align:right;color:#c0392b"><span class="ep-val">'+epFmt(r.desc)+'</span></td>'
+        +'<td style="padding:5px 8px;text-align:right"><span class="ep-val">'+epFmt(r.sub2)+'</span></td>'
+        +'<td style="padding:5px 8px;text-align:right;color:#c0392b"><span class="ep-val">'+epFmt(r.ant)+'</span></td>'
+        +'<td style="padding:5px 8px;text-align:right;color:#c0392b"><span class="ep-val">'+epFmt(r.ret)+'</span></td>'
+        +'<td style="padding:5px 8px;text-align:right;font-weight:700"><span class="ep-val">'+epFmt(r.neto)+'</span></td>'
+        +'<td style="padding:5px 8px;text-align:right"><span class="ep-val">'+epFmt(r.iva)+'</span></td>'
+        +'<td style="padding:5px 8px;text-align:right;font-weight:700"><span class="ep-val">'+epFmt(r.tot)+'</span></td>'
+        +'<td style="padding:5px 8px;text-align:right;background:#e8f5e9;color:#2d7a4f;font-weight:600"><span class="ep-val">'+epFmtPct(pct)+'</span></td>'
+        +'<td style="padding:5px 8px;text-align:right;background:#e8f5e9;color:#2d7a4f;font-weight:600"><span class="ep-val">'+epFmtPct(acumFinal)+'</span></td>'
         +'<td style="padding:5px 8px;text-align:center"><button onclick="epEliminarFila('+i+')" style="background:none;border:none;cursor:pointer;color:#c0392b;font-size:14px">✕</button></td>'
         +'</tr>';
     }).join('');
@@ -1870,8 +1924,9 @@ function actualizarSgPreview() {
     function pptPct(n){ return n.toFixed(2)+'%'; }
 
     // ── Slide único: Datos del contrato + Tabla EEPP ──
+    slideNum++;
     var sEP = prs.addSlide({masterName:'JASV'});
-    addHF(sEP,'5. Control de Estados de Pago',slideNum++);
+    addHF(sEP,'5. Control de Estados de Pago',slideNum);
 
     var epCD2=epVal('ep-cd'), epGG2=epVal('ep-gg'), epUTI2=epVal('ep-uti'), epDESC2=epVal('ep-desc');
     var epSUB2=epCD2+epGG2+epUTI2, epNETO2=epSUB2-epDESC2, epIVA2=epNETO2*0.19, epTOT2=epNETO2+epIVA2;
@@ -1890,8 +1945,8 @@ function actualizarSgPreview() {
       ['% Anticipo', pptPct(epP.pANT*100)],
       ['% Retenciones', pptPct(epP.pRET*100)],
     ];
-    var cW=3.4;
-    sEP.addTable(cRows,{x:CX,y:CONT_Y+0.05,w:cW,colW:[2.0,1.4],fontSize:11,fontFace:FONT,align:'left',valign:'middle',rowH:0.33,border:{type:'solid',pt:0.5,color:'CCCCCC'},fill:{color:'FFFFFF'}});
+    var cW=2.5;
+    sEP.addTable(cRows,{x:CX,y:CONT_Y+0.05,w:cW,colW:[1.45,1.05],fontSize:10,fontFace:FONT,align:'left',valign:'middle',rowH:0.30,border:{type:'solid',pt:0.5,color:'CCCCCC'},fill:{color:'FFFFFF'}});
 
     // — Tabla EEPP (derecha del contrato) —
     // Mostrar tabla EEPP siempre (vacía si no hay filas)
@@ -1944,14 +1999,16 @@ function actualizarSgPreview() {
         ct(pptFmt(tTT2),{align:'right'}),
         ct(pptPct(acT2),{align:'right',fill:'2d7a4f'}),ct(pptPct(acT2),{align:'right',fill:'2d7a4f'})
       ]);
-      // Ancho disponible para tabla EEPP: SW - cW - CX - 0.15 margen = 10 - 3.4 - 0.118 - 0.15 = 6.33"
-      var ew=SW-cW-CX-0.15;
-      // 14 columnas distribuidas proporcionalmente en 6.33"
-      var colW2=[0.42,0.56,0.46,0.46,0.54,0.42,0.54,0.50,0.50,0.56,0.46,0.56,0.38,0.38];
-      // Normalizar para que sumen ew
+      // Ancho disponible: SW - CX - cW - margen_interno (0.12)
+      var ew = Math.round((SW - CX - cW - 0.12)*1000)/1000;
+      // x inicio de tabla EEPP
+      var ex = CX + cW + 0.12;
+      // 14 columnas: N°, CD, GG, UTI, Sub1, Desc, Sub2, Ant, Ret, Neto, IVA, Total, Parc%, Acum%
+      // Proporciones relativas ajustadas para caber en ew (~7.27" con cW=2.5)
+      var colW2=[0.38,0.60,0.48,0.48,0.58,0.46,0.58,0.52,0.52,0.60,0.48,0.60,0.40,0.40];
       var sumW2=colW2.reduce(function(a,b){return a+b;},0);
       colW2=colW2.map(function(w){return Math.round(w/sumW2*ew*1000)/1000;});
-      sEP.addTable(eppRows2,{x:CX+cW+0.15,y:CONT_Y+0.05,w:ew,colW:colW2,
+      sEP.addTable(eppRows2,{x:ex,y:CONT_Y+0.05,w:ew,colW:colW2,
         fontSize:8,fontFace:FONT,align:'right',valign:'middle',rowH:0.30,
         border:{type:'solid',pt:0.3,color:'CCCCCC'},fill:{color:'FFFFFF'}});
     }
@@ -2363,111 +2420,6 @@ function actualizarSgPreview() {
 
   // ══ HISTORIAL DE OBRAS ══════════════════════════════
   var HIST_KEY = 'jasv_historial_v1';
-
-  // ── Recolectar todo el estado del formulario ──
-  function recolectarEstado() {
-    var estado = {};
-    try {
-    // Portada
-    ['nro-informe','fecha-emision','semana-informe','nombre-obra','nombre-edificio',
-     'direccion','mandante','contratista'].forEach(function(id){
-      var el = document.getElementById(id);
-      if(el) estado[id] = el.value;
-    });
-    // Datos proyecto
-    ['nro-oficina','fecha-inicio','plazo-dias','fecha-termino','moneda','monto-valor',
-     'monto-desc','descripcion-proyecto','superficie'].forEach(function(id){
-      var el = document.getElementById(id);
-      if(el) estado[id] = el.value;
-    });
-    var chkA = document.getElementById('chk-aumento');
-    if(chkA){ estado['chk-aumento'] = chkA.checked;
-      ['aumento-dias','aumento-motivo','fecha-termino-nueva'].forEach(function(id){
-        var el=document.getElementById(id); if(el) estado[id]=el.value;
-      });
-    }
-    // Profesionales (todos los inputs en prof-rows)
-    estado.profs = {};
-    ['mandante-profs','constructora-profs','arq-profs','ito-profs','pm-profs'].forEach(function(sec){
-      var rows = document.querySelectorAll('#'+sec+' .prof-row');
-      estado.profs[sec] = Array.from(rows).map(function(r){
-        var ins = r.querySelectorAll('input');
-        return { cargo: ins[0]?ins[0].value:'', nombre: ins[1]?ins[1].value:'' };
-      });
-    });
-    // Estatus documentación
-    estado.docRows = Array.from(document.querySelectorAll('#doc-tbody tr')).map(function(tr){
-      var ins = tr.querySelectorAll('input'); var sem = tr.querySelector('.sem-btn');
-      var semClass = sem ? (sem.classList.contains('verde')?'verde':sem.classList.contains('amarillo')?'amarillo':'rojo') : 'rojo';
-      return { semaforo: semClass, nombre: ins[0]?ins[0].value:'', fecha: ins[1]?ins[1].value:'', com: ins[2]?ins[2].value:'' };
-    });
-    // Estatus proyectos
-    estado.proyRows = Array.from(document.querySelectorAll('#proy-tbody tr')).map(function(tr){
-      var tds = tr.querySelectorAll('td');
-      var sem = tr.querySelector('.sem-btn');
-      var semClass = sem?(sem.classList.contains('verde')?'verde':sem.classList.contains('amarillo')?'amarillo':'rojo'):'rojo';
-      var esp = tds[1]&&tds[1].querySelector('input')?tds[1].querySelector('input').value:'';
-      var fa = tds[3]&&tds[3].querySelector('input')?tds[3].querySelector('input').value:'';
-      var hrows = Array.from(tr.querySelectorAll('.hist-row')).map(function(hr){
-        var sel=hr.querySelector('select'); var di=hr.querySelector('input[type=date]');
-        return { tipo: sel?sel.value:'', fecha: di?di.value:'' };
-      });
-      return { semaforo:semClass, especialidad:esp, fechaAprobacion:fa, historial:hrows };
-    });
-    // Curva S
-    estado.csInicio = document.getElementById('cs-inicio')?document.getElementById('cs-inicio').value:'';
-    estado.csTermino = document.getElementById('cs-termino')?document.getElementById('cs-termino').value:'';
-    estado.diaControl = document.getElementById('dia-control')?document.getElementById('dia-control').value:'4';
-    estado.csNota = document.getElementById('cs-nota')?document.getElementById('cs-nota').value:'';
-    estado.csRows = Array.from(document.querySelectorAll('#cs-tbody tr')).filter(function(tr){
-      var l=tr.querySelector('.cs-lbl'); return !(l&&l.textContent==='S0');
-    }).map(function(tr){
-      var lbl=tr.querySelector('.cs-lbl'); var fi=tr.querySelector('.cs-fi');
-      var prog=tr.querySelector('.cs-prog'); var real=tr.querySelector('.cs-real');
-      return { lbl:lbl?lbl.textContent:'', fi:fi?fi.value:'', prog:prog?prog.value:'', real:real?real.value:'' };
-    });
-    // Situación general
-    estado.sgFechaVisita = document.getElementById('sg-fecha-visita')?document.getElementById('sg-fecha-visita').value:'';
-    estado.sgNroVisita = document.getElementById('sg-nro-visita')?document.getElementById('sg-nro-visita').value:'';
-    estado.partidas = Array.from(document.querySelectorAll('#partidas-list .partida-input')).map(function(i){return i.value;});
-    estado.sgPuntos = Array.from(document.querySelectorAll('#sg-puntos-list .sg-punto-row')).map(function(r){
-      var ta=r.querySelector('.sg-punto-text');
-      return { texto:ta?ta.value:'', estado:r.dataset.estado||'' };
-    });
-    estado.sgPendientesAnterior = typeof recolectarPendientes==='function' ? recolectarPendientes() : [];
-    // Lay Out
-    ['lo-version','lo-fecha','lo-autor','lo-desc'].forEach(function(id){
-      var el=document.getElementById(id); if(el) estado[id]=el.value;
-    });
-    var loImg=document.getElementById('lo-preview-img');
-    var loImgEl2=document.getElementById('lo-preview-img');
-    estado.loImgSrc = loImgEl2&&loImgEl2.src&&loImgEl2.src.length>100?loImgEl2.src:'';
-    estado.loImgW = (loImgEl2&&loImgEl2.naturalWidth>0)?loImgEl2.naturalWidth:800;
-    estado.loImgH = (loImgEl2&&loImgEl2.naturalHeight>0)?loImgEl2.naturalHeight:600;
-    // Fotografías (con dataUrl ya comprimido)
-    estado.fotos = fotos.map(function(f){
-      return { dataUrl:f.dataUrl, pie:f.pie, grupo:f.grupo,
-               warning:f.warning, warningTxt:f.warningTxt,
-               resuelto:f.resuelto, resueltoTxt:f.resueltoTxt,
-               layoutImg:f.layoutImg||null, layoutMarkers:f.layoutMarkers||[] };
-    });
-    estado.fotoGrupos = fotoGrupos.map(function(g){ return { nombre:g.nombre }; });
-    // Estados de pago
-    estado.epCD         = (document.getElementById('ep-cd')||{}).value          || '';
-    estado.epGG         = (document.getElementById('ep-gg')||{}).value          || '';
-    estado.epUTI        = (document.getElementById('ep-uti')||{}).value         || '';
-    estado.epDESC       = (document.getElementById('ep-desc')||{}).value        || '';
-    estado.epPctAnticipo= (document.getElementById('ep-pct-anticipo')||{}).value|| '';
-    estado.epPctRet     = (document.getElementById('ep-pct-ret')||{}).value     || '';
-    estado.epFilas      = epFilas.map(function(f){ return {cd: f.cd}; });
-    // Anexos (sin rawFile, solo metadata)
-    estado.anexos = anexos.map(function(a){
-      return { nombre:a.nombre, size:a.size, tipo:a.tipo, titulo:a.titulo,
-               desc:a.desc, icono:a.icono, previewUrl:a.previewUrl||null };
-    });
-    } catch(e){ console.error('recolectar error:',e); }
-    return estado;
-  }
 
   // ── Restaurar estado completo ──
   function restaurarEstado(estado) {
@@ -4390,7 +4342,8 @@ setTimeout(function(){
     estado.fotos = fotos.map(function(f){
       return { dataUrl:f.dataUrl, pie:f.pie, grupo:f.grupo,
                warning:f.warning, warningTxt:f.warningTxt,
-               resuelto:f.resuelto, resueltoTxt:f.resueltoTxt };
+               resuelto:f.resuelto, resueltoTxt:f.resueltoTxt,
+               layoutImg:f.layoutImg||null, layoutMarkers:f.layoutMarkers||[] };
     });
     estado.fotoGrupos = fotoGrupos.map(function(g){ return { nombre:g.nombre }; });
     // Anexos (sin rawFile, solo metadata)
@@ -4398,125 +4351,19 @@ setTimeout(function(){
       return { nombre:a.nombre, size:a.size, tipo:a.tipo, titulo:a.titulo,
                desc:a.desc, icono:a.icono, previewUrl:a.previewUrl||null };
     });
+    // Estados de pago
+    estado.epCD         = (document.getElementById('ep-cd')||{}).value          || '';
+    estado.epGG         = (document.getElementById('ep-gg')||{}).value          || '';
+    estado.epUTI        = (document.getElementById('ep-uti')||{}).value         || '';
+    estado.epDESC       = (document.getElementById('ep-desc')||{}).value        || '';
+    estado.epPctAnticipo= (document.getElementById('ep-pct-anticipo')||{}).value|| '';
+    estado.epPctRet     = (document.getElementById('ep-pct-ret')||{}).value     || '';
+    estado.epFilas      = epFilas.map(function(f){ return {cd: f.cd}; });
     } catch(e){ console.error('recolectar error:',e); }
     return estado;
   }
 
-  // ── Restaurar estado completo ──
-  function restaurarEstado(estado) {
-    // Campos simples
-    var camposSimples = ['nro-informe','fecha-emision','semana-informe','nombre-obra',
-      'nombre-edificio','direccion','mandante','contratista',
-      'nro-oficina','fecha-inicio','plazo-dias','fecha-termino','moneda','monto-valor',
-      'monto-desc','descripcion-proyecto','superficie',
-      'aumento-dias','aumento-motivo','fecha-termino-nueva',
-      'cs-inicio','cs-termino','dia-control','cs-nota',
-      'sg-fecha-visita','sg-nro-visita','sg-pendientes-anterior',
-      'lo-version','lo-fecha','lo-autor','lo-desc'];
-    camposSimples.forEach(function(id){
-      var el=document.getElementById(id);
-      if(el && estado[id]!==undefined) el.value=estado[id];
-    });
-    var chkA=document.getElementById('chk-aumento');
-    if(chkA && estado['chk-aumento']!==undefined){
-      chkA.checked=estado['chk-aumento'];
-      if(typeof toggleAumento==='function') toggleAumento();
-    }
-    // Portada preview
-    if(typeof actualizarPortada==='function') actualizarPortada();
-    // Estatus documentación
-    if(estado.docRows && typeof addDocRow==='function'){
-      var tbody=document.getElementById('doc-tbody'); if(tbody) tbody.innerHTML='';
-      estado.docRows.forEach(function(r){
-        addDocRow(r.nombre);
-        var lastTr=document.querySelector('#doc-tbody tr:last-child');
-        if(!lastTr) return;
-        var ins=lastTr.querySelectorAll('input');
-        if(ins[1]) ins[1].value=r.fecha;
-        if(ins[2]) ins[2].value=r.com;
-        var sem=lastTr.querySelector('.sem-btn');
-        if(sem && r.semaforo!=='rojo'){
-          if(r.semaforo==='verde'){ sem.classList.remove('rojo','amarillo'); sem.classList.add('verde'); }
-          else if(r.semaforo==='amarillo'){ sem.classList.remove('rojo','verde'); sem.classList.add('amarillo'); }
-        }
-      });
-    }
-    // Estatus proyectos
-    if(estado.proyRows && typeof addProyRow==='function'){
-      var ptbody=document.getElementById('proy-tbody'); if(ptbody) ptbody.innerHTML='';
-      estado.proyRows.forEach(function(r){
-        addProyRow(r.especialidad);
-        var lastTr=document.querySelector('#proy-tbody tr:last-child');
-        if(!lastTr) return;
-        var tds=lastTr.querySelectorAll('td');
-        if(tds[3]&&tds[3].querySelector('input')) tds[3].querySelector('input').value=r.fechaAprobacion||'';
-        var sem=lastTr.querySelector('.sem-btn');
-        if(sem && r.semaforo!=='rojo'){
-          if(r.semaforo==='verde'){ sem.classList.remove('rojo','amarillo'); sem.classList.add('verde'); }
-          else{ sem.classList.remove('rojo','verde'); sem.classList.add('amarillo'); }
-        }
-        // Historial de revisiones
-        if(r.historial && r.historial.length>0){
-          var histContainer=lastTr.querySelector('.hist-container');
-          if(histContainer){
-            histContainer.innerHTML='';
-            r.historial.forEach(function(h){
-              if(typeof addHistRow==='function') addHistRow(histContainer,h.tipo,h.fecha);
-            });
-          }
-        }
-      });
-    }
-    // Curva S
-    if(estado.csRows && estado.csRows.length>0){
-      var cstbody=document.getElementById('cs-tbody'); if(cstbody) cstbody.innerHTML='';
-      // S0 fija (ancla en 0%)
-      (function(){ var s0=document.createElement('tr');
-        var s0fi=document.getElementById('cs-inicio')?document.getElementById('cs-inicio').value:'';
-        s0.innerHTML='<td><span class="cs-lbl">S0</span></td><td><input class="cs-fi" type="date" value="'+s0fi+'" readonly></td><td><div class="pct-row"><input class="cs-prog" type="number" value="0" readonly oninput="actualizarGrafico()"><span>%</span></div></td><td><div class="pct-row"><input class="cs-real real-inp" type="number" value="0" readonly oninput="actualizarGrafico()"><span>%</span></div></td>'; var csb=document.getElementById('cs-tbody'); if(csb) csb.appendChild(s0); })();
-      estado.csRows.forEach(function(r){
-        if(typeof addCsRow==='function'){
-          var tr2=document.createElement('tr');
-          tr2.innerHTML='<td><span class="cs-lbl">'+r.lbl+'</span></td>'+
-            '<td><input class="cs-fi" type="date" value="'+r.fi+'" readonly></td>'+
-            '<td><div class="pct-row"><input class="cs-prog" type="number" min="0" max="100" step="0.1" value="'+r.prog+'" oninput="actualizarGrafico()"><span>%</span></div></td>'+
-            '<td><div class="pct-row"><input class="cs-real real-inp" type="number" min="0" max="100" step="0.1" value="'+r.real+'" oninput="actualizarGrafico()"><span>%</span></div></td>';
-          var cstbody2=document.getElementById('cs-tbody'); if(cstbody2) cstbody2.appendChild(tr2);
-        }
-      });
-      if(typeof actualizarGrafico==='function') actualizarGrafico();
-    }
-    // Situación general
-    if(estado.partidas){
-      var pList2=document.getElementById('partidas-list'); if(pList2) pList2.innerHTML='';
-      estado.partidas.forEach(function(p){ if(typeof addPartida==='function') addPartida(); var last=document.querySelector('#partidas-list .partida-input:last-of-type'); if(last) last.value=p; });
-    }
-    if(estado.sgPuntos){
-      var sgList=document.getElementById('sg-puntos-list'); if(sgList) sgList.innerHTML=''; sgPuntoCount=0;
-      estado.sgPuntos.forEach(function(p){ if(typeof addSgPunto==='function') addSgPunto(p.texto, p.estado); });
-    }
-    if(typeof actualizarSgPreview==='function') actualizarSgPreview();
-    // Lay Out imagen
-    if(estado.loImgSrc && estado.loImgSrc.length>100){
-      var loImg2=document.getElementById('lo-preview-img');
-      var loWrap=document.getElementById('lo-preview-wrap');
-      var loDz=document.getElementById('lo-dropzone');
-      if(loImg2){ loImg2.src=estado.loImgSrc; loImg2.style.display='block'; }
-      if(loWrap) loWrap.style.display='block';
-      if(loDz) loDz.style.display='none';
-    }
-    // Fotografías
-    fotos = (estado.fotos||[]).map(function(f){ return Object.assign({},f); });
-    fotoGrupos = (estado.fotoGrupos||[]).map(function(g){ return Object.assign({},g); });
-    if(typeof renderFotos==='function') renderFotos();
-    if(typeof renderGrupos==='function') renderGrupos();
-    // Anexos
-    // Anexos: siempre vacíos — cada informe gestiona los suyos
-    anexos = [];
-    if(typeof renderAnexos==='function') renderAnexos();
-    // Ir a portada
-    if(typeof irA==='function') irA(0);
-  }
+
 
   // ── GUARDAR en localStorage ──
   function guardarEnHistorial() {
