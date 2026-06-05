@@ -1030,62 +1030,59 @@ function actualizarSgPreview() {
           tctx.restore();
 
           // ── ÍCONO CÁMARA ──
-          // Se dibuja en espacio propio: lente hacia +X, cuerpo horizontal
-          // Se rota para que la lente apunte en la misma dirección que el cono
-          // Dirección del cono en canvas: ángulo = ang - PI/2 (eje -Y rotado)
-          // Para que lente (+X local) apunte en esa dirección: rotar ang - PI/2
-          var iconAng = ang + Math.PI; // lente apunta en dirección del cono (+180° porque cuerpo va hacia -X)
-          tctx.save();
-          tctx.translate(nx,ny);
-          tctx.rotate(iconAng);
-          // Desplazar cuerpo detrás del cono (hacia -Y del espacio del cono = hacia atrás)
+          // Frente de la cámara hacia -Y local → al rotar con ang, apunta igual que el cono
           var r=iconR;
           var lw=Math.max(2,Math.round(r*0.08));
-          // Cuerpo horizontal: lente centrada en (0,0), cuerpo se extiende hacia -X
-          var bw=Math.round(r*1.8), bh=Math.round(r*1.1), br=Math.round(r*0.15);
-          var bx=-Math.round(bw*0.85), by=-Math.round(bh/2);
+          tctx.save();
+          tctx.translate(nx,ny);
+          tctx.rotate(ang); // misma rotación que el cono
+          var bw=Math.round(r*1.7), bh=Math.round(r*1.1), br=Math.round(r*0.15);
+          var bx=-Math.round(bw/2);
+          // Frente hacia -Y: cuerpo de by=-bh a by=0, lente en by=-bh*0.5
+          var by_top=-Math.round(bh*0.9), by_bot=Math.round(bh*0.2);
           // Fondo blanco
           tctx.beginPath();
-          tctx.moveTo(bx+br,by); tctx.lineTo(bx+bw-br,by);
-          tctx.quadraticCurveTo(bx+bw,by,bx+bw,by+br);
-          tctx.lineTo(bx+bw,by+bh-br);
-          tctx.quadraticCurveTo(bx+bw,by+bh,bx+bw-br,by+bh);
-          tctx.lineTo(bx+br,by+bh);
-          tctx.quadraticCurveTo(bx,by+bh,bx,by+bh-br);
-          tctx.lineTo(bx,by+br);
-          tctx.quadraticCurveTo(bx,by,bx+br,by);
+          tctx.moveTo(bx+br,by_top); tctx.lineTo(bx+bw-br,by_top);
+          tctx.quadraticCurveTo(bx+bw,by_top,bx+bw,by_top+br);
+          tctx.lineTo(bx+bw,by_bot-br);
+          tctx.quadraticCurveTo(bx+bw,by_bot,bx+bw-br,by_bot);
+          tctx.lineTo(bx+br,by_bot);
+          tctx.quadraticCurveTo(bx,by_bot,bx,by_bot-br);
+          tctx.lineTo(bx,by_top+br);
+          tctx.quadraticCurveTo(bx,by_top,bx+br,by_top);
           tctx.closePath();
           tctx.fillStyle='#ffffff'; tctx.fill();
-          // Jorobita (arriba del cuerpo, lado izquierdo)
-          var vw=Math.round(r*0.45), vh=Math.round(r*0.22);
-          var vx=bx+Math.round(r*0.15), vy=by-vh;
-          tctx.fillStyle='#ffffff';
-          tctx.fillRect(vx,vy,vw,vh+2);
+          // Jorobita arriba (frente, centrada)
+          var vw=Math.round(r*0.5), vh=Math.round(r*0.22);
+          var vx2=-Math.round(vw/2), vy2=by_top-vh;
+          tctx.fillStyle='#ffffff'; tctx.fillRect(vx2,vy2,vw,vh+2);
           tctx.strokeStyle='#1a1a1a'; tctx.lineWidth=lw;
           tctx.beginPath();
-          tctx.moveTo(vx,vy+vh); tctx.lineTo(vx,vy+Math.round(vh*0.3));
-          tctx.quadraticCurveTo(vx,vy,vx+Math.round(vh*0.3),vy);
-          tctx.lineTo(vx+vw-Math.round(vh*0.3),vy);
-          tctx.quadraticCurveTo(vx+vw,vy,vx+vw,vy+Math.round(vh*0.3));
-          tctx.lineTo(vx+vw,vy+vh);
-          tctx.stroke();
-          // Cuerpo (contorno)
+          tctx.moveTo(vx2+Math.round(vh*0.3),vy2);
+          tctx.lineTo(vx2+vw-Math.round(vh*0.3),vy2);
+          tctx.quadraticCurveTo(vx2+vw,vy2,vx2+vw,vy2+Math.round(vh*0.3));
+          tctx.lineTo(vx2+vw,vy2+vh); tctx.lineTo(vx2,vy2+vh);
+          tctx.lineTo(vx2,vy2+Math.round(vh*0.3));
+          tctx.quadraticCurveTo(vx2,vy2,vx2+Math.round(vh*0.3),vy2);
+          tctx.closePath(); tctx.stroke();
+          // Cuerpo contorno
           tctx.beginPath();
-          tctx.moveTo(bx+br,by); tctx.lineTo(bx+bw-br,by);
-          tctx.quadraticCurveTo(bx+bw,by,bx+bw,by+br);
-          tctx.lineTo(bx+bw,by+bh-br);
-          tctx.quadraticCurveTo(bx+bw,by+bh,bx+bw-br,by+bh);
-          tctx.lineTo(bx+br,by+bh);
-          tctx.quadraticCurveTo(bx,by+bh,bx,by+bh-br);
-          tctx.lineTo(bx,by+br);
-          tctx.quadraticCurveTo(bx,by,bx+br,by);
+          tctx.moveTo(bx+br,by_top); tctx.lineTo(bx+bw-br,by_top);
+          tctx.quadraticCurveTo(bx+bw,by_top,bx+bw,by_top+br);
+          tctx.lineTo(bx+bw,by_bot-br);
+          tctx.quadraticCurveTo(bx+bw,by_bot,bx+bw-br,by_bot);
+          tctx.lineTo(bx+br,by_bot);
+          tctx.quadraticCurveTo(bx,by_bot,bx,by_bot-br);
+          tctx.lineTo(bx,by_top+br);
+          tctx.quadraticCurveTo(bx,by_top,bx+br,by_top);
           tctx.closePath();
           tctx.strokeStyle='#1a1a1a'; tctx.lineWidth=lw; tctx.stroke();
-          // Lente (centrada en origen, aro doble)
-          var lr=Math.round(r*0.48);
-          tctx.beginPath(); tctx.arc(0,0,lr,0,Math.PI*2);
+          // Lente centrada horizontalmente, en zona superior del cuerpo (frente)
+          var ly=Math.round((by_top+by_bot)*0.35); // más hacia arriba (frente)
+          var lr=Math.round(r*0.45);
+          tctx.beginPath(); tctx.arc(0,ly,lr,0,Math.PI*2);
           tctx.strokeStyle='#1a1a1a'; tctx.lineWidth=lw; tctx.stroke();
-          tctx.beginPath(); tctx.arc(0,0,Math.round(lr*0.58),0,Math.PI*2);
+          tctx.beginPath(); tctx.arc(0,ly,Math.round(lr*0.58),0,Math.PI*2);
           tctx.strokeStyle='#1a1a1a'; tctx.lineWidth=lw; tctx.stroke();
           tctx.restore();
         });
