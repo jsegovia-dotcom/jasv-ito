@@ -624,7 +624,7 @@ function actualizarSgPreview() {
         var dx=Math.round((targetFW-dw)/2),dy=Math.round((targetFH-dh)/2);
         ctx150.drawImage(tmpImg,dx,dy,dw,dh);
         URL.revokeObjectURL(blobUrl);
-        fotos.push({ dataUrl: cv.toDataURL('image/jpeg',0.5), pie: '', grupo: '', warning: false, warningTxt: '', resuelto: false, resueltoTxt: '' });
+        fotos.push({ dataUrl: cv.toDataURL('image/jpeg',0.5), pie: '', grupo: '', warning: false, warningTxt: '', resuelto: false, resueltoTxt: '', layoutImg: null, layoutMarkers: [] });
         pending--;
         if (pending === 0) renderFotos();
       };
@@ -633,7 +633,7 @@ function actualizarSgPreview() {
         URL.revokeObjectURL(blobUrl);
         var rd = new FileReader();
         rd.onload = function(ev) {
-          fotos.push({ dataUrl: ev.target.result, pie: '', grupo: '', warning: false, warningTxt: '', resuelto: false, resueltoTxt: '' });
+          fotos.push({ dataUrl: ev.target.result, pie: '', grupo: '', warning: false, warningTxt: '', resuelto: false, resueltoTxt: '', layoutImg: null, layoutMarkers: [] });
           pending--; if(pending===0) renderFotos();
         };
         rd.readAsDataURL(file);
@@ -765,7 +765,19 @@ function actualizarSgPreview() {
       })(i, card, rTxt);
       rRow.appendChild(rChk); rRow.appendChild(rLbl);
 
-      body.appendChild(meta); body.appendChild(pie); body.appendChild(wRow); body.appendChild(wTxt); body.appendChild(rRow); body.appendChild(rTxt);
+      // Botón layout + miniatura
+      var layoutRow = document.createElement('div'); layoutRow.className = 'foto-layout-row';
+      var layoutBtn = document.createElement('button'); layoutBtn.className = 'foto-layout-btn';
+      layoutBtn.title = 'Marcar posición en plano';
+      layoutBtn.innerHTML = '&#128247; Posición en plano';
+      (function(idx){ layoutBtn.addEventListener('click', function(){ abrirEditorLayout(idx); }); })(i);
+      layoutRow.appendChild(layoutBtn);
+      if (f.layoutImg) {
+        var layoutThumb = document.createElement('img'); layoutThumb.src = f.layoutImg;
+        layoutThumb.className = 'foto-layout-thumb';
+        layoutThumb.title = 'Miniatura del plano'; layoutRow.appendChild(layoutThumb);
+      }
+      body.appendChild(meta); body.appendChild(pie); body.appendChild(wRow); body.appendChild(wTxt); body.appendChild(rRow); body.appendChild(rTxt); body.appendChild(layoutRow);
       card.appendChild(rm); card.appendChild(replBtn); card.appendChild(imgWrap); card.appendChild(body);
       grid.appendChild(card);
     });
@@ -776,6 +788,229 @@ function actualizarSgPreview() {
   }
 
   
+  // ══ LAYOUT MARKER (miniatura de plano) ══
+  var layoutGlobal = { img: null, dataUrl: null }; // plano compartido por todas las fotos
+
+  function abrirEditorLayout(idx) {
+    var overlay = document.getElementById('layout-editor-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'layout-editor-overlay';
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:9999;display:flex;align-items:center;justify-content:center;';
+      document.body.appendChild(overlay);
+    }
+    overlay.innerHTML = '';
+    overlay.style.display = 'flex';
+
+    var panel = document.createElement('div');
+    panel.style.cssText = 'background:#fff;border-radius:12px;padding:20px;width:min(620px,95vw);max-height:90vh;overflow-y:auto;font-family:inherit;';
+
+    var title = document.createElement('div');
+    title.style.cssText = 'font-weight:600;font-size:15px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;';
+    title.innerHTML = '<span>📍 Marcador de posición — Foto ' + (idx+1) + '</span>';
+    var closeBtn = document.createElement('button');
+    closeBtn.textContent = '×';
+    closeBtn.style.cssText = 'border:none;background:none;font-size:22px;cursor:pointer;color:#666;line-height:1;padding:0 4px;';
+    closeBtn.onclick = function(){ overlay.style.display='none'; };
+    title.appendChild(closeBtn);
+
+    // Upload plano
+    var uploadRow = document.createElement('div');
+    uploadRow.style.cssText = 'display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap;';
+    var uploadLbl = document.createElement('label');
+    uploadLbl.style.cssText = 'cursor:pointer;padding:6px 14px;border:1px solid #ccc;border-radius:6px;font-size:13px;background:#f8f8f8;';
+    uploadLbl.textContent = layoutGlobal.dataUrl ? '🔄 Cambiar plano' : '📁 Subir plano';
+    var uploadInp = document.createElement('input');
+    uploadInp.type = 'file'; uploadInp.accept = 'image/*'; uploadInp.style.display = 'none';
+    uploadLbl.appendChild(uploadInp);
+    var planInfo = document.createElement('span');
+    planInfo.style.cssText = 'font-size:12px;color:#888;';
+    planInfo.textContent = layoutGlobal.dataUrl ? 'Plano cargado ✓' : 'JPG, PNG, PDF…';
+
+    uploadInp.onchange = function(e) {
+      var file = e.target.files[0]; if(!file) return;
+      var url = URL.createObjectURL(file);
+      var tmpI = new Image();
+      tmpI.onload = function() {
+        var cw = Math.min(tmpI.naturalWidth, 1200);
+        var ch = Math.round(tmpI.naturalHeight * (cw/tmpI.naturalWidth));
+        var cv = document.createElement('canvas'); cv.width=cw; cv.height=ch;
+        cv.getContext('2d').drawImage(tmpI,0,0,cw,ch);
+        layoutGlobal.dataUrl = cv.toDataURL('image/jpeg', 0.85);
+        layoutGlobal.img = tmpI;
+        URL.revokeObjectURL(url);
+        uploadLbl.textContent = '🔄 Cambiar plano';
+        planInfo.textContent = 'Plano cargado ✓';
+        rebuildCanvas();
+      };
+      tmpI.src = url;
+    };
+    uploadRow.appendChild(uploadLbl); uploadRow.appendChild(planInfo);
+
+    // Controles: ángulo + color
+    var ctrlRow = document.createElement('div');
+    ctrlRow.style.cssText = 'display:flex;gap:12px;align-items:center;margin-bottom:10px;flex-wrap:wrap;font-size:13px;';
+    var angleLabel = document.createElement('label');
+    angleLabel.style.cssText = 'display:flex;align-items:center;gap:6px;';
+    angleLabel.textContent = 'Ángulo visión:';
+    var angleSlider = document.createElement('input');
+    angleSlider.type='range'; angleSlider.min=0; angleSlider.max=359; angleSlider.value=0;
+    angleSlider.style.width='90px';
+    var angleVal = document.createElement('span');
+    angleVal.style.cssText='min-width:30px;color:#555;font-size:12px;';
+    angleVal.textContent='0°';
+    angleSlider.oninput = function(){ angleVal.textContent=this.value+'°'; };
+    angleLabel.appendChild(angleSlider); angleLabel.appendChild(angleVal);
+
+    var colorLabel = document.createElement('label');
+    colorLabel.style.cssText='display:flex;align-items:center;gap:6px;';
+    colorLabel.textContent = 'Color:';
+    var colorSel = document.createElement('select');
+    colorSel.style.cssText='padding:4px 6px;border-radius:4px;border:1px solid #ccc;font-size:12px;';
+    [['#E24B4A','Rojo'],['#185FA5','Azul'],['#0F6E56','Verde'],['#BA7517','Ámbar'],['#533AB7','Morado']].forEach(function(c){
+      var o=document.createElement('option'); o.value=c[0]; o.textContent=c[1]; colorSel.appendChild(o);
+    });
+    colorLabel.appendChild(colorSel);
+
+    var instruccion = document.createElement('div');
+    instruccion.style.cssText='font-size:12px;color:#888;padding:6px 10px;background:#f5f5f5;border-radius:6px;margin-bottom:8px;';
+    instruccion.textContent = layoutGlobal.dataUrl
+      ? 'Haz clic en el plano para marcar la posición de la cámara.'
+      : 'Primero sube el plano del espacio.';
+
+    ctrlRow.appendChild(angleLabel); ctrlRow.appendChild(colorLabel);
+
+    // Canvas
+    var canvasWrap = document.createElement('div');
+    canvasWrap.style.cssText='border:1px solid #ddd;border-radius:8px;overflow:hidden;background:#eee;position:relative;cursor:crosshair;margin-bottom:12px;';
+    var edCanvas = document.createElement('canvas');
+    edCanvas.style.cssText='display:block;max-width:100%;';
+    canvasWrap.appendChild(edCanvas);
+
+    var currentMarkers = (fotos[idx].layoutMarkers||[]).map(function(m){return Object.assign({},m);});
+    var currentPlotImg = fotos[idx].layoutImg ? fotos[idx].layoutImg : null;
+    // Si hay plano global cargado previamente, úsarlo
+    if(layoutGlobal.dataUrl && !currentPlotImg) currentPlotImg = layoutGlobal.dataUrl;
+
+    function hexToRgba(hex, a) {
+      var r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+      return 'rgba('+r+','+g+','+b+','+a+')';
+    }
+
+    function drawMarkerOnCtx(c, m, num) {
+      var x=m.x, y=m.y, angle=m.angle, color=m.color;
+      var fov=70, ray=Math.min(c.canvas.width,c.canvas.height)*0.12;
+      c.save(); c.translate(x,y); c.rotate((angle-90)*Math.PI/180);
+      var half=(fov/2)*Math.PI/180;
+      c.beginPath(); c.moveTo(0,0);
+      c.lineTo(Math.cos(-half)*ray, Math.sin(-half)*ray);
+      c.arc(0,0,ray,-half,half);
+      c.lineTo(0,0); c.closePath();
+      c.fillStyle=hexToRgba(color,0.25); c.strokeStyle=color; c.lineWidth=1.5;
+      c.fill(); c.stroke(); c.restore();
+      c.save(); c.translate(x,y);
+      c.beginPath(); c.arc(0,0,11,0,Math.PI*2);
+      c.fillStyle=color; c.fill();
+      c.fillStyle='#fff'; c.font='bold 9px sans-serif';
+      c.textAlign='center'; c.textBaseline='middle';
+      c.fillText(String(num),0,0); c.restore();
+    }
+
+    function redrawEditor() {
+      var cw=edCanvas.width, ch=edCanvas.height;
+      var ctx=edCanvas.getContext('2d');
+      ctx.clearRect(0,0,cw,ch);
+      if(layoutGlobal.dataUrl && layoutGlobal.img) {
+        ctx.drawImage(layoutGlobal.img,0,0,cw,ch);
+      } else {
+        ctx.fillStyle='#ddd'; ctx.fillRect(0,0,cw,ch);
+        ctx.fillStyle='#aaa'; ctx.font='14px sans-serif';
+        ctx.textAlign='center'; ctx.fillText('Sube el plano para comenzar',cw/2,ch/2);
+      }
+      currentMarkers.forEach(function(m,i){ drawMarkerOnCtx(ctx,m,i+1); });
+    }
+
+    function rebuildCanvas() {
+      if(layoutGlobal.img) {
+        var maxW=Math.min(560, canvasWrap.offsetWidth||560);
+        var scale=Math.min(1,maxW/layoutGlobal.img.naturalWidth);
+        edCanvas.width=Math.round(layoutGlobal.img.naturalWidth*scale);
+        edCanvas.height=Math.round(layoutGlobal.img.naturalHeight*scale);
+        instruccion.textContent='Haz clic en el plano para marcar la posición de la cámara.';
+      } else {
+        edCanvas.width=480; edCanvas.height=300;
+      }
+      redrawEditor();
+    }
+    rebuildCanvas();
+
+    canvasWrap.addEventListener('click', function(e){
+      if(!layoutGlobal.dataUrl) return;
+      var rect=edCanvas.getBoundingClientRect();
+      var scaleX=edCanvas.width/rect.width, scaleY=edCanvas.height/rect.height;
+      var x=(e.clientX-rect.left)*scaleX;
+      var y=(e.clientY-rect.top)*scaleY;
+      currentMarkers = [{ x:x, y:y, angle:parseInt(angleSlider.value), color:colorSel.value }];
+      redrawEditor();
+    });
+
+    // Botones de acción
+    var btnRow = document.createElement('div');
+    btnRow.style.cssText='display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;';
+
+    var btnClear = document.createElement('button');
+    btnClear.textContent='🗑 Borrar marcador';
+    btnClear.style.cssText='padding:7px 14px;border:1px solid #ccc;border-radius:6px;font-size:13px;cursor:pointer;background:#fff;';
+    btnClear.onclick=function(){ currentMarkers=[]; redrawEditor(); };
+
+    var btnOk = document.createElement('button');
+    btnOk.textContent='✓ Guardar miniatura';
+    btnOk.style.cssText='padding:7px 16px;border:none;border-radius:6px;font-size:13px;cursor:pointer;background:#1a6bb5;color:#fff;font-weight:600;';
+    btnOk.onclick=function(){
+      // Generar miniatura 180x120
+      var tw=180,th=120;
+      var tc=document.createElement('canvas'); tc.width=tw; tc.height=th;
+      var tctx=tc.getContext('2d');
+      if(layoutGlobal.img){
+        tctx.fillStyle='#e8e8e8'; tctx.fillRect(0,0,tw,th);
+        var sc=Math.min(tw/edCanvas.width,th/edCanvas.height);
+        var ox=(tw-edCanvas.width*sc)/2, oy=(th-edCanvas.height*sc)/2;
+        tctx.drawImage(layoutGlobal.img,ox,oy,edCanvas.width*sc,edCanvas.height*sc);
+        currentMarkers.forEach(function(m,i){
+          var nm={x:m.x*sc+ox, y:m.y*sc+oy, angle:m.angle, color:m.color};
+          // escalar radio proporcionalmente
+          var origRay=Math.min(edCanvas.width,edCanvas.height)*0.12;
+          var newRay=origRay*sc;
+          tctx.save(); tctx.translate(nm.x,nm.y); tctx.rotate((nm.angle-90)*Math.PI/180);
+          var fov=70,half=(fov/2)*Math.PI/180;
+          tctx.beginPath(); tctx.moveTo(0,0);
+          tctx.lineTo(Math.cos(-half)*newRay,Math.sin(-half)*newRay);
+          tctx.arc(0,0,newRay,-half,half);
+          tctx.lineTo(0,0); tctx.closePath();
+          function hr(h,a){var r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return 'rgba('+r+','+g+','+b+','+a+')';}
+          tctx.fillStyle=hr(nm.color,0.25); tctx.strokeStyle=nm.color; tctx.lineWidth=1;
+          tctx.fill(); tctx.stroke(); tctx.restore();
+          tctx.save(); tctx.translate(nm.x,nm.y);
+          tctx.beginPath(); tctx.arc(0,0,7,0,Math.PI*2);
+          tctx.fillStyle=nm.color; tctx.fill();
+          tctx.fillStyle='#fff'; tctx.font='bold 6px sans-serif';
+          tctx.textAlign='center'; tctx.textBaseline='middle';
+          tctx.fillText(String(i+1),0,0); tctx.restore();
+        });
+      }
+      fotos[idx].layoutImg = tc.toDataURL('image/png');
+      fotos[idx].layoutMarkers = currentMarkers;
+      overlay.style.display='none';
+      renderFotos();
+    };
+
+    btnRow.appendChild(btnClear); btnRow.appendChild(btnOk);
+    panel.appendChild(title); panel.appendChild(uploadRow); panel.appendChild(ctrlRow);
+    panel.appendChild(instruccion); panel.appendChild(canvasWrap); panel.appendChild(btnRow);
+    overlay.appendChild(panel);
+    overlay.onclick=function(e){ if(e.target===overlay) overlay.style.display='none'; };
+  }
+
   // ══ ANEXOS ══
   var anexos = []; // [{nombre, size, tipo, titulo, desc, icono}]
   var ANX_TIPOS = ['Plano','Acta','Correo','Especificación','Fotografía','Certificado','Contrato','Otro'];
@@ -1765,7 +2000,8 @@ function actualizarSgPreview() {
     estado.fotos = fotos.map(function(f){
       return { dataUrl:f.dataUrl, pie:f.pie, grupo:f.grupo,
                warning:f.warning, warningTxt:f.warningTxt,
-               resuelto:f.resuelto, resueltoTxt:f.resueltoTxt };
+               resuelto:f.resuelto, resueltoTxt:f.resueltoTxt,
+               layoutImg:f.layoutImg||null, layoutMarkers:f.layoutMarkers||[] };
     });
     estado.fotoGrupos = fotoGrupos.map(function(g){ return { nombre:g.nombre }; });
     // Anexos (sin rawFile, solo metadata)
