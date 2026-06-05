@@ -16,10 +16,20 @@ function irA(n) {
   cur = n;
   document.getElementById('sec-' + n).classList.add('active');
   // Marcar step activo usando data-sec
+  var stepActivated = false;
   for (var i = 0; i < steps.length; i++) {
     var ds2 = steps[i].getAttribute('data-sec') || String(i);
     steps[i].classList.remove('active');
-    if (String(ds2) === String(n)) { steps[i].classList.add('active'); steps[i].classList.remove('done'); }
+    if (String(ds2) === String(n)) {
+      steps[i].classList.add('active');
+      steps[i].classList.remove('done');
+      stepActivated = true;
+    }
+  }
+  // Si no se pudo activar (ej: step oculto al momento), forzar visibilidad
+  if (!stepActivated && n === 9) {
+    var stepEpEl = document.getElementById('step-ep');
+    if (stepEpEl) { stepEpEl.style.display = ''; stepEpEl.classList.add('active'); stepEpEl.classList.remove('done'); }
   }
   window.scrollTo({ top: 0, behavior: 'smooth' });
   // Auto-guardar silencioso al navegar entre secciones
@@ -951,13 +961,25 @@ function actualizarSgPreview() {
     if(stepEP) stepEP.style.display = _conEEPP ? '' : 'none';
     if(secEP)  secEP.style.display  = _conEEPP ? '' : 'none';
 
-    // Actualizar numeración de sec-tags y navegación de botones
-    // sec-0 siempre = "Sección 1 de N"
-    document.querySelectorAll('.sec-tag').forEach(function(el, i){
-      // i = índice de la sección (0-based)
-      // sec-9 se oculta si no conEEPP, así que no importa su texto en ese caso
-      el.textContent = 'Sección ' + (i+1) + ' de ' + total;
-    });
+    // Actualizar sec-tags por ID (orden visual, no orden DOM)
+    // Sin EP: 1,2,3,4,5,6,7,8,9  Con EP: 1,2,3,4,5(EP),6,7,8,9,10
+    var N = _conEEPP ? 10 : 9;
+    function setTag(id, n){ var el=document.getElementById(id); if(el) el.textContent='Sección '+n+' de '+N; }
+    setTag('stag-0', 1); setTag('stag-1', 2); setTag('stag-2', 3); setTag('stag-3', 4);
+    if(_conEEPP){
+      setTag('stag-9', 5);  // EP = sección 5
+      setTag('stag-4', 6);  // CurvaS = 6
+      setTag('stag-5', 7);  // SitGen = 7
+      setTag('stag-6', 8);  // LO = 8
+      setTag('stag-7', 9);  // Fotos = 9
+      setTag('stag-8', 10); // Anexos = 10
+    } else {
+      setTag('stag-4', 5);  // CurvaS = 5
+      setTag('stag-5', 6);  // SitGen = 6
+      setTag('stag-6', 7);  // LO = 7
+      setTag('stag-7', 8);  // Fotos = 8
+      setTag('stag-8', 9);  // Anexos = 9
+    }
 
     // Actualizar botón "Siguiente" de sec-8 (Anexos)
     // Si conEEPP → apunta a irA(9); si no → permanece con acciones finales
@@ -987,11 +1009,7 @@ function actualizarSgPreview() {
       if(nANX) nANX.textContent = '9';
     }
 
-    // Actualizar sec-tags de secciones
-    var nTotal = _conEEPP ? 10 : 9;
-    document.querySelectorAll('.sec-tag').forEach(function(el, i){
-      el.textContent = 'Sección ' + (i+1) + ' de ' + nTotal;
-    });
+    // sec-tags actualizados arriba
   }
 
   // ══ LAYOUT MARKER (miniatura de plano) ══
@@ -2506,12 +2524,24 @@ function actualizarSgPreview() {
         }
         // Historial de revisiones
         if(r.historial && r.historial.length>0){
-          var histContainer=lastTr.querySelector('.hist-container');
-          if(histContainer){
-            histContainer.innerHTML='';
+          var histBlock=lastTr.querySelector('.hist-block');
+          if(histBlock){
+            // Quitar todos los hist-row existentes (dejar solo el botón agregar)
+            histBlock.querySelectorAll('.hist-row').forEach(function(hr){ hr.remove(); });
+            var addBtn=histBlock.querySelector('.btn-add-hist');
             r.historial.forEach(function(h){
-              if(typeof addHistRow==='function') addHistRow(histContainer,h.tipo,h.fecha);
+              // Crear hist-row y setear valores
+              var hr=crearHistRow();
+              var sel=hr.querySelector('select');
+              var di=hr.querySelector('input[type=date]');
+              if(sel) sel.value=h.tipo||'ingreso';
+              if(di) di.value=h.fecha||'';
+              // Insertar antes del botón agregar
+              if(addBtn) histBlock.insertBefore(hr,addBtn);
+              else histBlock.appendChild(hr);
             });
+            // Actualizar semáforo
+            if(typeof updateProySemaforo==='function') updateProySemaforo(lastTr);
           }
         }
       });
@@ -2556,21 +2586,31 @@ function actualizarSgPreview() {
     }
     // Profesionales del proyecto
     if(estado.profs){
+      // Cargos fijos por sección (readonly)
+      var profCargos = {
+        'mandante-profs': 'Rep. Mandante',
+        'arq-profs': 'Arquitecto',
+        'ito-profs': 'ITO',
+        'pm-profs': 'Project Manager'
+      };
       ['mandante-profs','constructora-profs','arq-profs','ito-profs','pm-profs'].forEach(function(sec){
         var container=document.getElementById(sec); if(!container) return;
-        var rows=container.querySelectorAll('.prof-row');
         var data=estado.profs[sec]||[];
-        // Ajustar filas
-        while(container.querySelectorAll('.prof-row').length < data.length){
-          var addBtn=container.querySelector('.btn-add-prof');
-          if(addBtn) addBtn.click(); else break;
-        }
-        var curRows=container.querySelectorAll('.prof-row');
-        data.forEach(function(d,i){
-          if(!curRows[i]) return;
-          var ins=curRows[i].querySelectorAll('input');
-          if(ins[0]) ins[0].value=d.cargo||'';
-          if(ins[1]) ins[1].value=d.nombre||'';
+        if(!data.length) return;
+        // Limpiar el contenedor
+        container.innerHTML='';
+        // Recrear cada fila con los datos guardados
+        data.forEach(function(d){
+          var r=document.createElement('div'); r.className='prof-row';
+          var cargoFixed = profCargos[sec]; // undefined para constructora → custom
+          if(cargoFixed){
+            // Cargo fijo (readonly)
+            r.innerHTML='<input class="cargo" type="text" value="'+(d.cargo||cargoFixed)+'" readonly><input type="text" placeholder="Nombre completo" value="'+(d.nombre||'')+'"><button class="btn-rm" onclick="rmProfRow(this)">×</button>';
+          } else {
+            // Cargo editable (constructora)
+            r.innerHTML='<input class="cargo" type="text" placeholder="Cargo" value="'+(d.cargo||'')+'"><input type="text" placeholder="Nombre completo" value="'+(d.nombre||'')+'"><button class="btn-rm" onclick="rmProfRow(this)">×</button>';
+          }
+          container.appendChild(r);
         });
       });
     }
