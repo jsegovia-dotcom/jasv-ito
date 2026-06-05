@@ -1840,7 +1840,7 @@ function actualizarSgPreview() {
     s6.addText(lblReal,{x:leyX,y:leyY+leyLH,    w:5.0,h:leyLH,fontSize:14,fontFace:FONT,bold:true,color:'1a5fa8',valign:'middle'});
     s6.addText(lblDesv,{x:leyX,y:leyY+leyLH*2,  w:5.0,h:leyLH,fontSize:14,fontFace:FONT,bold:true,color:desvC, valign:'middle'});
     // Gráfico: posición exacta 8cm x 8cm, tamaño 16.3cm x 7.55cm
-    var gfxX=3.252, gfxY=2.0433, gfxW=6.4173; // x=8.26cm y=5.19cm w=16.3cm, h calculado por aspecto
+    var gfxX=3.252, gfxW=6.4173; var gfxY=CONT_Y+0.05+3*leyLH+0.1; // alineado con tabla
     // Tabla: izquierda del gráfico, alineada al top del gráfico
     var tblW=2.8, tblX=0.2;
     // Tabla comienza justo después de la leyenda (3 líneas × 0.38 = 1.14")
@@ -1886,7 +1886,8 @@ function actualizarSgPreview() {
           else if(cell.options) cell.options.fontSize=tblFontBody;
         });
       });
-      s6.addTable(csTD,{x:tblX,y:tblY,w:tblW,colW:[tblW*0.3,tblW*0.35,tblW*0.35],
+      var tblH=rowH*nRows;
+      s6.addTable(csTD,{x:tblX,y:tblY,w:tblW,h:Math.min(tblH,tblMaxH),colW:[tblW*0.3,tblW*0.35,tblW*0.35],
         rowH:rowH,border:{color:'D0D8DC',pt:0.5},fill:{color:'FFFFFF'}});
     }
     // Gráfico derecha
@@ -1915,6 +1916,9 @@ function actualizarSgPreview() {
       var cropW=maxX-minX+1, cropH=maxY-minY+1;
       // Calcular h proporcional al aspecto original — ancho fijo 16.3cm
       var gfxH=gfxW*(cropH/cropW);
+      // Asegurar que el gráfico no exceda el área disponible
+      var gfxMaxH=notaY-gfxY-0.1;
+      if(gfxH>gfxMaxH){ var sc2=gfxMaxH/gfxH; gfxH=gfxMaxH; gfxW=gfxW*sc2; gfxX=3.252+(6.4173-gfxW); }
       // Escalar a 150ppp respetando aspecto
       var targetW=Math.round(gfxW*150), targetH=Math.round(gfxH*150);
       var cvOut=document.createElement('canvas');
@@ -2224,9 +2228,10 @@ function actualizarSgPreview() {
       ['% Anticipo', pptPct(epP.pANT*100)],
       ['% Retenciones', pptPct(epP.pRET*100)],
     ];
-    sEP1.addTable(cRows,{x:CX,y:1.5748,w:4.5,colW:[2.8,1.7],fontSize:12,fontFace:FONT,align:'left',valign:'middle',rowH:0.36,border:{type:'solid',pt:0.5,color:'CCCCCC'},fill:{color:'FFFFFF'}});
+    sEP1.addTable(cRows,{x:CX,y:CONT_Y+0.05,w:4.5,colW:[2.8,1.7],fontSize:12,fontFace:FONT,align:'left',valign:'middle',rowH:0.36,border:{type:'solid',pt:0.5,color:'CCCCCC'},fill:{color:'FFFFFF'}});
 
     // Slide 2: Tabla EEPP (si hay filas)
+    console.log('[EP PPT] epFilas.length='+epFilas.length);
     if(epFilas.length > 0){
       var sEP2 = prs.addSlide({masterName:'JASV'});
       addHF(sEP2,'6. Control de Estados de Pago — EEPP',slideNum++);
@@ -2288,7 +2293,7 @@ function actualizarSgPreview() {
         {text:pptPct(acumTotPct),options:{align:'right',bold:true,fill:'2d7a4f',color:'FFFFFF'}},
         {text:pptPct(acumTotPct),options:{align:'right',bold:true,fill:'2d7a4f',color:'FFFFFF'}}
       ]);
-      sEP2.addTable(eppRows,{x:0.08,y:1.5748,w:9.84,colW:[0.5,0.8,0.65,0.65,0.8,0.65,0.8,0.75,0.75,0.85,0.7,0.85,0.6,0.6],
+      sEP2.addTable(eppRows,{x:0.08,y:CONT_Y+0.05,w:9.84,colW:[0.5,0.8,0.65,0.65,0.8,0.65,0.8,0.75,0.75,0.85,0.7,0.85,0.6,0.6],
         fontSize:9,fontFace:FONT,align:'right',valign:'middle',rowH:0.32,
         border:{type:'solid',pt:0.3,color:'CCCCCC'},fill:{color:'FFFFFF'}});
     }
