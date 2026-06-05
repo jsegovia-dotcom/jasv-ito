@@ -1022,46 +1022,63 @@ function actualizarSgPreview() {
           tctx.lineTo(0,0); tctx.closePath();
           tctx.fillStyle=hr2(m.color,0.3); tctx.strokeStyle=m.color; tctx.lineWidth=1;
           tctx.fill(); tctx.stroke(); tctx.restore();
-          // Ícono cámara — forma realista
+          // Ícono cámara — contorno negro sobre fondo blanco (estilo línea)
           tctx.save(); tctx.translate(nx,ny);
           var r=iconR;
-          // — Cuerpo de la cámara (rectángulo con esquinas redondeadas) —
-          var bw=Math.round(r*1.7), bh=Math.round(r*1.1), br=Math.round(r*0.18);
-          var bx=-Math.round(bw/2), by=-Math.round(bh*0.45);
+          var lw=Math.max(2, Math.round(r*0.09)); // grosor trazo
+          // Dimensiones cuerpo
+          var bw=Math.round(r*1.9), bh=Math.round(r*1.25), br=Math.round(r*0.2);
+          var bx=-Math.round(bw/2), by=-Math.round(bh*0.38);
+          // — Fondo blanco del ícono completo —
           tctx.beginPath();
           tctx.moveTo(bx+br, by);
           tctx.lineTo(bx+bw-br, by);
-          tctx.quadraticCurveTo(bx+bw, by, bx+bw, by+br);
+          tctx.quadraticCurveTo(bx+bw,by, bx+bw,by+br);
           tctx.lineTo(bx+bw, by+bh-br);
-          tctx.quadraticCurveTo(bx+bw, by+bh, bx+bw-br, by+bh);
+          tctx.quadraticCurveTo(bx+bw,by+bh, bx+bw-br,by+bh);
           tctx.lineTo(bx+br, by+bh);
-          tctx.quadraticCurveTo(bx, by+bh, bx, by+bh-br);
+          tctx.quadraticCurveTo(bx,by+bh, bx,by+bh-br);
           tctx.lineTo(bx, by+br);
-          tctx.quadraticCurveTo(bx, by, bx+br, by);
+          tctx.quadraticCurveTo(bx,by, bx+br,by);
           tctx.closePath();
-          tctx.fillStyle=m.color; tctx.fill();
-          // — Visor / jorobita superior izquierda —
-          var vw=Math.round(r*0.55), vh=Math.round(r*0.28);
-          var vx=bx+Math.round(r*0.2), vy=by-vh;
-          tctx.fillStyle=m.color;
-          tctx.fillRect(vx, vy, vw, vh+Math.round(r*0.1));
-          // — Lente: aro exterior blanco + círculo color + reflejo —
-          var lr=Math.round(r*0.52);
-          tctx.beginPath(); tctx.arc(0, Math.round(r*0.1), lr+Math.round(r*0.1), 0, Math.PI*2);
           tctx.fillStyle='#ffffff'; tctx.fill();
-          tctx.beginPath(); tctx.arc(0, Math.round(r*0.1), lr, 0, Math.PI*2);
-          tctx.fillStyle=m.color; tctx.fill();
-          tctx.beginPath(); tctx.arc(0, Math.round(r*0.1), Math.round(lr*0.55), 0, Math.PI*2);
-          tctx.fillStyle='#ffffff'; tctx.fill();
-          tctx.beginPath(); tctx.arc(0, Math.round(r*0.1), Math.round(lr*0.28), 0, Math.PI*2);
-          tctx.fillStyle=m.color; tctx.fill();
-          // — Reflejo de luz en lente (punto blanco) —
-          tctx.beginPath(); tctx.arc(-Math.round(lr*0.3), Math.round(r*0.1)-Math.round(lr*0.3), Math.round(lr*0.15), 0, Math.PI*2);
-          tctx.fillStyle='rgba(255,255,255,0.85)'; tctx.fill();
-          // — Flash / botón derecho pequeño —
+          // — Jorobita superior (centrada) —
+          var vw=Math.round(r*0.7), vh=Math.round(r*0.3), vr=Math.round(r*0.1);
+          var vx=-Math.round(vw/2), vy=by-vh;
+          // fondo blanco jorobita
           tctx.fillStyle='#ffffff';
-          tctx.beginPath(); tctx.arc(bx+bw-Math.round(r*0.28), by+Math.round(r*0.28), Math.round(r*0.13), 0, Math.PI*2);
-          tctx.fill();
+          tctx.fillRect(vx-lw, vy-lw, vw+lw*2, vh+lw);
+          // trazo jorobita
+          tctx.beginPath();
+          tctx.moveTo(vx+vr, vy);
+          tctx.lineTo(vx+vw-vr, vy);
+          tctx.quadraticCurveTo(vx+vw,vy, vx+vw,vy+vr);
+          tctx.lineTo(vx+vw, vy+vh);
+          tctx.lineTo(vx, vy+vh);
+          tctx.lineTo(vx, vy+vr);
+          tctx.quadraticCurveTo(vx,vy, vx+vr,vy);
+          tctx.closePath();
+          tctx.strokeStyle='#1a1a1a'; tctx.lineWidth=lw; tctx.stroke();
+          // — Cuerpo cámara (trazo) —
+          tctx.beginPath();
+          tctx.moveTo(bx+br, by);
+          tctx.lineTo(bx+bw-br, by);
+          tctx.quadraticCurveTo(bx+bw,by, bx+bw,by+br);
+          tctx.lineTo(bx+bw, by+bh-br);
+          tctx.quadraticCurveTo(bx+bw,by+bh, bx+bw-br,by+bh);
+          tctx.lineTo(bx+br, by+bh);
+          tctx.quadraticCurveTo(bx,by+bh, bx,by+bh-br);
+          tctx.lineTo(bx, by+br);
+          tctx.quadraticCurveTo(bx,by, bx+br,by);
+          tctx.closePath();
+          tctx.strokeStyle='#1a1a1a'; tctx.lineWidth=lw; tctx.stroke();
+          // — Lente circular (aro doble) —
+          var cy=by+Math.round(bh*0.52);
+          var lr=Math.round(r*0.55);
+          tctx.beginPath(); tctx.arc(0, cy, lr, 0, Math.PI*2);
+          tctx.strokeStyle='#1a1a1a'; tctx.lineWidth=lw; tctx.stroke();
+          tctx.beginPath(); tctx.arc(0, cy, Math.round(lr*0.65), 0, Math.PI*2);
+          tctx.strokeStyle='#1a1a1a'; tctx.lineWidth=lw; tctx.stroke();
           tctx.restore();
         });
       }
