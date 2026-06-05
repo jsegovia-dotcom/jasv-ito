@@ -140,22 +140,22 @@
 <div class="app">
 <nav class="sidebar">
   <div class="sidebar-lbl">Secciones</div>
-  <div class="step active" onclick="irA(0)"><div class="step-n">1</div><div class="step-t">Portada</div></div>
-  <div class="step" onclick="irA(1)"><div class="step-n">2</div><div class="step-t">Datos del proyecto</div></div>
-  <div class="step" onclick="irA(2)"><div class="step-n">3</div><div class="step-t">Estatus documentación</div></div>
-  <div class="step" onclick="irA(3)"><div class="step-n">4</div><div class="step-t">Estatus proyectos</div></div>
-  <div class="step" id="step-ep" onclick="irA(9)" style="display:none"><div class="step-n" id="step-ep-n">5</div><div class="step-t">Estados de Pago</div></div>
-  <div class="step" onclick="irA(4)"><div class="step-n" id="step-n-cs">5</div><div class="step-t">Control Curva S</div></div>
-  <div class="step" onclick="irA(5)"><div class="step-n" id="step-n-sg">6</div><div class="step-t">Situación general</div></div>
-  <div class="step" onclick="irA(6)"><div class="step-n" id="step-n-lo">7</div><div class="step-t">Lay Out Arquitectura</div></div>
-  <div class="step" onclick="irA(7)"><div class="step-n" id="step-n-ft">8</div><div class="step-t">Fotografías</div></div>
-  <div class="step" onclick="irA(8)"><div class="step-n" id="step-n-anx">9</div><div class="step-t">Anexos</div></div>
+  <div class="step active" data-sec="0" onclick="irA(0)"><div class="step-n">1</div><div class="step-t">Portada</div></div>
+  <div class="step" data-sec="1" onclick="irA(1)"><div class="step-n">2</div><div class="step-t">Datos del proyecto</div></div>
+  <div class="step" data-sec="2" onclick="irA(2)"><div class="step-n">3</div><div class="step-t">Estatus documentación</div></div>
+  <div class="step" data-sec="3" onclick="irA(3)"><div class="step-n">4</div><div class="step-t">Estatus proyectos</div></div>
+  <div class="step" data-sec="9" id="step-ep" onclick="irA(9)" style="display:none"><div class="step-n" id="step-ep-n">5</div><div class="step-t">Estados de Pago</div></div>
+  <div class="step" data-sec="4" onclick="irA(4)"><div class="step-n" id="step-n-cs">5</div><div class="step-t">Control Curva S</div></div>
+  <div class="step" data-sec="5" onclick="irA(5)"><div class="step-n" id="step-n-sg">6</div><div class="step-t">Situación general</div></div>
+  <div class="step" data-sec="6" onclick="irA(6)"><div class="step-n" id="step-n-lo">7</div><div class="step-t">Lay Out Arquitectura</div></div>
+  <div class="step" data-sec="7" onclick="irA(7)"><div class="step-n" id="step-n-ft">8</div><div class="step-t">Fotografías</div></div>
+  <div class="step" data-sec="8" onclick="irA(8)"><div class="step-n" id="step-n-anx">9</div><div class="step-t">Anexos</div></div>
 </nav>
 <main class="main">
 
 <!-- SEC 0 PORTADA -->
 <div class="sec active" id="sec-0">
-  <div class="sec-tag">Sección 1 de 10</div><div class="sec-title">Portada del informe</div>
+  <div class="sec-tag" id="stag-0">Sección 1 de 9</div><div class="sec-title">Portada del informe</div>
   <div class="sec-desc">Datos de identificación. La vista previa se actualiza en tiempo real.</div>
   <div class="card"><div class="card-title">Identificación del informe</div>
     <div class="g3">
@@ -194,7 +194,7 @@
 
 <!-- SEC 1 DATOS PROYECTO -->
 <div class="sec" id="sec-1">
-  <div class="sec-tag">Sección 2 de 10</div><div class="sec-title">Datos del proyecto</div>
+  <div class="sec-tag" id="stag-1">Sección 2 de 9</div><div class="sec-title">Datos del proyecto</div>
   <div class="sec-desc">Información general. Se mantiene estable salvo modificaciones contractuales.</div>
   <div class="card"><div class="card-title">Ubicación en el edificio</div>
     <div class="g1"><div class="fld"><label>N° de oficina / piso(s)</label><input type="text" id="nro-oficina" placeholder="Ej: Oficinas 1201, 1202 — Pisos 12 y 13"><span class="hint">Puede ingresar varios números separados por coma.</span></div></div>
@@ -261,7 +261,7 @@
 
 <!-- SEC 2 ESTATUS DOC -->
 <div class="sec" id="sec-2">
-  <div class="sec-tag">Sección 3 de 10</div><div class="sec-title">Estatus de documentación</div>
+  <div class="sec-tag" id="stag-2">Sección 3 de 9</div><div class="sec-title">Estatus de documentación</div>
   <div class="sec-desc">Clic en el semáforo para cambiar estado. Textos editables directamente en la celda.</div>
   <div class="card"><div class="card-title">Tabla de estatus</div>
     <div class="tbl-wrap"><table class="tbl"><thead><tr>
@@ -277,7 +277,7 @@
 
 <!-- SEC 3 ESTATUS PROYECTOS -->
 <div class="sec" id="sec-3">
-  <div class="sec-tag">Sección 4 de 10</div><div class="sec-title">Estatus de aprobación de proyectos</div>
+  <div class="sec-tag" id="stag-3">Sección 4 de 9</div><div class="sec-title">Estatus de aprobación de proyectos</div>
   <div class="sec-desc">Historial de revisiones por especialidad.</div>
   <div class="card"><div class="card-title">Tabla de proyectos y revisiones</div>
     <div class="ptbl-wrap"><table class="ptbl"><thead><tr>
@@ -293,7 +293,7 @@
 
 <!-- SEC 4 CURVA S -->
 <div class="sec" id="sec-4">
-  <div class="sec-tag">Sección 5 de 10</div><div class="sec-title">Control Curva S</div>
+  <div class="sec-tag" id="stag-4">Sección 5 de 9</div><div class="sec-title">Control Curva S</div>
   <div class="sec-desc">Define el día de control y genera las fechas. Completa el % real semana a semana.</div>
   <div class="card"><div class="card-title">Configuración del control de avance</div>
     <div class="g3">
@@ -332,7 +332,7 @@
 
 <!-- SEC 5 SITUACIÓN GENERAL -->
 <div class="sec" id="sec-5">
-  <div class="sec-tag">Sección 6 de 10</div><div class="sec-title">Situación general de la obra</div>
+  <div class="sec-tag" id="stag-5">Sección 6 de 9</div><div class="sec-title">Situación general de la obra</div>
   <div class="sec-desc">Lista numerada de la visita semanal. Los puntos 1 y 2 se generan automáticamente.</div>
   <div class="card"><div class="card-title">Punto 1 — Visita ITO</div>
     <div class="sg-punto-auto"><span class="sg-num">1.</span><span id="sg-p1-texto">Con fecha <em>—</em> se realizó la visita N° <em>—</em> a la obra por parte de esta ITO.</span></div>
@@ -361,7 +361,7 @@
 
 <!-- SECCIONES PENDIENTES -->
 <div class="sec" id="sec-6">
-  <div class="sec-tag">Sección 7 de 10</div>
+  <div class="sec-tag" id="stag-6">Sección 7 de 9</div>
   <div class="sec-title">Lay Out Arquitectura vigente</div>
   <div class="sec-desc">Sube el plano de arquitectura vigente. Si hubo un cambio de lay out, indica la nueva versión y fecha. El plano se repite cada semana hasta que haya una nueva versión.</div>
 
@@ -423,7 +423,7 @@
   </div>
 </div>
 <div class="sec" id="sec-7">
-  <div class="sec-tag">Sección 8 de 10</div>
+  <div class="sec-tag" id="stag-7">Sección 8 de 9</div>
   <div class="sec-title">Fotografías relevantes</div>
   <div class="sec-desc">Agrega hasta 10 fotografías. Puedes agruparlas por rol u oficina, agregar pie de foto y marcar situaciones con advertencia.</div>
 
@@ -452,7 +452,7 @@
   </div>
 </div>
 <div class="sec" id="sec-8">
-  <div class="sec-tag">Sección 9 de 10</div>
+  <div class="sec-tag" id="stag-8">Sección 9 de 9</div>
   <div class="sec-title">Anexos</div>
   <div class="sec-desc">Adjunta documentos relevantes que complementan el informe. Cada anexo lleva un título, tipo y descripción opcional.</div>
 
@@ -487,7 +487,7 @@
 
 <!-- SEC 9 ESTADOS DE PAGO -->
 <div class="sec" id="sec-9" style="display:none">
-  <div class="sec-tag">Sección 10 de 10</div>
+  <div class="sec-tag" id="stag-9">Sección 5 de 10</div>
   <div class="sec-title">Control de Estados de Pago</div>
   <div class="sec-desc">Datos financieros del contrato y registro de estados de pago aprobados por la ITO.</div>
 
