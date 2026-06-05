@@ -7,14 +7,19 @@ var sgPuntoCount = 0;
 // ══ NAVEGACIÓN ══
 function irA(n) {
   document.getElementById('sec-' + cur).classList.remove('active');
+  // Marcar step anterior como done usando data-sec
   var steps = document.querySelectorAll('.step');
-  steps[cur].classList.remove('active');
-  steps[cur].classList.add('done');
+  for (var j = 0; j < steps.length; j++) {
+    var ds = steps[j].getAttribute('data-sec') || String(j);
+    if (String(ds) === String(cur)) { steps[j].classList.remove('active'); steps[j].classList.add('done'); break; }
+  }
   cur = n;
   document.getElementById('sec-' + n).classList.add('active');
+  // Marcar step activo usando data-sec
   for (var i = 0; i < steps.length; i++) {
+    var ds2 = steps[i].getAttribute('data-sec') || String(i);
     steps[i].classList.remove('active');
-    if (i === n) { steps[i].classList.add('active'); steps[i].classList.remove('done'); }
+    if (String(ds2) === String(n)) { steps[i].classList.add('active'); steps[i].classList.remove('done'); }
   }
   window.scrollTo({ top: 0, behavior: 'smooth' });
   // Auto-guardar silencioso al navegar entre secciones
@@ -1871,7 +1876,8 @@ function actualizarSgPreview() {
     sEP.addTable(cRows,{x:CX,y:CONT_Y+0.05,w:cW,colW:[2.0,1.4],fontSize:11,fontFace:FONT,align:'left',valign:'middle',rowH:0.33,border:{type:'solid',pt:0.5,color:'CCCCCC'},fill:{color:'FFFFFF'}});
 
     // — Tabla EEPP (derecha del contrato) —
-    if(epFilas.length > 0){
+    // Mostrar tabla EEPP siempre (vacía si no hay filas)
+    {
       var acumCD2=0,tCD2=0,tGG2=0,tUTI2=0,tS12=0,tDC2=0,tS22=0,tAT2=0,tRT2=0,tNT2=0,tIV2=0,tTT2=0;
       var hdr2=[
         {text:'N°',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',fontSize:8}},
@@ -1953,7 +1959,7 @@ function actualizarSgPreview() {
     // Tabla: izquierda del gráfico, alineada al top del gráfico
     var tblW=2.8, tblX=0.2;
     // Tabla comienza justo después de la leyenda (3 líneas × 0.38 = 1.14")
-    var notaY=5.7; // bajar nota para dar más espacio
+    var notaY=MAX_Y-0.5; // nota queda antes del pie
     // Tabla avance — fuente 12 encabezado, 10 body
     var csRows=document.querySelectorAll('#cs-tbody tr');
     if(csRows.length>0){
@@ -1995,9 +2001,20 @@ function actualizarSgPreview() {
           else if(cell.options) cell.options.fontSize=tblFontBody;
         });
       });
-      var tblH=rowH*nRows;
-      s6.addTable(csTD,{x:tblX,y:tblY,w:tblW,h:Math.min(tblH,tblMaxH),colW:[tblW*0.3,tblW*0.35,tblW*0.35],
-        rowH:rowH,border:{color:'D0D8DC',pt:0.5},fill:{color:'FFFFFF'}});
+      // Ajuste final: rowH que garantiza que la tabla entre en tblMaxH
+      var rowHFinal = tblMaxH / Math.max(nRows, 1);
+      rowHFinal = Math.max(rowHFinal, 0.13); // mínimo absoluto
+      if(rowHFinal < 0.18){ tblFontHead=9; tblFontBody=7; }
+      if(rowHFinal < 0.15){ tblFontHead=7; tblFontBody=6; }
+      csTD.forEach(function(row,ri){
+        row.forEach(function(cell){
+          if(ri===0) cell.options.fontSize=tblFontHead;
+          else if(cell.options) cell.options.fontSize=tblFontBody;
+        });
+      });
+      // h explícito = exactamente tblMaxH para que no desborde nunca
+      s6.addTable(csTD,{x:tblX,y:tblY,w:tblW,h:tblMaxH,colW:[tblW*0.3,tblW*0.35,tblW*0.35],
+        rowH:rowHFinal,border:{color:'D0D8DC',pt:0.5},fill:{color:'FFFFFF'}});
     }
     // Gráfico derecha
     var chartCanvas=document.getElementById('cs-chart');
@@ -2036,7 +2053,9 @@ function actualizarSgPreview() {
       ctxOut.fillStyle='#FFFFFF';
       ctxOut.fillRect(0,0,targetW,targetH);
       ctxOut.drawImage(chartCanvas,minX,minY,cropW,cropH,0,0,targetW,targetH);
-      s6.addImage({data:cvOut.toDataURL('image/jpeg',0.88),x:gfxX,y:gfxY,w:gfxW,h:gfxH});
+      // Limitar gráfico para que no exceda notaY
+      if(gfxY + gfxH > notaY){ gfxH = notaY - gfxY - 0.05; if(gfxH>0) gfxW = gfxH*(cropW/cropH); }
+      if(gfxH > 0) s6.addImage({data:cvOut.toDataURL('image/jpeg',0.88),x:gfxX,y:gfxY,w:gfxW,h:gfxH});
     }
     // Nota en negrita con prefijo
     var csNota=document.getElementById('cs-nota').value;
@@ -2560,14 +2579,17 @@ function actualizarSgPreview() {
     fotoGrupos = (estado.fotoGrupos||[]).map(function(g){ return Object.assign({},g); });
     if(typeof renderFotos==='function') renderFotos();
     // Restaurar estados de pago
-    if(document.getElementById('ep-cd'))          document.getElementById('ep-cd').value           = estado.epCD          || '';
-    if(document.getElementById('ep-gg'))          document.getElementById('ep-gg').value           = estado.epGG          || '';
-    if(document.getElementById('ep-uti'))         document.getElementById('ep-uti').value          = estado.epUTI         || '';
-    if(document.getElementById('ep-desc'))        document.getElementById('ep-desc').value         = estado.epDESC        || '';
-    if(document.getElementById('ep-pct-anticipo'))document.getElementById('ep-pct-anticipo').value = estado.epPctAnticipo || '';
-    if(document.getElementById('ep-pct-ret'))     document.getElementById('ep-pct-ret').value      = estado.epPctRet      || '';
+    // Restaurar EP: desde estado del informe, o fallback a datos de la obra
+    var epFallback = obraActual || {};
+    if(document.getElementById('ep-cd'))          document.getElementById('ep-cd').value           = estado.epCD          || epFallback.epCD          || '';
+    if(document.getElementById('ep-gg'))          document.getElementById('ep-gg').value           = estado.epGG          || epFallback.epGG          || '';
+    if(document.getElementById('ep-uti'))         document.getElementById('ep-uti').value          = estado.epUTI         || epFallback.epUTI         || '';
+    if(document.getElementById('ep-desc'))        document.getElementById('ep-desc').value         = estado.epDESC        || epFallback.epDESC        || '';
+    if(document.getElementById('ep-pct-anticipo'))document.getElementById('ep-pct-anticipo').value = estado.epPctAnticipo || epFallback.epPctAnticipo || '';
+    if(document.getElementById('ep-pct-ret'))     document.getElementById('ep-pct-ret').value      = estado.epPctRet      || epFallback.epPctRet      || '';
     epFilas = (estado.epFilas||[]).map(function(f){ return {cd: f.cd||0}; });
     if(typeof epRecalcContrato==='function') epRecalcContrato();
+    if(typeof epRenderEepp==='function') epRenderEepp();
     // Re-aplicar config EEPP al cargar informe
     if(obraActual && typeof aplicarConfigEEPP==='function') aplicarConfigEEPP(obraActual.conEEPP);
     if(typeof renderGrupos==='function') renderGrupos();
@@ -3185,6 +3207,7 @@ function actualizarSgPreview() {
   // ══ FIN RESET ══
 
   function abrirFormulario(obra, inf, esNuevo) {
+    obraActual = obra;       // CRÍTICO: asignar antes de restaurarEstado para fallback EP
     informeActual = inf;
     // Reset completo del formulario antes de cargar datos
     window._cargandoFormulario = true;
