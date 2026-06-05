@@ -1022,19 +1022,21 @@ function actualizarSgPreview() {
           tctx.fill(); tctx.stroke(); tctx.restore();
           // Ícono cámara (círculo + símbolo)
           tctx.save(); tctx.translate(nx,ny);
-          // Círculo de fondo (doble)
-          tctx.beginPath(); tctx.arc(0,0,18,0,Math.PI*2);
+          // Círculo de fondo: diámetro 0.67cm = 80.4px → radio 40.2px
+          tctx.beginPath(); tctx.arc(0,0,40.2,0,Math.PI*2);
           tctx.fillStyle=m.color; tctx.fill();
-          // Ícono cámara al doble de tamaño
+          // Cuerpo cámara proporcional al círculo
           tctx.fillStyle='#ffffff';
-          tctx.fillRect(-10,-7,20,14); // cuerpo (doble)
-          tctx.beginPath(); tctx.arc(0,0,5.6,0,Math.PI*2); // lente (doble)
+          tctx.fillRect(-22,-15,44,31);
+          // Lente
+          tctx.beginPath(); tctx.arc(0,0,15.3,0,Math.PI*2);
           tctx.fillStyle=m.color; tctx.fill();
-          tctx.beginPath(); tctx.arc(0,0,2.4,0,Math.PI*2);
+          // Reflejo lente
+          tctx.beginPath(); tctx.arc(0,0,6.4,0,Math.PI*2);
           tctx.fillStyle='#ffffff'; tctx.fill();
-          // Botón superior cámara (doble)
+          // Botón superior cámara
           tctx.fillStyle='#ffffff';
-          tctx.fillRect(2,-10,6,4);
+          tctx.fillRect(5,-26,13,9);
           tctx.restore();
         });
       }
