@@ -1007,8 +1007,8 @@ function actualizarSgPreview() {
         // Dibujar plano limpio (sin marcadores del editor)
         tctx.drawImage(layoutGlobal.img,ox,oy,Math.round(edCanvas.width*sc),Math.round(edCanvas.height*sc));
         // Tamaños fijos en px del canvas miniatura (336px = 2.8cm)
-        // iconR=55px → diámetro ~0.92cm | coneR=150px → radio ~1.25cm
-        var iconR = 55;
+        // iconR=50px (-10%) | coneR=150px
+        var iconR = 50;
         var coneR = 150;
         currentMarkers.forEach(function(m,i){
           var nx=m.x*sc+ox, ny=m.y*sc+oy;
@@ -1022,8 +1022,9 @@ function actualizarSgPreview() {
           tctx.lineTo(0,0); tctx.closePath();
           tctx.fillStyle=hr2(m.color,0.3); tctx.strokeStyle=m.color; tctx.lineWidth=1;
           tctx.fill(); tctx.stroke(); tctx.restore();
-          // Ícono cámara — contorno negro sobre fondo blanco (estilo línea)
+          // Ícono cámara — contorno negro, girado en dirección del cono
           tctx.save(); tctx.translate(nx,ny);
+          tctx.rotate((m.angle-90)*Math.PI/180);
           var r=iconR;
           var lw=Math.max(2, Math.round(r*0.09)); // grosor trazo
           // Dimensiones cuerpo
