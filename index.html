@@ -74,8 +74,8 @@
 </div>
 
 <!-- MODAL NUEVA/EDITAR OBRA -->
-<div id="modal-obra" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center;" onclick="if(event.target===this)cerrarModalObra()">
-  <div style="background:var(--color-background-primary);border-radius:16px;width:min(640px,96vw);max-height:90vh;overflow-y:auto;padding:28px;box-shadow:0 8px 40px rgba(0,0,0,.25);">
+<div id="modal-obra" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:flex-start;justify-content:center;overflow-y:auto;padding:24px 16px;" onclick="if(event.target===this)cerrarModalObra()">
+  <div style="background:var(--color-background-primary);border-radius:16px;width:min(640px,96vw);padding:28px;box-shadow:0 8px 40px rgba(0,0,0,.25);margin:auto;">
     <h2 id="modal-obra-titulo" style="font-size:18px;font-weight:500;margin:0 0 20px;color:var(--color-text-primary);">Nueva obra</h2>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
       <div class="fld" style="grid-column:1/-1;"><label>Nombre de la obra *</label><input type="text" id="mo-nombre" placeholder="Ej: Habilitación Oficinas 12° piso"></div>
