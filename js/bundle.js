@@ -1022,24 +1022,46 @@ function actualizarSgPreview() {
           tctx.lineTo(0,0); tctx.closePath();
           tctx.fillStyle=hr2(m.color,0.3); tctx.strokeStyle=m.color; tctx.lineWidth=1;
           tctx.fill(); tctx.stroke(); tctx.restore();
-          // Ícono cámara proporcional
+          // Ícono cámara — forma realista
           tctx.save(); tctx.translate(nx,ny);
-          // Círculo de fondo
-          tctx.beginPath(); tctx.arc(0,0,iconR,0,Math.PI*2);
+          var r=iconR;
+          // — Cuerpo de la cámara (rectángulo con esquinas redondeadas) —
+          var bw=Math.round(r*1.7), bh=Math.round(r*1.1), br=Math.round(r*0.18);
+          var bx=-Math.round(bw/2), by=-Math.round(bh*0.45);
+          tctx.beginPath();
+          tctx.moveTo(bx+br, by);
+          tctx.lineTo(bx+bw-br, by);
+          tctx.quadraticCurveTo(bx+bw, by, bx+bw, by+br);
+          tctx.lineTo(bx+bw, by+bh-br);
+          tctx.quadraticCurveTo(bx+bw, by+bh, bx+bw-br, by+bh);
+          tctx.lineTo(bx+br, by+bh);
+          tctx.quadraticCurveTo(bx, by+bh, bx, by+bh-br);
+          tctx.lineTo(bx, by+br);
+          tctx.quadraticCurveTo(bx, by, bx+br, by);
+          tctx.closePath();
           tctx.fillStyle=m.color; tctx.fill();
-          // Cuerpo cámara
-          var cb=Math.round(iconR*0.85), ch=Math.round(iconR*0.6);
-          tctx.fillStyle='#ffffff';
-          tctx.fillRect(-cb,-ch,cb*2,ch*2);
-          // Lente
-          tctx.beginPath(); tctx.arc(0,0,Math.round(iconR*0.38),0,Math.PI*2);
-          tctx.fillStyle=m.color; tctx.fill();
-          // Reflejo lente
-          tctx.beginPath(); tctx.arc(0,0,Math.round(iconR*0.16),0,Math.PI*2);
+          // — Visor / jorobita superior izquierda —
+          var vw=Math.round(r*0.55), vh=Math.round(r*0.28);
+          var vx=bx+Math.round(r*0.2), vy=by-vh;
+          tctx.fillStyle=m.color;
+          tctx.fillRect(vx, vy, vw, vh+Math.round(r*0.1));
+          // — Lente: aro exterior blanco + círculo color + reflejo —
+          var lr=Math.round(r*0.52);
+          tctx.beginPath(); tctx.arc(0, Math.round(r*0.1), lr+Math.round(r*0.1), 0, Math.PI*2);
           tctx.fillStyle='#ffffff'; tctx.fill();
-          // Botón superior
+          tctx.beginPath(); tctx.arc(0, Math.round(r*0.1), lr, 0, Math.PI*2);
+          tctx.fillStyle=m.color; tctx.fill();
+          tctx.beginPath(); tctx.arc(0, Math.round(r*0.1), Math.round(lr*0.55), 0, Math.PI*2);
+          tctx.fillStyle='#ffffff'; tctx.fill();
+          tctx.beginPath(); tctx.arc(0, Math.round(r*0.1), Math.round(lr*0.28), 0, Math.PI*2);
+          tctx.fillStyle=m.color; tctx.fill();
+          // — Reflejo de luz en lente (punto blanco) —
+          tctx.beginPath(); tctx.arc(-Math.round(lr*0.3), Math.round(r*0.1)-Math.round(lr*0.3), Math.round(lr*0.15), 0, Math.PI*2);
+          tctx.fillStyle='rgba(255,255,255,0.85)'; tctx.fill();
+          // — Flash / botón derecho pequeño —
           tctx.fillStyle='#ffffff';
-          tctx.fillRect(Math.round(iconR*0.15),-Math.round(iconR*1.05),Math.round(iconR*0.5),Math.round(iconR*0.28));
+          tctx.beginPath(); tctx.arc(bx+bw-Math.round(r*0.28), by+Math.round(r*0.28), Math.round(r*0.13), 0, Math.PI*2);
+          tctx.fill();
           tctx.restore();
         });
       }
