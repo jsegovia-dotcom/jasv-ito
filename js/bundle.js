@@ -1000,14 +1000,18 @@ function actualizarSgPreview() {
       // Fondo blanco siempre
       tctx.fillStyle='#ffffff'; tctx.fillRect(0,0,tw,th);
       if(layoutGlobal.img){
-        // Escalar plano para que quepa en el cuadrado manteniendo proporción (contain)
+        // Usar edCanvas como fuente de escala (coords marcadores = coords edCanvas)
         var sc=Math.min((tw-2)/edCanvas.width,(th-2)/edCanvas.height);
         var ox=Math.round((tw-edCanvas.width*sc)/2);
         var oy=Math.round((th-edCanvas.height*sc)/2);
+        // Dibujar plano limpio (sin marcadores del editor)
         tctx.drawImage(layoutGlobal.img,ox,oy,Math.round(edCanvas.width*sc),Math.round(edCanvas.height*sc));
-        // Dibujar marcadores — tamaño relativo al canvas miniatura
-        var iconR = Math.round(tw * 0.022); // radio ícono: 2.2% de 336 ≈ 7px
-        var coneR = Math.round(tw * 0.10);  // radio cono: 10% de 336 ≈ 34px
+        // Tamaños relativos al canvas resultante (edCanvas escalado)
+        var scaledW = edCanvas.width * sc;
+        var scaledH = edCanvas.height * sc;
+        console.log('Miniatura sc='+sc.toFixed(3)+' scaledW='+Math.round(scaledW)+' iconR prev='+Math.round(tw*0.022));
+        var iconR = Math.round(Math.min(scaledW,scaledH) * 0.030); // 3% del lado menor escalado
+        var coneR = Math.round(Math.min(scaledW,scaledH) * 0.115); // 11.5% del lado menor
         currentMarkers.forEach(function(m,i){
           var nx=m.x*sc+ox, ny=m.y*sc+oy;
           function hr2(h,a){var r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return 'rgba('+r+','+g+','+b+','+a+')';}
