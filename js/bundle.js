@@ -912,6 +912,27 @@ function actualizarSgPreview() {
       +'</tr>';
   }
 
+  // ══ FUNCIONES MODAL EEPP ══
+  function toggleModalEEPP() {
+    var chk = document.getElementById('mo-con-eepp');
+    var panel = document.getElementById('mo-eepp-panel');
+    if(panel) panel.style.display = (chk && chk.checked) ? 'block' : 'none';
+  }
+
+  function moEpRecalc() {
+    var cd  = parseFloat((document.getElementById('mo-ep-cd')||{}).value)   || 0;
+    var gg  = parseFloat((document.getElementById('mo-ep-gg')||{}).value)   || 0;
+    var uti = parseFloat((document.getElementById('mo-ep-uti')||{}).value)  || 0;
+    var dc  = parseFloat((document.getElementById('mo-ep-desc')||{}).value) || 0;
+    var sub = cd + gg + uti;
+    var net = sub - dc;
+    var iva = net * 0.19;
+    var tot = net + iva;
+    function setV(id,v){ var el=document.getElementById(id); if(el) el.value=v>0?Math.round(v*100)/100:''; }
+    setV('mo-ep-subtotal', sub); setV('mo-ep-neto', net);
+    setV('mo-ep-iva', iva);      setV('mo-ep-total', tot);
+  }
+
   // ══ CONTROL EEPP POR PROYECTO ══
   var _conEEPP = false; // estado global del proyecto actual
 
@@ -3136,6 +3157,8 @@ function actualizarSgPreview() {
     if (mainTop3) mainTop3.style.display = '';
     var tb = document.getElementById('inf-topbar');
     if (tb) tb.style.display = '';
+    // Aplicar configuración EEPP de la obra
+    aplicarConfigEEPP(obra.conEEPP);
     // irA(0) will be called after data is loaded
     if (esNuevo) {
       // ══ Datos FIJOS de la obra (siempre pre-cargados) ══
@@ -3163,6 +3186,13 @@ function actualizarSgPreview() {
         if(ftEl) ftEl.value=fi2.toISOString().split('T')[0];
       }
       actualizarPortada();
+      // Pre-cargar datos EP de la obra en la sección 9
+      if(obra.conEEPP){
+        var epPreMap={'ep-cd':obra.epCD,'ep-gg':obra.epGG,'ep-uti':obra.epUTI,
+                      'ep-desc':obra.epDESC,'ep-pct-anticipo':obra.epPctAnticipo,'ep-pct-ret':obra.epPctRet};
+        Object.keys(epPreMap).forEach(function(id){ var el=document.getElementById(id); if(el && epPreMap[id]) el.value=epPreMap[id]; });
+        if(typeof epRecalcContrato==='function') epRecalcContrato();
+      }
       // Limpiar punto 1 con valores por defecto
     var p1el=document.getElementById('sg-p1-texto');
     if(p1el) p1el.innerHTML='Con fecha <em>—</em> se realizó la visita N° <em>—</em> a la obra.';
@@ -3488,6 +3518,11 @@ function actualizarSgPreview() {
     });
     var eppChk=document.getElementById('mo-con-eepp');
     if(eppChk) eppChk.checked=false;
+    ['mo-ep-cd','mo-ep-gg','mo-ep-uti','mo-ep-desc','mo-ep-anticipo','mo-ep-ret',
+     'mo-ep-subtotal','mo-ep-neto','mo-ep-iva','mo-ep-total'].forEach(function(id){
+      var el=document.getElementById(id); if(el) el.value='';
+    });
+    toggleModalEEPP();
     var fi=document.getElementById('mo-fecha-inicio'); if(fi) fi.value='';
     var pl=document.getElementById('mo-plazo'); if(pl) pl.value='';
     document.getElementById('modal-obra').style.display='flex';
@@ -3512,6 +3547,12 @@ function actualizarSgPreview() {
     if(monSel && obraActual.moneda) monSel.value=obraActual.moneda;
     var eppChk=document.getElementById('mo-con-eepp');
     if(eppChk) eppChk.checked = !!obraActual.conEEPP;
+    // Restaurar datos EP en modal
+    var moMap={'mo-ep-cd':obraActual.epCD,'mo-ep-gg':obraActual.epGG,'mo-ep-uti':obraActual.epUTI,
+               'mo-ep-desc':obraActual.epDESC,'mo-ep-anticipo':obraActual.epPctAnticipo,'mo-ep-ret':obraActual.epPctRet};
+    Object.keys(moMap).forEach(function(id){ var el=document.getElementById(id); if(el) el.value=moMap[id]||''; });
+    moEpRecalc();
+    toggleModalEEPP();
     document.getElementById('modal-obra').style.display='flex';
   }
 
@@ -3534,7 +3575,13 @@ function actualizarSgPreview() {
       monto: document.getElementById('mo-monto').value.trim(),
       montoDesc: document.getElementById('mo-monto-desc').value.trim(),
       descripcion: document.getElementById('mo-descripcion').value.trim(),
-      conEEPP: document.getElementById('mo-con-eepp') ? document.getElementById('mo-con-eepp').checked : false
+      conEEPP: document.getElementById('mo-con-eepp') ? document.getElementById('mo-con-eepp').checked : false,
+      epCD:         (document.getElementById('mo-ep-cd')||{}).value      || '',
+      epGG:         (document.getElementById('mo-ep-gg')||{}).value      || '',
+      epUTI:        (document.getElementById('mo-ep-uti')||{}).value     || '',
+      epDESC:       (document.getElementById('mo-ep-desc')||{}).value    || '',
+      epPctAnticipo:(document.getElementById('mo-ep-anticipo')||{}).value|| '',
+      epPctRet:     (document.getElementById('mo-ep-ret')||{}).value     || ''
     };
     var obras = cargarObras();
     if (modoEdicionObra && obraActual) {
