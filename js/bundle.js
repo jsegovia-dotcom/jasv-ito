@@ -3181,7 +3181,7 @@ function actualizarSgPreview() {
       // Fecha término calculada
       if(obra.fechaInicio && obra.plazo){
         var fi2=new Date(obra.fechaInicio+'T12:00:00');
-        fi2.setDate(fi2.getDate()+parseInt(obra.plazo));
+        fi2.setDate(fi2.getDate()+parseInt(obra.plazo)-1); // día 1 = fecha inicio
         var ftEl=document.getElementById('fecha-termino');
         if(ftEl) ftEl.value=fi2.toISOString().split('T')[0];
       }
