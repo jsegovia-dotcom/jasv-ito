@@ -1023,15 +1023,17 @@ function actualizarSgPreview() {
           tctx.lineTo(0,0); tctx.closePath();
           tctx.fillStyle=hr2(m.color,0.3); tctx.strokeStyle=m.color; tctx.lineWidth=1;
           tctx.fill(); tctx.stroke();
-          // — Ícono cámara en el mismo espacio rotado —
-          // La cámara se posiciona en el origen (nx,ny) ya rotado
-          // La lente apunta hacia Y negativo (dirección del cono)
-          // El cuerpo se extienda hacia Y positivo (detrás)
+          // — Ícono cámara: girado 90° extra + desplazado detrás del origen —
+          // La cámara tiene lente a la derecha (+X) → rotar -90° la pone apuntando a -Y
+          // Desplazamos hacia +Y para que quede detrás del cono
+          tctx.save();
+          tctx.rotate(-Math.PI/2); // lente apunta ahora hacia -Y (dirección cono)
+          tctx.translate(0, Math.round(iconR*0.55)); // desplazar cuerpo detrás
           var r=iconR;
-          var lw=Math.max(2, Math.round(r*0.09)); // grosor trazo
-          // Dimensiones cuerpo — lente centrada en Y=0, cuerpo hacia Y positivo
+          var lw=Math.max(2, Math.round(r*0.09));
+          // Cámara orientada horizontalmente: lente a la derecha (+X)
           var bw=Math.round(r*1.9), bh=Math.round(r*1.25), br=Math.round(r*0.2);
-          var bx=-Math.round(bw/2), by=-Math.round(bh*0.75);
+          var bx=-Math.round(bw*0.75), by=-Math.round(bh/2);
           // — Fondo blanco del ícono completo —
           tctx.beginPath();
           tctx.moveTo(bx+br, by);
@@ -1045,13 +1047,11 @@ function actualizarSgPreview() {
           tctx.quadraticCurveTo(bx,by, bx+br,by);
           tctx.closePath();
           tctx.fillStyle='#ffffff'; tctx.fill();
-          // — Jorobita superior (centrada) —
-          var vw=Math.round(r*0.7), vh=Math.round(r*0.3), vr=Math.round(r*0.1);
+          // — Jorobita superior del cuerpo (centrada en X, sobre borde superior) —
+          var vw=Math.round(r*0.5), vh=Math.round(r*0.22), vr=Math.round(r*0.08);
           var vx=-Math.round(vw/2), vy=by-vh;
-          // fondo blanco jorobita
           tctx.fillStyle='#ffffff';
           tctx.fillRect(vx-lw, vy-lw, vw+lw*2, vh+lw);
-          // trazo jorobita
           tctx.beginPath();
           tctx.moveTo(vx+vr, vy);
           tctx.lineTo(vx+vw-vr, vy);
@@ -1076,12 +1076,14 @@ function actualizarSgPreview() {
           tctx.closePath();
           tctx.strokeStyle='#1a1a1a'; tctx.lineWidth=lw; tctx.stroke();
           // — Lente circular (aro doble) —
-          var cy=by+Math.round(bh*0.52);
+          var cy=bx+bw; // lente centrada a la derecha del cuerpo (+X)
           var lr=Math.round(r*0.55);
-          tctx.beginPath(); tctx.arc(0, cy, lr, 0, Math.PI*2);
+          var lx=Math.round(bw*0.22); // lente centrada horizontalmente en el cuerpo
+          tctx.beginPath(); tctx.arc(lx, 0, lr, 0, Math.PI*2);
           tctx.strokeStyle='#1a1a1a'; tctx.lineWidth=lw; tctx.stroke();
-          tctx.beginPath(); tctx.arc(0, cy, Math.round(lr*0.65), 0, Math.PI*2);
+          tctx.beginPath(); tctx.arc(lx, 0, Math.round(lr*0.65), 0, Math.PI*2);
           tctx.strokeStyle='#1a1a1a'; tctx.lineWidth=lw; tctx.stroke();
+          tctx.restore(); // cierra save del ícono (rotación -90°)
           tctx.restore(); // cierra el save del cono+ícono
         });
       }
