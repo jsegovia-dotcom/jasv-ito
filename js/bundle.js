@@ -993,37 +993,54 @@ function actualizarSgPreview() {
     btnOk.textContent='✓ Guardar miniatura';
     btnOk.style.cssText='padding:7px 16px;border:none;border-radius:6px;font-size:13px;cursor:pointer;background:#1a6bb5;color:#fff;font-weight:600;';
     btnOk.onclick=function(){
-      // Generar miniatura 360x240 (calidad PPT)
-      var tw=360,th=240;
+      // Generar miniatura cuadrada 336x336px (= 2.8cm a 96ppi calidad PPT)
+      var tw=336,th=336;
       var tc=document.createElement('canvas'); tc.width=tw; tc.height=th;
       var tctx=tc.getContext('2d');
+      // Fondo blanco siempre
+      tctx.fillStyle='#ffffff'; tctx.fillRect(0,0,tw,th);
       if(layoutGlobal.img){
-        tctx.fillStyle='#e8e8e8'; tctx.fillRect(0,0,tw,th);
-        var sc=Math.min(tw/edCanvas.width,th/edCanvas.height);
-        var ox=(tw-edCanvas.width*sc)/2, oy=(th-edCanvas.height*sc)/2;
-        tctx.drawImage(layoutGlobal.img,ox,oy,edCanvas.width*sc,edCanvas.height*sc);
+        // Escalar plano para que quepa en el cuadrado manteniendo proporción (contain)
+        var sc=Math.min((tw-2)/edCanvas.width,(th-2)/edCanvas.height);
+        var ox=Math.round((tw-edCanvas.width*sc)/2);
+        var oy=Math.round((th-edCanvas.height*sc)/2);
+        tctx.drawImage(layoutGlobal.img,ox,oy,Math.round(edCanvas.width*sc),Math.round(edCanvas.height*sc));
+        // Dibujar marcadores escalados
         currentMarkers.forEach(function(m,i){
-          var nm={x:m.x*sc+ox, y:m.y*sc+oy, angle:m.angle, color:m.color};
-          // escalar radio proporcionalmente
+          var nx=m.x*sc+ox, ny=m.y*sc+oy;
           var origRay=Math.min(edCanvas.width,edCanvas.height)*0.12;
-          var newRay=origRay*sc;
-          tctx.save(); tctx.translate(nm.x,nm.y); tctx.rotate((nm.angle-90)*Math.PI/180);
+          var newRay=Math.max(origRay*sc, 18);
+          function hr2(h,a){var r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return 'rgba('+r+','+g+','+b+','+a+')';}
+          // Cono de visión
+          tctx.save(); tctx.translate(nx,ny); tctx.rotate((m.angle-90)*Math.PI/180);
           var fov=70,half=(fov/2)*Math.PI/180;
           tctx.beginPath(); tctx.moveTo(0,0);
           tctx.lineTo(Math.cos(-half)*newRay,Math.sin(-half)*newRay);
           tctx.arc(0,0,newRay,-half,half);
           tctx.lineTo(0,0); tctx.closePath();
-          function hr(h,a){var r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return 'rgba('+r+','+g+','+b+','+a+')';}
-          tctx.fillStyle=hr(nm.color,0.25); tctx.strokeStyle=nm.color; tctx.lineWidth=1;
+          tctx.fillStyle=hr2(m.color,0.3); tctx.strokeStyle=m.color; tctx.lineWidth=1.5;
           tctx.fill(); tctx.stroke(); tctx.restore();
-          tctx.save(); tctx.translate(nm.x,nm.y);
-          tctx.beginPath(); tctx.arc(0,0,7,0,Math.PI*2);
-          tctx.fillStyle=nm.color; tctx.fill();
-          tctx.fillStyle='#fff'; tctx.font='bold 6px sans-serif';
-          tctx.textAlign='center'; tctx.textBaseline='middle';
-          tctx.fillText(String(i+1),0,0); tctx.restore();
+          // Ícono cámara (círculo + símbolo)
+          tctx.save(); tctx.translate(nx,ny);
+          // Círculo de fondo
+          tctx.beginPath(); tctx.arc(0,0,9,0,Math.PI*2);
+          tctx.fillStyle=m.color; tctx.fill();
+          // Ícono cámara simplificado: cuerpo rectangular + lente
+          tctx.fillStyle='#ffffff';
+          tctx.fillRect(-5,-3.5,10,7); // cuerpo
+          tctx.beginPath(); tctx.arc(0,0,2.8,0,Math.PI*2); // lente
+          tctx.fillStyle=m.color; tctx.fill();
+          tctx.beginPath(); tctx.arc(0,0,1.2,0,Math.PI*2);
+          tctx.fillStyle='#ffffff'; tctx.fill();
+          // Botón superior cámara
+          tctx.fillStyle='#ffffff';
+          tctx.fillRect(1,-5,3,2);
+          tctx.restore();
         });
       }
+      // Borde gris sutil
+      tctx.strokeStyle='#cccccc'; tctx.lineWidth=1;
+      tctx.strokeRect(0.5,0.5,tw-1,th-1);
       fotos[idx].layoutImg = tc.toDataURL('image/jpeg', 0.92);
       fotos[idx].layoutMarkers = currentMarkers;
       overlay.style.display='none';
@@ -1892,18 +1909,19 @@ function actualizarSgPreview() {
             sf.addText('✓ '+foto.resueltoTxt,{x:fx,y:dY+(foto.warning&&foto.warningTxt?0.3:0),w:FOTO_W,h:0.28,fontSize:12,fontFace:FONT,color:'2d7a4f',italic:true,wrap:true});
           // Miniatura lay out (posición en plano) — esquina inferior derecha de la foto
           if(foto.layoutImg){
-            console.log('layoutImg presente para foto '+(fi3+bi+1)+': '+foto.layoutImg.substring(0,40));
-            var MINI_W=1.26, MINI_H=0.84; // ~3.2cm x 2.1cm
-            var miniX=fx+FOTO_W-MINI_W-0.05;
-            var miniY=fy+FOTO_H-MINI_H-0.05;
-            // Marco blanco detrás de la miniatura
-            sf.addShape(prs.ShapeType.rect,{x:miniX-0.04,y:miniY-0.04,
-              w:MINI_W+0.08,h:MINI_H+0.08,
-              fill:{color:'FFFFFF'},line:{color:'DDDDDD',pt:1}});
-            // pptxgenjs acepta data: URL completa como string
-            var liStr=foto.layoutImg;
-            sf.addImage({data:liStr,x:miniX,y:miniY,w:MINI_W,h:MINI_H,
-              rounding:false});
+            // Miniatura plano: 2.8x2.8cm = 1.1024", posición fija por columna
+            var MINI_SZ=1.1024; // 2.8cm cuadrado
+            var miniX=bi===0?2.3228:5.8465; // 5.9cm / 14.85cm desde borde izq slide
+            var miniY=fy+FOTO_H+0.04; // justo debajo de la foto
+            // Fondo blanco cuadrado con borde gris
+            sf.addShape(prs.ShapeType.rect,{x:miniX,y:miniY,w:MINI_SZ,h:MINI_SZ,
+              fill:{color:'FFFFFF'},line:{color:'CCCCCC',pt:1}});
+            // Imagen del plano centrada dentro del cuadrado blanco
+            sf.addImage({data:foto.layoutImg,x:miniX,y:miniY,w:MINI_SZ,h:MINI_SZ,
+              sizing:{type:'contain',w:MINI_SZ,h:MINI_SZ}});
+            // Ícono cámara (📷) — texto emoji sobre la miniatura, esquina sup izq
+            sf.addText('📷',{x:miniX+0.04,y:miniY+0.04,w:0.25,h:0.2,
+              fontSize:9,fontFace:'Segoe UI Emoji',align:'left',valign:'top'});
           }
         });
       }
