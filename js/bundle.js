@@ -1034,7 +1034,7 @@ function actualizarSgPreview() {
           // Se rota para que la lente apunte en la misma dirección que el cono
           // Dirección del cono en canvas: ángulo = ang - PI/2 (eje -Y rotado)
           // Para que lente (+X local) apunte en esa dirección: rotar ang - PI/2
-          var iconAng = ang; // lente del icono horizontal → apunta igual que el cono
+          var iconAng = ang + Math.PI; // lente apunta en dirección del cono (+180° porque cuerpo va hacia -X)
           tctx.save();
           tctx.translate(nx,ny);
           tctx.rotate(iconAng);
