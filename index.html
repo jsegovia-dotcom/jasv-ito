@@ -95,6 +95,13 @@
       </div>
       <div class="fld"><label>Nota monto</label><input type="text" id="mo-monto-desc" placeholder="Ej: neto sin IVA"></div>
       <div class="fld" style="grid-column:1/-1;"><label>Descripción de la obra</label><textarea id="mo-descripcion" rows="2" placeholder="Breve descripción del alcance de la obra..."></textarea></div>
+      <div class="fld" style="grid-column:1/-1;margin-top:4px;">
+        <div class="tog-row" style="margin:0">
+          <input type="checkbox" id="mo-con-eepp">
+          <label for="mo-con-eepp" style="font-weight:500">Incluir Control de Estados de Pago en este proyecto</label>
+        </div>
+        <span class="hint" style="margin-left:28px">Agrega la sección de Estados de Pago al informe con numeración automática.</span>
+      </div>
     </div>
     <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
       <button class="btn btn-sec" onclick="cerrarModalObra()">Cancelar</button>
@@ -115,12 +122,13 @@
   <div class="step" onclick="irA(6)"><div class="step-n">7</div><div class="step-t">Lay Out Arquitectura</div></div>
   <div class="step" onclick="irA(7)"><div class="step-n">8</div><div class="step-t">Fotografías</div></div>
   <div class="step" onclick="irA(8)"><div class="step-n">9</div><div class="step-t">Anexos</div></div>
+  <div class="step" id="step-ep" onclick="irA(9)" style="display:none"><div class="step-n" id="step-ep-n">10</div><div class="step-t">Estados de Pago</div></div>
 </nav>
 <main class="main">
 
 <!-- SEC 0 PORTADA -->
 <div class="sec active" id="sec-0">
-  <div class="sec-tag">Sección 1 de 9</div><div class="sec-title">Portada del informe</div>
+  <div class="sec-tag">Sección 1 de 10</div><div class="sec-title">Portada del informe</div>
   <div class="sec-desc">Datos de identificación. La vista previa se actualiza en tiempo real.</div>
   <div class="card"><div class="card-title">Identificación del informe</div>
     <div class="g3">
@@ -159,7 +167,7 @@
 
 <!-- SEC 1 DATOS PROYECTO -->
 <div class="sec" id="sec-1">
-  <div class="sec-tag">Sección 2 de 9</div><div class="sec-title">Datos del proyecto</div>
+  <div class="sec-tag">Sección 2 de 10</div><div class="sec-title">Datos del proyecto</div>
   <div class="sec-desc">Información general. Se mantiene estable salvo modificaciones contractuales.</div>
   <div class="card"><div class="card-title">Ubicación en el edificio</div>
     <div class="g1"><div class="fld"><label>N° de oficina / piso(s)</label><input type="text" id="nro-oficina" placeholder="Ej: Oficinas 1201, 1202 — Pisos 12 y 13"><span class="hint">Puede ingresar varios números separados por coma.</span></div></div>
@@ -226,7 +234,7 @@
 
 <!-- SEC 2 ESTATUS DOC -->
 <div class="sec" id="sec-2">
-  <div class="sec-tag">Sección 3 de 9</div><div class="sec-title">Estatus de documentación</div>
+  <div class="sec-tag">Sección 3 de 10</div><div class="sec-title">Estatus de documentación</div>
   <div class="sec-desc">Clic en el semáforo para cambiar estado. Textos editables directamente en la celda.</div>
   <div class="card"><div class="card-title">Tabla de estatus</div>
     <div class="tbl-wrap"><table class="tbl"><thead><tr>
@@ -242,7 +250,7 @@
 
 <!-- SEC 3 ESTATUS PROYECTOS -->
 <div class="sec" id="sec-3">
-  <div class="sec-tag">Sección 4 de 9</div><div class="sec-title">Estatus de aprobación de proyectos</div>
+  <div class="sec-tag">Sección 4 de 10</div><div class="sec-title">Estatus de aprobación de proyectos</div>
   <div class="sec-desc">Historial de revisiones por especialidad.</div>
   <div class="card"><div class="card-title">Tabla de proyectos y revisiones</div>
     <div class="ptbl-wrap"><table class="ptbl"><thead><tr>
@@ -258,7 +266,7 @@
 
 <!-- SEC 4 CURVA S -->
 <div class="sec" id="sec-4">
-  <div class="sec-tag">Sección 5 de 9</div><div class="sec-title">Control Curva S</div>
+  <div class="sec-tag">Sección 5 de 10</div><div class="sec-title">Control Curva S</div>
   <div class="sec-desc">Define el día de control y genera las fechas. Completa el % real semana a semana.</div>
   <div class="card"><div class="card-title">Configuración del control de avance</div>
     <div class="g3">
@@ -297,7 +305,7 @@
 
 <!-- SEC 5 SITUACIÓN GENERAL -->
 <div class="sec" id="sec-5">
-  <div class="sec-tag">Sección 6 de 9</div><div class="sec-title">Situación general de la obra</div>
+  <div class="sec-tag">Sección 6 de 10</div><div class="sec-title">Situación general de la obra</div>
   <div class="sec-desc">Lista numerada de la visita semanal. Los puntos 1 y 2 se generan automáticamente.</div>
   <div class="card"><div class="card-title">Punto 1 — Visita ITO</div>
     <div class="sg-punto-auto"><span class="sg-num">1.</span><span id="sg-p1-texto">Con fecha <em>—</em> se realizó la visita N° <em>—</em> a la obra por parte de esta ITO.</span></div>
@@ -326,7 +334,7 @@
 
 <!-- SECCIONES PENDIENTES -->
 <div class="sec" id="sec-6">
-  <div class="sec-tag">Sección 7 de 9</div>
+  <div class="sec-tag">Sección 7 de 10</div>
   <div class="sec-title">Lay Out Arquitectura vigente</div>
   <div class="sec-desc">Sube el plano de arquitectura vigente. Si hubo un cambio de lay out, indica la nueva versión y fecha. El plano se repite cada semana hasta que haya una nueva versión.</div>
 
@@ -388,7 +396,7 @@
   </div>
 </div>
 <div class="sec" id="sec-7">
-  <div class="sec-tag">Sección 8 de 9</div>
+  <div class="sec-tag">Sección 8 de 10</div>
   <div class="sec-title">Fotografías relevantes</div>
   <div class="sec-desc">Agrega hasta 10 fotografías. Puedes agruparlas por rol u oficina, agregar pie de foto y marcar situaciones con advertencia.</div>
 
@@ -417,7 +425,7 @@
   </div>
 </div>
 <div class="sec" id="sec-8">
-  <div class="sec-tag">Sección 9 de 9</div>
+  <div class="sec-tag">Sección 9 de 10</div>
   <div class="sec-title">Anexos</div>
   <div class="sec-desc">Adjunta documentos relevantes que complementan el informe. Cada anexo lleva un título, tipo y descripción opcional.</div>
 
@@ -446,9 +454,84 @@
 
   <div class="nav-btns">
     <button class="btn btn-sec" onclick="irA(7)">← Anterior</button>
+    <button class="btn btn-pri" onclick="irA(9)">Siguiente →</button>
+  </div>
+</div>
+
+<!-- SEC 9 ESTADOS DE PAGO -->
+<div class="sec" id="sec-9" style="display:none">
+  <div class="sec-tag">Sección 10 de 10</div>
+  <div class="sec-title">Control de Estados de Pago</div>
+  <div class="sec-desc">Datos financieros del contrato y registro de estados de pago aprobados por la ITO.</div>
+
+  <!-- DATOS CONTRATO -->
+  <div class="card">
+    <div class="card-title">Datos del contrato</div>
+    <div class="g3">
+      <div class="fld"><label>Costo Directo (CD)</label>
+        <input type="number" id="ep-cd" placeholder="Ej: 13851" min="0" step="0.01" oninput="epRecalcContrato()"></div>
+      <div class="fld"><label>Gastos Generales (GG)</label>
+        <input type="number" id="ep-gg" placeholder="Ej: 1385" min="0" step="0.01" oninput="epRecalcContrato()"></div>
+      <div class="fld"><label>Utilidades (UTI)</label>
+        <input type="number" id="ep-uti" placeholder="Ej: 1108" min="0" step="0.01" oninput="epRecalcContrato()"></div>
+      <div class="fld"><label>Subtotal</label>
+        <input type="number" id="ep-subtotal" readonly style="background:#f5f5f5"></div>
+      <div class="fld"><label>Descuento Comercial</label>
+        <input type="number" id="ep-desc" placeholder="Ej: 100" min="0" step="0.01" oninput="epRecalcContrato()"></div>
+      <div class="fld"><label>Neto contrato</label>
+        <input type="number" id="ep-neto" readonly style="background:#f5f5f5"></div>
+      <div class="fld"><label>IVA (19%)</label>
+        <input type="number" id="ep-iva" readonly style="background:#f5f5f5"></div>
+      <div class="fld"><label style="font-weight:700;color:#1a3a5c">TOTAL contrato</label>
+        <input type="number" id="ep-total" readonly style="background:#eef4fb;color:#1a3a5c;font-weight:700"></div>
+    </div>
+    <div class="g2 mt">
+      <div class="fld"><label>% Anticipo</label>
+        <input type="number" id="ep-pct-anticipo" placeholder="Ej: 10" min="0" max="100" step="0.01" oninput="epRenderEepp()">
+        <span class="hint">Porcentaje sobre Subtotal2 de cada EEPP</span></div>
+      <div class="fld"><label>% Retenciones</label>
+        <input type="number" id="ep-pct-ret" placeholder="Ej: 5" min="0" max="100" step="0.01" oninput="epRenderEepp()">
+        <span class="hint">Porcentaje sobre Subtotal2 de cada EEPP</span></div>
+    </div>
+  </div>
+
+  <!-- TABLA EEPP -->
+  <div class="card">
+    <div class="card-title">Estados de Pago aprobados
+      <button class="btn-add" onclick="epAgregarFila()" style="margin-left:12px;font-size:12px;padding:4px 12px">+ Agregar EEPP</button>
+    </div>
+    <div style="overflow-x:auto">
+      <table id="ep-tabla" style="width:100%;border-collapse:collapse;font-size:12px;min-width:900px">
+        <thead>
+          <tr style="background:#1a3a5c;color:#fff">
+            <th style="padding:7px 8px;text-align:left;white-space:nowrap">N°</th>
+            <th style="padding:7px 8px;text-align:right;white-space:nowrap">Costo Directo</th>
+            <th style="padding:7px 8px;text-align:right;white-space:nowrap">GG</th>
+            <th style="padding:7px 8px;text-align:right;white-space:nowrap">UTI</th>
+            <th style="padding:7px 8px;text-align:right;white-space:nowrap">Subtotal</th>
+            <th style="padding:7px 8px;text-align:right;white-space:nowrap;color:#f4a261">Desc. Comercial</th>
+            <th style="padding:7px 8px;text-align:right;white-space:nowrap">Subtotal 2</th>
+            <th style="padding:7px 8px;text-align:right;white-space:nowrap;color:#f4a261">Anticipo</th>
+            <th style="padding:7px 8px;text-align:right;white-space:nowrap;color:#f4a261">Retenciones</th>
+            <th style="padding:7px 8px;text-align:right;white-space:nowrap;font-weight:700">Neto</th>
+            <th style="padding:7px 8px;text-align:right;white-space:nowrap">IVA</th>
+            <th style="padding:7px 8px;text-align:right;white-space:nowrap;font-weight:700">Total</th>
+            <th style="padding:7px 8px;text-align:right;white-space:nowrap;background:#2d7a4f">Parcial %</th>
+            <th style="padding:7px 8px;text-align:right;white-space:nowrap;background:#2d7a4f">Acum. %</th>
+            <th style="padding:7px 8px;text-align:center">✕</th>
+          </tr>
+        </thead>
+        <tbody id="ep-tbody"></tbody>
+        <tfoot id="ep-tfoot"></tfoot>
+      </table>
+    </div>
+  </div>
+
+  <div class="nav-btns">
+    <button class="btn btn-sec" onclick="irA(8)">← Anterior</button>
     <button class="btn btn-sec" onclick="btnGuardar()" style="font-size:14px;padding:10px 20px;border-color:#2d7a4f;color:#2d7a4f;font-weight:600">💾 Guardar informe</button>
     <button class="btn btn-pri" onclick="try{generarPPT();}catch(e){mostrarToast('Error PPT: '+e.message,'err');}" style="font-size:14px;padding:10px 28px;">📄 Generar PPT</button>
-    <button class="btn btn-sec" onclick="abrirPreview()" style="font-size:14px;padding:10px 20px;">👁 Vista previa del informe</button>
+    <button class="btn btn-sec" onclick="abrirPreview()" style="font-size:14px;padding:10px 20px;">👁 Vista previa</button>
   </div>
 </div>
 
