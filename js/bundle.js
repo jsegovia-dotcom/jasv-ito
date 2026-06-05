@@ -1009,34 +1009,33 @@ function actualizarSgPreview() {
         currentMarkers.forEach(function(m,i){
           var nx=m.x*sc+ox, ny=m.y*sc+oy;
           var origRay=Math.min(edCanvas.width,edCanvas.height)*0.12;
-          var newRay=Math.max(origRay*sc, 18);
+          var newRay=Math.max(origRay*sc, 72); // ×4 respecto al anterior
           function hr2(h,a){var r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return 'rgba('+r+','+g+','+b+','+a+')';}
-          // Cono de visión
+          // Cono de visión ×4
           tctx.save(); tctx.translate(nx,ny); tctx.rotate((m.angle-90)*Math.PI/180);
           var fov=70,half=(fov/2)*Math.PI/180;
           tctx.beginPath(); tctx.moveTo(0,0);
           tctx.lineTo(Math.cos(-half)*newRay,Math.sin(-half)*newRay);
           tctx.arc(0,0,newRay,-half,half);
           tctx.lineTo(0,0); tctx.closePath();
-          tctx.fillStyle=hr2(m.color,0.3); tctx.strokeStyle=m.color; tctx.lineWidth=1.5;
+          tctx.fillStyle=hr2(m.color,0.3); tctx.strokeStyle=m.color; tctx.lineWidth=6;
           tctx.fill(); tctx.stroke(); tctx.restore();
-          // Ícono cámara (círculo + símbolo)
+          // Ícono cámara ×4: diámetro 0.67cm×4 → radio 160.8px
           tctx.save(); tctx.translate(nx,ny);
-          // Círculo de fondo: diámetro 0.67cm = 80.4px → radio 40.2px
-          tctx.beginPath(); tctx.arc(0,0,40.2,0,Math.PI*2);
+          tctx.beginPath(); tctx.arc(0,0,160.8,0,Math.PI*2);
           tctx.fillStyle=m.color; tctx.fill();
-          // Cuerpo cámara proporcional al círculo
+          // Cuerpo cámara ×4
           tctx.fillStyle='#ffffff';
-          tctx.fillRect(-22,-15,44,31);
-          // Lente
-          tctx.beginPath(); tctx.arc(0,0,15.3,0,Math.PI*2);
+          tctx.fillRect(-88,-60,176,124);
+          // Lente ×4
+          tctx.beginPath(); tctx.arc(0,0,61.2,0,Math.PI*2);
           tctx.fillStyle=m.color; tctx.fill();
-          // Reflejo lente
-          tctx.beginPath(); tctx.arc(0,0,6.4,0,Math.PI*2);
+          // Reflejo lente ×4
+          tctx.beginPath(); tctx.arc(0,0,25.6,0,Math.PI*2);
           tctx.fillStyle='#ffffff'; tctx.fill();
-          // Botón superior cámara
+          // Botón superior cámara ×4
           tctx.fillStyle='#ffffff';
-          tctx.fillRect(5,-26,13,9);
+          tctx.fillRect(20,-104,52,36);
           tctx.restore();
         });
       }
