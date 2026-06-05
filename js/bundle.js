@@ -1007,9 +1007,9 @@ function actualizarSgPreview() {
         // Dibujar plano limpio (sin marcadores del editor)
         tctx.drawImage(layoutGlobal.img,ox,oy,Math.round(edCanvas.width*sc),Math.round(edCanvas.height*sc));
         // Tamaños fijos en px del canvas miniatura (336px = 2.8cm)
-        // iconR=28px → diámetro ~0.47cm | coneR=120px → radio ~1cm
-        var iconR = 28;
-        var coneR = 120;
+        // iconR=55px → diámetro ~0.92cm | coneR=150px → radio ~1.25cm
+        var iconR = 55;
+        var coneR = 150;
         currentMarkers.forEach(function(m,i){
           var nx=m.x*sc+ox, ny=m.y*sc+oy;
           function hr2(h,a){var r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return 'rgba('+r+','+g+','+b+','+a+')';}
