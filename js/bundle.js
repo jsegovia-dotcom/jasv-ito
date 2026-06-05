@@ -859,7 +859,13 @@ function actualizarSgPreview() {
     var angleVal = document.createElement('span');
     angleVal.style.cssText='min-width:30px;color:#555;font-size:12px;';
     angleVal.textContent='0°';
-    angleSlider.oninput = function(){ angleVal.textContent=this.value+'°'; };
+    angleSlider.oninput = function(){
+      angleVal.textContent=this.value+'°';
+      if(currentMarkers.length>0){
+        currentMarkers[0].angle=parseInt(this.value);
+        redrawEditor();
+      }
+    };
     angleLabel.appendChild(angleSlider); angleLabel.appendChild(angleVal);
 
     var colorLabel = document.createElement('label');
@@ -870,6 +876,12 @@ function actualizarSgPreview() {
     [['#E24B4A','Rojo'],['#185FA5','Azul'],['#0F6E56','Verde'],['#BA7517','Ámbar'],['#533AB7','Morado']].forEach(function(c){
       var o=document.createElement('option'); o.value=c[0]; o.textContent=c[1]; colorSel.appendChild(o);
     });
+    colorSel.oninput = function(){
+      if(currentMarkers.length>0){
+        currentMarkers[0].color=this.value;
+        redrawEditor();
+      }
+    };
     colorLabel.appendChild(colorSel);
 
     var instruccion = document.createElement('div');
@@ -888,6 +900,15 @@ function actualizarSgPreview() {
     canvasWrap.appendChild(edCanvas);
 
     var currentMarkers = (fotos[idx].layoutMarkers||[]).map(function(m){return Object.assign({},m);});
+    // Precargar ángulo y color del marcador existente
+    if(currentMarkers.length>0){
+      angleSlider.value = currentMarkers[0].angle||0;
+      angleVal.textContent = (currentMarkers[0].angle||0)+'°';
+      var existColor = currentMarkers[0].color||'#E24B4A';
+      for(var oi=0;oi<colorSel.options.length;oi++){
+        if(colorSel.options[oi].value===existColor){ colorSel.selectedIndex=oi; break; }
+      }
+    }
     var currentPlotImg = fotos[idx].layoutImg ? fotos[idx].layoutImg : null;
     // Si hay plano global cargado previamente, úsarlo
     if(layoutGlobal.dataUrl && !currentPlotImg) currentPlotImg = layoutGlobal.dataUrl;
@@ -1864,6 +1885,15 @@ function actualizarSgPreview() {
             sf.addText('⚠ '+foto.warningTxt,{x:fx,y:dY,w:FOTO_W,h:0.28,fontSize:12,fontFace:FONT,color:'7a6010',italic:true,wrap:true});
           if(foto.resuelto&&foto.resueltoTxt&&dY<MAX_Y)
             sf.addText('✓ '+foto.resueltoTxt,{x:fx,y:dY+(foto.warning&&foto.warningTxt?0.3:0),w:FOTO_W,h:0.28,fontSize:12,fontFace:FONT,color:'2d7a4f',italic:true,wrap:true});
+          // Miniatura lay out (posición en plano)
+          if(foto.layoutImg){
+            var MINI_W=1.26, MINI_H=0.84; // ~3.2cm x 2.1cm
+            var miniX=fx+FOTO_W-MINI_W-0.04;
+            var miniY=fy+FOTO_H-MINI_H-0.04;
+            sf.addImage({data:foto.layoutImg,x:miniX,y:miniY,w:MINI_W,h:MINI_H,
+              sizing:{type:'contain',w:MINI_W,h:MINI_H},
+              shadow:{type:'outer',color:'000000',opacity:0.4,blur:4,offset:4,angle:45}});
+          }
         });
       }
     }
