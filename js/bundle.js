@@ -1013,26 +1013,25 @@ function actualizarSgPreview() {
         currentMarkers.forEach(function(m,i){
           var nx=m.x*sc+ox, ny=m.y*sc+oy;
           function hr2(h,a){var r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return 'rgba('+r+','+g+','+b+','+a+')';}
-          // Cono de visión
+          // Cono + ícono en el mismo bloque de transformación (misma rotación)
           tctx.save(); tctx.translate(nx,ny); tctx.rotate((m.angle-90)*Math.PI/180);
+          // — Cono de visión —
           var fov=70,half=(fov/2)*Math.PI/180;
           tctx.beginPath(); tctx.moveTo(0,0);
           tctx.lineTo(Math.cos(-half)*coneR,Math.sin(-half)*coneR);
           tctx.arc(0,0,coneR,-half,half);
           tctx.lineTo(0,0); tctx.closePath();
           tctx.fillStyle=hr2(m.color,0.3); tctx.strokeStyle=m.color; tctx.lineWidth=1;
-          tctx.fill(); tctx.stroke(); tctx.restore();
-          // Ícono cámara — contorno negro, girado en dirección del cono
-          // El ícono se desplaza hacia atrás del cono (lente apunta hacia el cono)
-          tctx.save(); tctx.translate(nx,ny);
-          tctx.rotate((m.angle-90)*Math.PI/180);
-          // Desplazar el ícono hacia atrás (Y positivo = alejarse del cono)
-          tctx.translate(0, Math.round(iconR*0.6));
+          tctx.fill(); tctx.stroke();
+          // — Ícono cámara en el mismo espacio rotado —
+          // La cámara se posiciona en el origen (nx,ny) ya rotado
+          // La lente apunta hacia Y negativo (dirección del cono)
+          // El cuerpo se extienda hacia Y positivo (detrás)
           var r=iconR;
           var lw=Math.max(2, Math.round(r*0.09)); // grosor trazo
           // Dimensiones cuerpo — lente centrada en Y=0, cuerpo hacia Y positivo
           var bw=Math.round(r*1.9), bh=Math.round(r*1.25), br=Math.round(r*0.2);
-          var bx=-Math.round(bw/2), by=-Math.round(bh*0.52);
+          var bx=-Math.round(bw/2), by=-Math.round(bh*0.75);
           // — Fondo blanco del ícono completo —
           tctx.beginPath();
           tctx.moveTo(bx+br, by);
@@ -1083,7 +1082,7 @@ function actualizarSgPreview() {
           tctx.strokeStyle='#1a1a1a'; tctx.lineWidth=lw; tctx.stroke();
           tctx.beginPath(); tctx.arc(0, cy, Math.round(lr*0.65), 0, Math.PI*2);
           tctx.strokeStyle='#1a1a1a'; tctx.lineWidth=lw; tctx.stroke();
-          tctx.restore();
+          tctx.restore(); // cierra el save del cono+ícono
         });
       }
       // Borde gris sutil
