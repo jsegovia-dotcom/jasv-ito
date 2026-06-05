@@ -874,7 +874,7 @@ function actualizarSgPreview() {
       var acumFinal = p.cdC > 0 ? (totCD / p.cdC * 100) : 0;
       return '<tr style="background:'+bg+'">'
         +'<td style="padding:5px 8px;font-weight:600">EEPP'+(i+1)+'</td>'
-        +'<td style="padding:5px 4px;text-align:right"><input type="number" value="'+(f.cd||'')+'" min="0" step="0.01" style="width:90px;text-align:right;border:1px solid #ccc;border-radius:4px;padding:2px 4px;font-size:12px" oninput="epCdChange('+i+',this.value)"></td>'
+        +'<td style="padding:5px 4px;text-align:right"><input type="text" inputmode="decimal" value="'+(f.cd||'')+'" style="width:90px;text-align:right;border:1px solid #ccc;border-radius:4px;padding:2px 4px;font-size:12px" oninput="epCdChange('+i+',this.value)"></td>'
         +'<td style="padding:5px 8px;text-align:right;color:#555">'+epFmt(r.gg)+'</td>'
         +'<td style="padding:5px 8px;text-align:right;color:#555">'+epFmt(r.uti)+'</td>'
         +'<td style="padding:5px 8px;text-align:right">'+epFmt(r.sub1)+'</td>'
@@ -956,25 +956,37 @@ function actualizarSgPreview() {
 
     // Actualizar botón "Siguiente" de sec-8 (Anexos)
     // Si conEEPP → apunta a irA(9); si no → permanece con acciones finales
-    var navBtns8 = document.querySelectorAll('#sec-8 .nav-btns');
-    if(navBtns8.length > 0){
-      var nb8 = navBtns8[0];
-      if(_conEEPP){
-        // Quitar botones finales de sec-8, agregar Siguiente
-        if(!nb8.querySelector('.ep-siguiente-btn')){
-          var btn = document.createElement('button');
-          btn.className = 'btn btn-pri ep-siguiente-btn';
-          btn.textContent = 'Siguiente →';
-          btn.onclick = function(){ irA(9); };
-          // Insertar antes del botón guardar
-          var firstBtn = nb8.querySelector('button');
-          nb8.insertBefore(btn, firstBtn ? firstBtn.nextSibling : null);
-        }
-      } else {
-        var epBtn = nb8.querySelector('.ep-siguiente-btn');
-        if(epBtn) epBtn.parentNode.removeChild(epBtn);
-      }
+    // Mostrar/ocultar botón "Siguiente" de sec-8 → sec-9
+    var sec8NextBtn = document.getElementById('sec8-next-btn');
+    if(sec8NextBtn) sec8NextBtn.style.display = _conEEPP ? '' : 'none';
+
+    // Actualizar numeración de steps que se desplazan según conEEPP
+    var nCS  = document.getElementById('step-n-cs');
+    var nSG  = document.getElementById('step-n-sg');
+    var nLO  = document.getElementById('step-n-lo');
+    var nFT  = document.getElementById('step-n-ft');
+    var nANX = document.getElementById('step-n-anx');
+    var nEP  = document.getElementById('step-ep-n');
+    if(_conEEPP){
+      if(nCS)  nCS.textContent  = '6';
+      if(nSG)  nSG.textContent  = '7';
+      if(nLO)  nLO.textContent  = '8';
+      if(nFT)  nFT.textContent  = '9';
+      if(nANX) nANX.textContent = '10';
+      if(nEP)  nEP.textContent  = '5';
+    } else {
+      if(nCS)  nCS.textContent  = '5';
+      if(nSG)  nSG.textContent  = '6';
+      if(nLO)  nLO.textContent  = '7';
+      if(nFT)  nFT.textContent  = '8';
+      if(nANX) nANX.textContent = '9';
     }
+
+    // Actualizar sec-tags de secciones
+    var nTotal = _conEEPP ? 10 : 9;
+    document.querySelectorAll('.sec-tag').forEach(function(el, i){
+      el.textContent = 'Sección ' + (i+1) + ' de ' + nTotal;
+    });
   }
 
   // ══ LAYOUT MARKER (miniatura de plano) ══
@@ -1586,13 +1598,17 @@ function actualizarSgPreview() {
       if(txt) pendArrastre.push({texto:txt,estado:est});
     });
 
-    var secciones=['1. Datos del proyecto','2. Estatus de documentación','3. Estatus de aprobación de proyectos','4. Control Curva S','5. Situación general de la obra'];
-    if(pendArrastre.length>0) secciones.push('6. Puntos de arrastre — semana anterior');
-    var layNum=pendArrastre.length>0?7:6, fotNum=pendArrastre.length>0?8:7, anxNum=pendArrastre.length>0?9:8;
+    var secciones=['1. Datos del proyecto','2. Estatus de documentación','3. Estatus de aprobación de proyectos'];
+    if(_conEEPP) secciones.push('4. Control Curva S');
+    else secciones.push('4. Control Curva S');
+    if(_conEEPP){ secciones.push('5. Control de Estados de Pago'); secciones.push('6. Situación general de la obra'); }
+    else secciones.push('5. Situación general de la obra');
+    var base=_conEEPP?6:5;
+    if(pendArrastre.length>0) secciones.push((base+1)+'. Puntos de arrastre — semana anterior');
+    var layNum=pendArrastre.length>0?base+2:base+1, fotNum=pendArrastre.length>0?base+3:base+2, anxNum=pendArrastre.length>0?base+4:base+3;
     secciones.push(layNum+'. Lay Out Arquitectura vigente');
     secciones.push(fotNum+'. Fotografías relevantes');
     if(anexos.length>0) secciones.push(anxNum+'. Anexos');
-    if(_conEEPP){ var epNum=(anexos.length>0?anxNum+1:anxNum); secciones.push(epNum+'. Control de Estados de Pago'); }
     var tocLH=0.375; var tocY=CY+CH+0.15;
     secciones.forEach(function(sec,i){
       var y=tocY+i*(tocLH+0.04);
@@ -1825,9 +1841,102 @@ function actualizarSgPreview() {
       rowH:0.3,border:{color:'D0D8DC',pt:0.5},fill:{color:'FFFFFF'}});
 
     // ══ CONTROL CURVA S ══
+    if(_conEEPP){
+    var epP = epPcts();
+    function pptFmt(n){ return n !== 0 ? n.toLocaleString('es-CL',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—'; }
+    function pptPct(n){ return n.toFixed(2)+'%'; }
+
+    // ── Slide único: Datos del contrato + Tabla EEPP ──
+    var sEP = prs.addSlide({masterName:'JASV'});
+    addHF(sEP,'5. Control de Estados de Pago',slideNum++);
+
+    var epCD2=epVal('ep-cd'), epGG2=epVal('ep-gg'), epUTI2=epVal('ep-uti'), epDESC2=epVal('ep-desc');
+    var epSUB2=epCD2+epGG2+epUTI2, epNETO2=epSUB2-epDESC2, epIVA2=epNETO2*0.19, epTOT2=epNETO2+epIVA2;
+
+    // — Tabla contrato (izquierda, ancho ~3.5") —
+    var cRows=[
+      [{text:'CONTRATO',options:{colspan:2,bold:true,fill:'1a3a5c',color:'FFFFFF',align:'center'}}],
+      [{text:'Costo Directo',options:{bold:true}}, pptFmt(epCD2)],
+      ['GG ('+Math.round(epP.pGG*10000)/100+'%)', pptFmt(epGG2)],
+      ['UTI ('+Math.round(epP.pUTI*10000)/100+'%)', pptFmt(epUTI2)],
+      [{text:'Subtotal',options:{bold:true}},{text:pptFmt(epSUB2),options:{bold:true}}],
+      [{text:'Desc.',options:{color:'C0392B'}},{text:pptFmt(epDESC2),options:{color:'C0392B'}}],
+      [{text:'Neto',options:{bold:true}},{text:pptFmt(epNETO2),options:{bold:true}}],
+      ['IVA 19%', pptFmt(epIVA2)],
+      [{text:'TOTAL',options:{bold:true,fill:'EEF4FB',color:'1A3A5C'}},{text:pptFmt(epTOT2),options:{bold:true,fill:'EEF4FB',color:'1A3A5C'}}],
+      ['% Anticipo', pptPct(epP.pANT*100)],
+      ['% Retenciones', pptPct(epP.pRET*100)],
+    ];
+    var cW=3.4;
+    sEP.addTable(cRows,{x:CX,y:CONT_Y+0.05,w:cW,colW:[2.0,1.4],fontSize:11,fontFace:FONT,align:'left',valign:'middle',rowH:0.33,border:{type:'solid',pt:0.5,color:'CCCCCC'},fill:{color:'FFFFFF'}});
+
+    // — Tabla EEPP (derecha del contrato) —
+    if(epFilas.length > 0){
+      var acumCD2=0,tCD2=0,tGG2=0,tUTI2=0,tS12=0,tDC2=0,tS22=0,tAT2=0,tRT2=0,tNT2=0,tIV2=0,tTT2=0;
+      var hdr2=[
+        {text:'N°',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',fontSize:8}},
+        {text:'CD',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:8}},
+        {text:'GG',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:8}},
+        {text:'UTI',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:8}},
+        {text:'Subtotal',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:8}},
+        {text:'Desc.',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:8}},
+        {text:'Sub2',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:8}},
+        {text:'Antici.',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:8}},
+        {text:'Retenc.',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:8}},
+        {text:'Neto',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:8}},
+        {text:'IVA',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:8}},
+        {text:'Total',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:8}},
+        {text:'Parc%',options:{bold:true,fill:'2d7a4f',color:'FFFFFF',align:'right',fontSize:8}},
+        {text:'Acum%',options:{bold:true,fill:'2d7a4f',color:'FFFFFF',align:'right',fontSize:8}}
+      ];
+      var eppRows2=[hdr2];
+      epFilas.forEach(function(f,i){
+        var r=epCalcFila(f.cd,epP);
+        tCD2+=r.cdEP;tGG2+=r.gg;tUTI2+=r.uti;tS12+=r.sub1;tDC2+=r.desc;
+        tS22+=r.sub2;tAT2+=r.ant;tRT2+=r.ret;tNT2+=r.neto;tIV2+=r.iva;tTT2+=r.tot;
+        var pct2=epP.cdC>0?(f.cd/epP.cdC*100):0;
+        acumCD2+=f.cd; var ap2=epP.cdC>0?(acumCD2/epP.cdC*100):0;
+        var bg2=i%2===0?'F5F8FC':'FFFFFF';
+        function c(v,opt){ return Object.assign({text:v,options:Object.assign({fill:bg2,fontSize:8},opt||{})}); }
+        eppRows2.push([
+          c('EEPP'+(i+1),{bold:true}), c(pptFmt(r.cdEP),{align:'right'}),
+          c(pptFmt(r.gg),{align:'right'}), c(pptFmt(r.uti),{align:'right'}),
+          c(pptFmt(r.sub1),{align:'right'}), c(pptFmt(r.desc),{align:'right',color:'C0392B'}),
+          c(pptFmt(r.sub2),{align:'right'}), c(pptFmt(r.ant),{align:'right',color:'C0392B'}),
+          c(pptFmt(r.ret),{align:'right',color:'C0392B'}), c(pptFmt(r.neto),{align:'right',bold:true}),
+          c(pptFmt(r.iva),{align:'right'}), c(pptFmt(r.tot),{align:'right',bold:true}),
+          c(pptPct(pct2),{align:'right',bold:true,color:'2D7A4F',fill:'E8F5E9'}),
+          c(pptPct(ap2),{align:'right',bold:true,color:'2D7A4F',fill:'E8F5E9'})
+        ]);
+      });
+      var acT2=epP.cdC>0?(tCD2/epP.cdC*100):0;
+      function ct(v,opt){ return {text:v,options:Object.assign({fill:'1a3a5c',color:'FFFFFF',bold:true,fontSize:8},opt||{})}; }
+      eppRows2.push([
+        ct('TOTAL'),ct(pptFmt(tCD2),{align:'right'}),ct(pptFmt(tGG2),{align:'right'}),
+        ct(pptFmt(tUTI2),{align:'right'}),ct(pptFmt(tS12),{align:'right'}),
+        ct(pptFmt(tDC2),{align:'right'}),ct(pptFmt(tS22),{align:'right'}),
+        ct(pptFmt(tAT2),{align:'right'}),ct(pptFmt(tRT2),{align:'right'}),
+        ct(pptFmt(tNT2),{align:'right'}),ct(pptFmt(tIV2),{align:'right'}),
+        ct(pptFmt(tTT2),{align:'right'}),
+        ct(pptPct(acT2),{align:'right',fill:'2d7a4f'}),ct(pptPct(acT2),{align:'right',fill:'2d7a4f'})
+      ]);
+      // Ancho disponible para tabla EEPP: SW - cW - CX - 0.15 margen = 10 - 3.4 - 0.118 - 0.15 = 6.33"
+      var ew=SW-cW-CX-0.15;
+      // 14 columnas distribuidas proporcionalmente en 6.33"
+      var colW2=[0.42,0.56,0.46,0.46,0.54,0.42,0.54,0.50,0.50,0.56,0.46,0.56,0.38,0.38];
+      // Normalizar para que sumen ew
+      var sumW2=colW2.reduce(function(a,b){return a+b;},0);
+      colW2=colW2.map(function(w){return Math.round(w/sumW2*ew*1000)/1000;});
+      sEP.addTable(eppRows2,{x:CX+cW+0.15,y:CONT_Y+0.05,w:ew,colW:colW2,
+        fontSize:8,fontFace:FONT,align:'right',valign:'middle',rowH:0.30,
+        border:{type:'solid',pt:0.3,color:'CCCCCC'},fill:{color:'FFFFFF'}});
+    }
+    } // fin if(_conEEPP)
+
+
     slideNum++;
     var s6=prs.addSlide();
-    addHF(s6,'4. Control Curva S',slideNum);
+    addHF(s6,(_conEEPP?'6':'5')+'. Control Curva S',slideNum);
     var lblProg=document.getElementById('lbl-prog').textContent;
     var lblReal=document.getElementById('lbl-real').textContent;
     var lblDesv=document.getElementById('lbl-desv').textContent;
@@ -1962,7 +2071,7 @@ function actualizarSgPreview() {
     function newSgSlide(){
       slideNum++;
       var sl=prs.addSlide();
-      addHF(sl,'5. Situación general de la obra',slideNum);
+      addHF(sl,(_conEEPP?'7':'6')+'. Situación general de la obra',slideNum);
       // Línea divisoria vertical entre columnas
       sl.addShape(prs.ShapeType.rect,{
         x:COL_L+COL_W+0.03, y:CONT_Y+0.02,
@@ -2058,7 +2167,7 @@ function actualizarSgPreview() {
     // ══ LAY OUT ARQUITECTURA ══
     slideNum++;
     var s8=prs.addSlide();
-    addHF(s8,(pendArrastre.length>0?'7':'6')+'. Lay Out Arquitectura vigente',slideNum);
+    addHF(s8,(pendArrastre.length>0?String((_conEEPP?8:7)+1):String(_conEEPP?8:7))+'. Lay Out Arquitectura vigente',slideNum);
     var loImg=document.getElementById('lo-preview-img');
     var loVer=document.getElementById('lo-version').value;
     var loFecha=document.getElementById('lo-fecha').value;
@@ -2205,100 +2314,6 @@ function actualizarSgPreview() {
     sfin.addImage({data:LOGO2_DATA,x:(SW-6.9094)/2,y:(SH-1.1102)/2,w:6.9094,h:1.1102});
 
     // ══ ESTADOS DE PAGO (slide) ══
-    if(_conEEPP){
-    var epP = epPcts();
-    function pptFmt(n){ return n !== 0 ? n.toLocaleString('es-CL',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—'; }
-    function pptPct(n){ return n.toFixed(2)+'%'; }
-
-    // Slide 1: Datos del contrato
-    var sEP1 = prs.addSlide({masterName:'JASV'});
-    addHF(sEP1,'6. Control de Estados de Pago',slideNum++);
-    var epCD2 = epVal('ep-cd'), epGG2=epVal('ep-gg'), epUTI2=epVal('ep-uti'), epDESC2=epVal('ep-desc');
-    var epSUB2=epCD2+epGG2+epUTI2, epNETO2=epSUB2-epDESC2, epIVA2=epNETO2*0.19, epTOT2=epNETO2+epIVA2;
-    var cRows=[
-      [{text:'DATOS DEL CONTRATO',options:{colspan:2,bold:true,fill:'1a3a5c',color:'FFFFFF',align:'center'}}],
-      [{text:'Costo Directo',options:{bold:true}}, pptFmt(epCD2)],
-      ['Gastos Generales ('+Math.round(epP.pGG*10000)/100+'%)', pptFmt(epGG2)],
-      ['Utilidades ('+Math.round(epP.pUTI*10000)/100+'%)', pptFmt(epUTI2)],
-      [{text:'Subtotal',options:{bold:true}},{text:pptFmt(epSUB2),options:{bold:true}}],
-      [{text:'Desc. Comercial',options:{color:'C0392B'}},{text:pptFmt(epDESC2),options:{color:'C0392B'}}],
-      [{text:'Neto',options:{bold:true}},{text:pptFmt(epNETO2),options:{bold:true}}],
-      ['IVA (19%)', pptFmt(epIVA2)],
-      [{text:'TOTAL',options:{bold:true,fill:'EEF4FB',color:'1A3A5C'}},{text:pptFmt(epTOT2),options:{bold:true,fill:'EEF4FB',color:'1A3A5C'}}],
-      ['% Anticipo', pptPct(epP.pANT*100)],
-      ['% Retenciones', pptPct(epP.pRET*100)],
-    ];
-    sEP1.addTable(cRows,{x:CX,y:CONT_Y+0.05,w:4.5,colW:[2.8,1.7],fontSize:12,fontFace:FONT,align:'left',valign:'middle',rowH:0.36,border:{type:'solid',pt:0.5,color:'CCCCCC'},fill:{color:'FFFFFF'}});
-
-    // Slide 2: Tabla EEPP (si hay filas)
-    console.log('[EP PPT] epFilas.length='+epFilas.length);
-    if(epFilas.length > 0){
-      var sEP2 = prs.addSlide({masterName:'JASV'});
-      addHF(sEP2,'6. Control de Estados de Pago — EEPP',slideNum++);
-      var hdr=[{text:'N°',options:{bold:true,fill:'1a3a5c',color:'FFFFFF'}},
-               {text:'Costo Directo',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right'}},
-               {text:'GG',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right'}},
-               {text:'UTI',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right'}},
-               {text:'Subtotal',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right'}},
-               {text:'Desc.',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right'}},
-               {text:'Sub2',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right'}},
-               {text:'Anticipo',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right'}},
-               {text:'Retenc.',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right'}},
-               {text:'Neto',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right'}},
-               {text:'IVA',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right'}},
-               {text:'Total',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right'}},
-               {text:'Parcial%',options:{bold:true,fill:'2d7a4f',color:'FFFFFF',align:'right'}},
-               {text:'Acum.%',options:{bold:true,fill:'2d7a4f',color:'FFFFFF',align:'right'}}];
-      var eppRows=[hdr];
-      var acumCD=0, tCD=0,tGG=0,tUTI=0,tS1=0,tDC=0,tS2=0,tAT=0,tRT=0,tNT=0,tIV=0,tTT=0;
-      epFilas.forEach(function(f,i){
-        var r=epCalcFila(f.cd,epP);
-        tCD+=r.cdEP; tGG+=r.gg; tUTI+=r.uti; tS1+=r.sub1; tDC+=r.desc;
-        tS2+=r.sub2; tAT+=r.ant; tRT+=r.ret; tNT+=r.neto; tIV+=r.iva; tTT+=r.tot;
-        var pct=epP.cdC>0?(f.cd/epP.cdC*100):0;
-        acumCD+=f.cd;
-        var acumPct=epP.cdC>0?(acumCD/epP.cdC*100):0;
-        var bg=i%2===0?'F5F8FC':'FFFFFF';
-        eppRows.push([
-          {text:'EEPP'+(i+1),options:{bold:true,fill:bg}},
-          {text:pptFmt(r.cdEP),options:{align:'right',fill:bg}},
-          {text:pptFmt(r.gg),options:{align:'right',fill:bg}},
-          {text:pptFmt(r.uti),options:{align:'right',fill:bg}},
-          {text:pptFmt(r.sub1),options:{align:'right',fill:bg}},
-          {text:pptFmt(r.desc),options:{align:'right',color:'C0392B',fill:bg}},
-          {text:pptFmt(r.sub2),options:{align:'right',fill:bg}},
-          {text:pptFmt(r.ant),options:{align:'right',color:'C0392B',fill:bg}},
-          {text:pptFmt(r.ret),options:{align:'right',color:'C0392B',fill:bg}},
-          {text:pptFmt(r.neto),options:{align:'right',bold:true,fill:bg}},
-          {text:pptFmt(r.iva),options:{align:'right',fill:bg}},
-          {text:pptFmt(r.tot),options:{align:'right',bold:true,fill:bg}},
-          {text:pptPct(pct),options:{align:'right',bold:true,fill:'E8F5E9',color:'2D7A4F'}},
-          {text:pptPct(acumPct),options:{align:'right',bold:true,fill:'E8F5E9',color:'2D7A4F'}}
-        ]);
-      });
-      var acumTotPct=epP.cdC>0?(tCD/epP.cdC*100):0;
-      eppRows.push([
-        {text:'TOTAL',options:{bold:true,fill:'1a3a5c',color:'FFFFFF'}},
-        {text:pptFmt(tCD),options:{align:'right',bold:true,fill:'1a3a5c',color:'FFFFFF'}},
-        {text:pptFmt(tGG),options:{align:'right',bold:true,fill:'1a3a5c',color:'FFFFFF'}},
-        {text:pptFmt(tUTI),options:{align:'right',bold:true,fill:'1a3a5c',color:'FFFFFF'}},
-        {text:pptFmt(tS1),options:{align:'right',bold:true,fill:'1a3a5c',color:'FFFFFF'}},
-        {text:pptFmt(tDC),options:{align:'right',bold:true,fill:'1a3a5c',color:'FFFFFF'}},
-        {text:pptFmt(tS2),options:{align:'right',bold:true,fill:'1a3a5c',color:'FFFFFF'}},
-        {text:pptFmt(tAT),options:{align:'right',bold:true,fill:'1a3a5c',color:'FFFFFF'}},
-        {text:pptFmt(tRT),options:{align:'right',bold:true,fill:'1a3a5c',color:'FFFFFF'}},
-        {text:pptFmt(tNT),options:{align:'right',bold:true,fill:'1a3a5c',color:'FFFFFF'}},
-        {text:pptFmt(tIV),options:{align:'right',bold:true,fill:'1a3a5c',color:'FFFFFF'}},
-        {text:pptFmt(tTT),options:{align:'right',bold:true,fill:'1a3a5c',color:'FFFFFF'}},
-        {text:pptPct(acumTotPct),options:{align:'right',bold:true,fill:'2d7a4f',color:'FFFFFF'}},
-        {text:pptPct(acumTotPct),options:{align:'right',bold:true,fill:'2d7a4f',color:'FFFFFF'}}
-      ]);
-      sEP2.addTable(eppRows,{x:0.08,y:CONT_Y+0.05,w:9.84,colW:[0.5,0.8,0.65,0.65,0.8,0.65,0.8,0.75,0.75,0.85,0.7,0.85,0.6,0.6],
-        fontSize:9,fontFace:FONT,align:'right',valign:'middle',rowH:0.32,
-        border:{type:'solid',pt:0.3,color:'CCCCCC'},fill:{color:'FFFFFF'}});
-    }
-
-    } // fin if(_conEEPP)
 
     // ══ DESCARGAR ══
     var nS=String(nroInf).padStart(3,'0');
@@ -2519,6 +2534,26 @@ function actualizarSgPreview() {
       if(loImg2){ loImg2.src=estado.loImgSrc; loImg2.style.display='block'; }
       if(loWrap) loWrap.style.display='block';
       if(loDz) loDz.style.display='none';
+    }
+    // Profesionales del proyecto
+    if(estado.profs){
+      ['mandante-profs','constructora-profs','arq-profs','ito-profs','pm-profs'].forEach(function(sec){
+        var container=document.getElementById(sec); if(!container) return;
+        var rows=container.querySelectorAll('.prof-row');
+        var data=estado.profs[sec]||[];
+        // Ajustar filas
+        while(container.querySelectorAll('.prof-row').length < data.length){
+          var addBtn=container.querySelector('.btn-add-prof');
+          if(addBtn) addBtn.click(); else break;
+        }
+        var curRows=container.querySelectorAll('.prof-row');
+        data.forEach(function(d,i){
+          if(!curRows[i]) return;
+          var ins=curRows[i].querySelectorAll('input');
+          if(ins[0]) ins[0].value=d.cargo||'';
+          if(ins[1]) ins[1].value=d.nombre||'';
+        });
+      });
     }
     // Fotografías
     fotos = (estado.fotos||[]).map(function(f){ return Object.assign({},f); });
