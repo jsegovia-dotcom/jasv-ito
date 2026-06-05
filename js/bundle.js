@@ -861,10 +861,6 @@ function actualizarSgPreview() {
     angleVal.textContent='0°';
     angleSlider.oninput = function(){
       angleVal.textContent=this.value+'°';
-      if(currentMarkers.length>0){
-        currentMarkers[0].angle=parseInt(this.value);
-        redrawEditor();
-      }
     };
     angleLabel.appendChild(angleSlider); angleLabel.appendChild(angleVal);
 
@@ -876,12 +872,6 @@ function actualizarSgPreview() {
     [['#E24B4A','Rojo'],['#185FA5','Azul'],['#0F6E56','Verde'],['#BA7517','Ámbar'],['#533AB7','Morado']].forEach(function(c){
       var o=document.createElement('option'); o.value=c[0]; o.textContent=c[1]; colorSel.appendChild(o);
     });
-    colorSel.oninput = function(){
-      if(currentMarkers.length>0){
-        currentMarkers[0].color=this.value;
-        redrawEditor();
-      }
-    };
     colorLabel.appendChild(colorSel);
 
     var instruccion = document.createElement('div');
@@ -965,6 +955,21 @@ function actualizarSgPreview() {
     }
     rebuildCanvas();
 
+    // Ahora que el canvas existe, conectar handlers de slider y color
+    angleSlider.oninput = function(){
+      angleVal.textContent=this.value+'°';
+      if(currentMarkers.length>0){
+        currentMarkers[0].angle=parseInt(this.value);
+        redrawEditor();
+      }
+    };
+    colorSel.oninput = function(){
+      if(currentMarkers.length>0){
+        currentMarkers[0].color=this.value;
+        redrawEditor();
+      }
+    };
+
     canvasWrap.addEventListener('click', function(e){
       if(!layoutGlobal.dataUrl) return;
       var rect=edCanvas.getBoundingClientRect();
@@ -988,8 +993,8 @@ function actualizarSgPreview() {
     btnOk.textContent='✓ Guardar miniatura';
     btnOk.style.cssText='padding:7px 16px;border:none;border-radius:6px;font-size:13px;cursor:pointer;background:#1a6bb5;color:#fff;font-weight:600;';
     btnOk.onclick=function(){
-      // Generar miniatura 180x120
-      var tw=180,th=120;
+      // Generar miniatura 360x240 (calidad PPT)
+      var tw=360,th=240;
       var tc=document.createElement('canvas'); tc.width=tw; tc.height=th;
       var tctx=tc.getContext('2d');
       if(layoutGlobal.img){
@@ -1019,7 +1024,7 @@ function actualizarSgPreview() {
           tctx.fillText(String(i+1),0,0); tctx.restore();
         });
       }
-      fotos[idx].layoutImg = tc.toDataURL('image/png');
+      fotos[idx].layoutImg = tc.toDataURL('image/jpeg', 0.92);
       fotos[idx].layoutMarkers = currentMarkers;
       overlay.style.display='none';
       renderFotos();
@@ -1885,14 +1890,20 @@ function actualizarSgPreview() {
             sf.addText('⚠ '+foto.warningTxt,{x:fx,y:dY,w:FOTO_W,h:0.28,fontSize:12,fontFace:FONT,color:'7a6010',italic:true,wrap:true});
           if(foto.resuelto&&foto.resueltoTxt&&dY<MAX_Y)
             sf.addText('✓ '+foto.resueltoTxt,{x:fx,y:dY+(foto.warning&&foto.warningTxt?0.3:0),w:FOTO_W,h:0.28,fontSize:12,fontFace:FONT,color:'2d7a4f',italic:true,wrap:true});
-          // Miniatura lay out (posición en plano)
+          // Miniatura lay out (posición en plano) — esquina inferior derecha de la foto
           if(foto.layoutImg){
+            console.log('layoutImg presente para foto '+(fi3+bi+1)+': '+foto.layoutImg.substring(0,40));
             var MINI_W=1.26, MINI_H=0.84; // ~3.2cm x 2.1cm
-            var miniX=fx+FOTO_W-MINI_W-0.04;
-            var miniY=fy+FOTO_H-MINI_H-0.04;
-            sf.addImage({data:foto.layoutImg,x:miniX,y:miniY,w:MINI_W,h:MINI_H,
-              sizing:{type:'contain',w:MINI_W,h:MINI_H},
-              shadow:{type:'outer',color:'000000',opacity:0.4,blur:4,offset:4,angle:45}});
+            var miniX=fx+FOTO_W-MINI_W-0.05;
+            var miniY=fy+FOTO_H-MINI_H-0.05;
+            // Marco blanco detrás de la miniatura
+            sf.addShape(prs.ShapeType.rect,{x:miniX-0.04,y:miniY-0.04,
+              w:MINI_W+0.08,h:MINI_H+0.08,
+              fill:{color:'FFFFFF'},line:{color:'DDDDDD',pt:1}});
+            // pptxgenjs acepta data: URL completa como string
+            var liStr=foto.layoutImg;
+            sf.addImage({data:liStr,x:miniX,y:miniY,w:MINI_W,h:MINI_H,
+              rounding:false});
           }
         });
       }
