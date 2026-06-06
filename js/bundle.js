@@ -3661,23 +3661,39 @@ function actualizarSgPreview() {
         sgNroV.value='';
       }
 
-      // Pendientes del informe anterior: puntos en proceso/pendiente/urgente
-      // Pendientes del informe anterior: mostrar en sg-pendientes-list
-      // Cargar pendientes anteriores como cards editables
+      // ══ Pendientes del informe anterior ══
+      // Combina: puntos no cerrados del informe anterior + pendientes que venían de informes previos
       var sgPendList=document.getElementById('sg-pendientes-list');
       if(sgPendList){
-        if(prev && prev.sgPuntos && prev.sgPuntos.length>0){
-          var pendItems=prev.sgPuntos.filter(function(p){
-            return p.estado==='pendiente'||p.estado==='urgente'||p.estado==='proceso';
-          });
-          if(pendItems.length>0){
-            sgPendList.innerHTML='';
-            pendItems.forEach(function(p,pi){
-              sgPendList.appendChild(crearPendCard(p.texto, p.estado, pi));
+        var todosLosNoC=[];
+        if(prev){
+          // 1. Pendientes que venían de informes anteriores (propagados), aún no cerrados
+          if(prev.sgPendientesAnterior && prev.sgPendientesAnterior.length>0){
+            prev.sgPendientesAnterior.forEach(function(p){
+              if(p.estado!=='cerrado'){
+                // Evitar duplicados por texto
+                var existe=todosLosNoC.some(function(x){return x.texto===p.texto;});
+                if(!existe) todosLosNoC.push({texto:p.texto, estado:p.estado});
+              }
             });
-          } else {
-            sgPendList.innerHTML='<div style="font-size:13px;color:#2d7a4f;padding:8px 0">✅ Sin puntos pendientes del informe anterior.</div>';
           }
+          // 2. Puntos nuevos del informe anterior que no están cerrados
+          if(prev.sgPuntos && prev.sgPuntos.length>0){
+            prev.sgPuntos.forEach(function(p){
+              if(p.estado==='pendiente'||p.estado==='urgente'||p.estado==='proceso'){
+                var existe=todosLosNoC.some(function(x){return x.texto===p.texto;});
+                if(!existe) todosLosNoC.push({texto:p.texto, estado:p.estado});
+              }
+            });
+          }
+        }
+        if(todosLosNoC.length>0){
+          sgPendList.innerHTML='';
+          todosLosNoC.forEach(function(p,pi){
+            sgPendList.appendChild(crearPendCard(p.texto, p.estado, pi));
+          });
+        } else if(prev){
+          sgPendList.innerHTML='<div style="font-size:13px;color:#2d7a4f;padding:8px 0">✅ Sin puntos pendientes del informe anterior.</div>';
         } else {
           sgPendList.innerHTML='<div style="font-size:13px;color:#aaa;font-style:italic;padding:8px 0">Los puntos no cerrados aparecerán aquí automáticamente.</div>';
         }
