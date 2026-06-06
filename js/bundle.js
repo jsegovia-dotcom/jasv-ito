@@ -2305,7 +2305,7 @@ function actualizarSgPreview() {
     // ══ LAY OUT ARQUITECTURA ══
     slideNum++;
     var s8=prs.addSlide();
-    addHF(s8,(pendArrastre.length>0?String((_conEEPP?8:7)+1):String(_conEEPP?7:6))+'. Lay Out Arquitectura vigente',slideNum);
+    addHF(s8,layNum+'. Lay Out Arquitectura vigente',slideNum);
     var loImg=document.getElementById('lo-preview-img');
     var loVer=document.getElementById('lo-version').value;
     var loFecha=document.getElementById('lo-fecha').value;
@@ -2364,7 +2364,7 @@ function actualizarSgPreview() {
       for(var fi3=0;fi3<fotos.length;fi3+=2){
         slideNum++;
         var sf=prs.addSlide();
-        addHF(sf,(pendArrastre.length>0?String(_conEEPP?9:8):String(_conEEPP?8:7))+'. Fotografías relevantes',slideNum);
+        addHF(sf,fotNum+'. Fotografías relevantes',slideNum);
         var batch=fotos.slice(fi3,fi3+2);
         batch.forEach(function(foto,bi){
           var fx=bi===0?FOTO_L_X:FOTO_R_X;
@@ -2419,7 +2419,7 @@ function actualizarSgPreview() {
     if(anexos.length>0){
       slideNum++;
       var sa=prs.addSlide();
-      addHF(sa,(pendArrastre.length>0?'9':'8')+'. Anexos',slideNum);
+      addHF(sa,anxNum+'. Anexos',slideNum);
       var anxR=[];
       var anxY=CONT_Y+0.05;
       anexos.forEach(function(a,ai){
@@ -3458,6 +3458,30 @@ function actualizarSgPreview() {
                       'ep-desc':obra.epDESC,'ep-pct-anticipo':obra.epPctAnticipo,'ep-pct-ret':obra.epPctRet};
         Object.keys(epPreMap).forEach(function(id){ var el=document.getElementById(id); if(el && epPreMap[id]) el.value=epPreMap[id]; });
         if(typeof epRecalcContrato==='function') epRecalcContrato();
+        // ══ Heredar estados de pago del informe anterior ══
+        if(prev && prev.epFilas && prev.epFilas.length>0){
+          epFilas = prev.epFilas.map(function(f){ return {cd: f.cd||0}; });
+          // También cargar datos del contrato del estado anterior si la obra no los tiene
+          ['epCD','epGG','epUTI','epDESC','epPctAnticipo','epPctRet'].forEach(function(k){
+            var htmlId = k.replace(/([A-Z])/g,function(m){ return '-'+m.toLowerCase(); })
+                          .replace('ep-','ep-').replace(/^ep/,'ep');
+            // Mapa manual
+          });
+          var epPrevMap={
+            'ep-cd':      prev.epCD||obra.epCD,
+            'ep-gg':      prev.epGG||obra.epGG,
+            'ep-uti':     prev.epUTI||obra.epUTI,
+            'ep-desc':    prev.epDESC||obra.epDESC,
+            'ep-pct-anticipo': prev.epPctAnticipo||obra.epPctAnticipo,
+            'ep-pct-ret': prev.epPctRet||obra.epPctRet
+          };
+          Object.keys(epPrevMap).forEach(function(id){
+            var el=document.getElementById(id);
+            if(el && epPrevMap[id]) el.value=epPrevMap[id];
+          });
+          if(typeof epRecalcContrato==='function') epRecalcContrato();
+          if(typeof epRenderEepp==='function') epRenderEepp();
+        }
       }
       // Limpiar punto 1 con valores por defecto
     var p1el=document.getElementById('sg-p1-texto');
