@@ -1965,9 +1965,9 @@ function actualizarSgPreview() {
       // Ajustar automáticamente: desde tblY=3.1496" hasta notas y=5.9055"
       // Tabla: desde después de leyenda hasta notas
       var tblY=tblY; // posición fija según especificación
-      // Límite inferior: 17.75cm = 6.988" (línea gris pie de página)
-      var LIMITE_INF = 6.988;
-      var tblMaxH = Math.min(notaY - tblY - 0.05, LIMITE_INF - tblY - 0.05);
+      // Límite inferior exacto: 17.75cm = 6.9882"
+      var LIMITE_INF = 6.9882;
+      var tblMaxH = Math.min(LIMITE_INF - tblY, notaY - tblY - 0.05);
       var nRows=csTD.length; // incluye header
       var rowH=Math.min(0.26, tblMaxH/Math.max(nRows,1));
       // Si rowH < 0.18 reducir fuente para que quepa el texto
@@ -2073,16 +2073,25 @@ function actualizarSgPreview() {
       ['% Retenciones', pptPct(epP.pRET*100)],
     ];
     // — Título sección EP —
-    sEP.addText('DATOS DEL CONTRATO',{x:CX,y:CONT_Y+0.02,w:(SW-CX*2)*0.42,h:0.25,
-      fontSize:9,fontFace:FONT,bold:true,color:'FFFFFF',fill:'4A6741',
-      align:'center',valign:'middle'});
-    sEP.addText('CONTROL DE ESTADOS DE PAGO',{x:CX+(SW-CX*2)*0.42+0.1,y:CONT_Y+0.02,w:(SW-CX*2)*0.57,h:0.25,
-      fontSize:9,fontFace:FONT,bold:true,color:'FFFFFF',fill:'1a3a5c',
+    // Posiciones exactas según especificación
+    // Contrato: x=0.3cm=0.1181" y=5.75cm=2.2638" w=24.74cm=9.7402" h=2.48cm=0.9764"
+    // EEPP:     x=0.3cm=0.1181" y=9.53cm=3.752"  w=24.74cm=9.7402" h=4.18cm=1.6457"
+    var EP_X  = 0.1181;
+    var EP_W  = 9.7402;
+    var CONT_Y_EP  = 2.2638;
+    var CONT_H_EP  = 0.9764;
+    var EEPP_Y_EP  = 3.752;
+    var EEPP_H_EP  = 1.6457;
+    var TITLE_H = 0.22;
+
+    // Título "DATOS DEL CONTRATO"
+    sEP.addText('DATOS DEL CONTRATO',{x:EP_X,y:CONT_Y_EP-TITLE_H-0.02,w:EP_W,h:TITLE_H,
+      fontSize:10,fontFace:FONT,bold:true,color:'FFFFFF',fill:'4A6741',
       align:'center',valign:'middle'});
 
-    // — Tabla contrato HORIZONTAL (2 filas: labels arriba, valores abajo) —
-    var cW = (SW-CX*2)*0.42;  // 42% del ancho disponible
-    var eppY0 = CONT_Y+0.02+0.25;  // justo debajo del título (altura 0.25")
+    // — Tabla contrato HORIZONTAL —
+    var cW = EP_W;
+    var eppY0 = CONT_Y_EP;
     var cRowsH=[
       // Fila de etiquetas
       [{text:'Costo Directo',options:{bold:true,fill:'2C4770',color:'FFFFFF',fontSize:8,align:'center'}},
@@ -2110,12 +2119,12 @@ function actualizarSgPreview() {
     var cColW=[1.0,0.9,0.9,1.0,0.85,1.0,0.85,1.05,0.85,0.85];
     var cSumW=cColW.reduce(function(a,b){return a+b;},0);
     cColW=cColW.map(function(w){return Math.round(w/cSumW*cW*1000)/1000;});
-    sEP.addTable(cRowsH,{x:CX,y:eppY0,w:cW,colW:cColW,
-      fontSize:10,fontFace:FONT,align:'center',valign:'middle',rowH:0.28,
+    sEP.addTable(cRowsH,{x:EP_X,y:eppY0,w:EP_W,h:CONT_H_EP,colW:cColW,
+      fontSize:11,fontFace:FONT,align:'center',valign:'middle',rowH:CONT_H_EP/2,
       border:{type:'solid',pt:0.5,color:'CCCCCC'},fill:{color:'FFFFFF'}});
 
     // — Tabla EEPP (debajo del contrato) —
-    var eppY = eppY0+0.28*2+0.25; // separación entre contrato y EEPP
+    var eppY = EEPP_Y_EP;  // posición exacta 9.53cm
     {
       var acumCD2=0,tCD2=0,tGG2=0,tUTI2=0,tS12=0,tDC2=0,tS22=0,tAT2=0,tRT2=0,tNT2=0,tIV2=0,tTT2=0;
       // Agregar fila vacía si no hay filas ingresadas
@@ -2176,14 +2185,22 @@ function actualizarSgPreview() {
       var colW2=[0.38,0.60,0.48,0.48,0.58,0.46,0.58,0.52,0.52,0.60,0.48,0.60,0.40,0.40];
       var sumW2=colW2.reduce(function(a,b){return a+b;},0);
       colW2=colW2.map(function(w){return Math.round(w/sumW2*ew*1000)/1000;});
-      var ew = (SW-CX*2)*0.57 - 0.05;  // 57% menos margen
-      var ex = CX + cW + 0.1;           // después de tabla contrato + margen
+      var ew = EP_W;   // ancho exacto 24.74cm
+      var ex = EP_X;   // posición exacta 0.3cm
+      // Título "CONTROL DE ESTADOS DE PAGO" encima de tabla EEPP
+      sEP.addText('CONTROL DE ESTADOS DE PAGO',{x:EP_X,y:EEPP_Y_EP-TITLE_H-0.02,w:EP_W,h:TITLE_H,
+        fontSize:10,fontFace:FONT,bold:true,color:'FFFFFF',fill:'1a3a5c',
+        align:'center',valign:'middle'});
       // 14 columnas para tabla EEPP
       var colW2=[0.38,0.60,0.48,0.48,0.58,0.46,0.58,0.52,0.52,0.60,0.48,0.60,0.40,0.40];
       var sumW2=colW2.reduce(function(a,b){return a+b;},0);
       colW2=colW2.map(function(w){return Math.round(w/sumW2*ew*1000)/1000;});
-      sEP.addTable(eppRows2,{x:ex,y:eppY,w:ew,colW:colW2,
-        fontSize:8,fontFace:FONT,align:'right',valign:'middle',rowH:0.30,
+      // Calcular rowH dinámico para que la tabla quepa en EEPP_H_EP
+      var nRowsEepp = eppRows2.length; // header + data + total
+      var rowHEepp = Math.min(EEPP_H_EP / Math.max(nRowsEepp, 1), 0.35);
+      rowHEepp = Math.max(rowHEepp, 0.18);
+      sEP.addTable(eppRows2,{x:ex,y:eppY,w:ew,h:EEPP_H_EP,colW:colW2,
+        fontSize:9,fontFace:FONT,align:'right',valign:'middle',rowH:rowHEepp,
         border:{type:'solid',pt:0.3,color:'CCCCCC'},fill:{color:'FFFFFF'}});
     }
     } // fin if(_conEEPP)
