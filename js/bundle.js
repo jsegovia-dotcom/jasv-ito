@@ -1021,9 +1021,9 @@ function actualizarSgPreview() {
 
     // Actualizar botón "Siguiente" de sec-8 (Anexos)
     // Si conEEPP → apunta a irA(9); si no → permanece con acciones finales
-    // Mostrar/ocultar botón "Siguiente" de sec-8 → sec-9
+    // sec8-next-btn ya no se usa (EP ahora va antes de CurvaS)
     var sec8NextBtn = document.getElementById('sec8-next-btn');
-    if(sec8NextBtn) sec8NextBtn.style.display = _conEEPP ? '' : 'none';
+    if(sec8NextBtn) sec8NextBtn.style.display = 'none';
 
     // Actualizar numeración de steps que se desplazan según conEEPP
     var nCS  = document.getElementById('step-n-cs');
@@ -3458,28 +3458,7 @@ function actualizarSgPreview() {
                       'ep-desc':obra.epDESC,'ep-pct-anticipo':obra.epPctAnticipo,'ep-pct-ret':obra.epPctRet};
         Object.keys(epPreMap).forEach(function(id){ var el=document.getElementById(id); if(el && epPreMap[id]) el.value=epPreMap[id]; });
         if(typeof epRecalcContrato==='function') epRecalcContrato();
-        // ══ Heredar estados de pago del informe anterior ══
-        if(prev){
-          // Cargar filas EEPP del informe anterior
-          if(prev.epFilas && prev.epFilas.length > 0){
-            epFilas = prev.epFilas.map(function(f){ return {cd: f.cd||0}; });
-          }
-          // Cargar datos del contrato del estado anterior (más actualizado que la obra)
-          var epPrevMap={
-            'ep-cd':           prev.epCD           || obra.epCD,
-            'ep-gg':           prev.epGG           || obra.epGG,
-            'ep-uti':          prev.epUTI          || obra.epUTI,
-            'ep-desc':         prev.epDESC         || obra.epDESC,
-            'ep-pct-anticipo': prev.epPctAnticipo  || obra.epPctAnticipo,
-            'ep-pct-ret':      prev.epPctRet       || obra.epPctRet
-          };
-          Object.keys(epPrevMap).forEach(function(id){
-            var el=document.getElementById(id);
-            if(el && epPrevMap[id]) el.value=epPrevMap[id];
-          });
-          if(typeof epRecalcContrato==='function') epRecalcContrato();
-          if(typeof epRenderEepp==='function') epRenderEepp();
-        }
+        // herencia EP → ver más abajo después de prevInf
       }
       // Limpiar punto 1 con valores por defecto
     var p1el=document.getElementById('sg-p1-texto');
@@ -3498,6 +3477,29 @@ function actualizarSgPreview() {
         }
       }
       var prev = prevInf ? prevInf.estado : null;
+
+      // ══ Heredar estados de pago del informe anterior ══
+      if(obra.conEEPP && prev){
+        // Cargar filas EEPP del informe anterior
+        if(prev.epFilas && prev.epFilas.length > 0){
+          epFilas = prev.epFilas.map(function(f){ return {cd: f.cd||0}; });
+        }
+        // Cargar datos del contrato del estado anterior
+        var epPrevMap={
+          'ep-cd':           prev.epCD           || obra.epCD,
+          'ep-gg':           prev.epGG           || obra.epGG,
+          'ep-uti':          prev.epUTI          || obra.epUTI,
+          'ep-desc':         prev.epDESC         || obra.epDESC,
+          'ep-pct-anticipo': prev.epPctAnticipo  || obra.epPctAnticipo,
+          'ep-pct-ret':      prev.epPctRet       || obra.epPctRet
+        };
+        Object.keys(epPrevMap).forEach(function(id){
+          var el=document.getElementById(id);
+          if(el && epPrevMap[id]) el.value=epPrevMap[id];
+        });
+        if(typeof epRecalcContrato==='function') epRecalcContrato();
+        if(typeof epRenderEepp==='function') epRenderEepp();
+      }
 
       // ── Profesionales: heredar del informe anterior ──
       if(prev && prev.profs){
