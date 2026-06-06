@@ -1286,8 +1286,8 @@ function actualizarSgPreview() {
         tctx.drawImage(layoutGlobal.img,ox,oy,Math.round(edCanvas.width*sc),Math.round(edCanvas.height*sc));
         // Tamaños fijos en px del canvas miniatura (336px = 2.8cm)
         // Tamaños fijos calibrados (canvas 336px = 2.8cm)
-        var iconR = 50;
-        var coneR = 150;
+        var iconR = 43;
+        var coneR = 128;  // reducido 15%
         currentMarkers.forEach(function(m,i){
           var nx=m.x*sc+ox, ny=m.y*sc+oy;
           var ang=(m.angle-90)*Math.PI/180;
@@ -1926,14 +1926,16 @@ function actualizarSgPreview() {
     var desvC=desvNeg?'d93a3a':(desvPos?'1a5fa8':NEGRO);
     // Leyenda avance — encima de la tabla/gráfico
     // Leyenda: izquierda, uno debajo del otro
-    var leyX=0.2, leyY=CONT_Y+0.05, leyLH=0.38;
-    s6.addText(lblProg,{x:leyX,y:leyY,          w:5.0,h:leyLH,fontSize:14,fontFace:FONT,bold:true,color:'888888',valign:'middle'});
-    s6.addText(lblReal,{x:leyX,y:leyY+leyLH,    w:5.0,h:leyLH,fontSize:14,fontFace:FONT,bold:true,color:'1a5fa8',valign:'middle'});
-    s6.addText(lblDesv,{x:leyX,y:leyY+leyLH*2,  w:5.0,h:leyLH,fontSize:14,fontFace:FONT,bold:true,color:desvC, valign:'middle'});
-    // Gráfico: posición exacta 8cm x 8cm, tamaño 16.3cm x 7.55cm
-    var gfxX=3.252, gfxW=6.4173; var gfxY=CONT_Y+0.05+3*leyLH+0.1; // alineado con tabla
+    // Posiciones fijas según especificación
+    var leyX=3.252, progY=1.9449, realY=2.2756, desvY=2.6024, leyH=0.36;
+    var tblX=0.1181, tblY=2.0157;
+    s6.addText(lblProg,{x:leyX,y:progY,w:6.5,h:leyH,fontSize:14,fontFace:FONT,bold:true,color:'888888',valign:'middle'});
+    s6.addText(lblReal,{x:leyX,y:realY,w:6.5,h:leyH,fontSize:14,fontFace:FONT,bold:true,color:'1a5fa8',valign:'middle'});
+    s6.addText(lblDesv,{x:leyX,y:desvY,w:6.5,h:leyH,fontSize:14,fontFace:FONT,bold:true,color:desvC, valign:'middle'});
+    // Gráfico a la derecha de la tabla
+    var gfxX=3.252, gfxW=6.4173; var gfxY=desvY+leyH+0.12;
     // Tabla: izquierda del gráfico, alineada al top del gráfico
-    var tblW=2.8, tblX=0.2;
+    var tblW=2.8;
     // Tabla comienza justo después de la leyenda (3 líneas × 0.38 = 1.14")
     var notaY=MAX_Y-0.5; // nota queda antes del pie
     // Tabla avance — fuente 12 encabezado, 10 body
@@ -1962,7 +1964,7 @@ function actualizarSgPreview() {
       // Ajustar rowH para que la tabla no se desborde: desde y=3.1496 hasta comentarios y=5.9055
       // Ajustar automáticamente: desde tblY=3.1496" hasta notas y=5.9055"
       // Tabla: desde después de leyenda hasta notas
-      var tblY=CONT_Y+0.05+3*leyLH+0.1; // right after 3 legend lines
+      var tblY=tblY; // posición fija según especificación
       var tblMaxH=notaY-tblY-0.05;
       var nRows=csTD.length; // incluye header
       var rowH=Math.min(0.26, tblMaxH/Math.max(nRows,1));
@@ -2068,44 +2070,51 @@ function actualizarSgPreview() {
       ['% Anticipo', pptPct(epP.pANT*100)],
       ['% Retenciones', pptPct(epP.pRET*100)],
     ];
+    // — Título sección EP —
+    sEP.addText('DATOS DEL CONTRATO',{x:CX,y:CONT_Y+0.02,w:SW-CX*2,h:0.28,
+      fontSize:10,fontFace:FONT,bold:true,color:'FFFFFF',fill:'2C4770',
+      align:'center',valign:'middle'});
+
     // — Tabla contrato HORIZONTAL (2 filas: labels arriba, valores abajo) —
-    // Ancho completo del slide
     var cW=SW-CX*2;
+    var eppY0 = CONT_Y+0.02+0.28;  // justo debajo del título
     var cRowsH=[
       // Fila de etiquetas
-      [{text:'Costo Directo',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',fontSize:9,align:'center'}},
-       {text:'GG ('+Math.round(epP.pGG*10000)/100+'%)',options:{fill:'1a3a5c',color:'FFFFFF',fontSize:9,align:'center'}},
-       {text:'UTI ('+Math.round(epP.pUTI*10000)/100+'%)',options:{fill:'1a3a5c',color:'FFFFFF',fontSize:9,align:'center'}},
-       {text:'Subtotal',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',fontSize:9,align:'center'}},
-       {text:'Desc.',options:{fill:'1a3a5c',color:'FFFFFF',fontSize:9,align:'center'}},
-       {text:'Neto',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',fontSize:9,align:'center'}},
-       {text:'IVA 19%',options:{fill:'1a3a5c',color:'FFFFFF',fontSize:9,align:'center'}},
-       {text:'TOTAL',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',fontSize:9,align:'center'}},
-       {text:'% Anticipo',options:{fill:'1a3a5c',color:'FFFFFF',fontSize:9,align:'center'}},
+      [{text:'Costo Directo',options:{bold:true,fill:'2C4770',color:'FFFFFF',fontSize:8,align:'center'}},
+       {text:'GG ('+Math.round(epP.pGG*10000)/100+'%)',options:{fill:'2C4770',color:'FFFFFF',fontSize:8,align:'center'}},
+       {text:'UTI ('+Math.round(epP.pUTI*10000)/100+'%)',options:{fill:'2C4770',color:'FFFFFF',fontSize:8,align:'center'}},
+       {text:'Subtotal',options:{bold:true,fill:'2C4770',color:'FFFFFF',fontSize:8,align:'center'}},
+       {text:'Desc.',options:{fill:'2C4770',color:'FFFFFF',fontSize:8,align:'center'}},
+       {text:'Neto',options:{bold:true,fill:'2C4770',color:'FFFFFF',fontSize:8,align:'center'}},
+       {text:'IVA 19%',options:{fill:'2C4770',color:'FFFFFF',fontSize:8,align:'center'}},
+       {text:'TOTAL',options:{bold:true,fill:'2C4770',color:'FFFFFF',fontSize:8,align:'center'}},
+       {text:'% Anticipo',options:{fill:'2C4770',color:'FFFFFF',fontSize:8,align:'center'}},
        {text:'% Retenciones',options:{fill:'1a3a5c',color:'FFFFFF',fontSize:9,align:'center'}}],
       // Fila de valores
-      [{text:pptFmt(epCD2),options:{bold:true,fontSize:9,align:'center'}},
-       {text:pptFmt(epGG2),options:{fontSize:9,align:'center',color:'555555'}},
-       {text:pptFmt(epUTI2),options:{fontSize:9,align:'center',color:'555555'}},
-       {text:pptFmt(epSUB2),options:{bold:true,fontSize:9,align:'center'}},
-       {text:epDESC2>0?pptFmt(epDESC2):'—',options:{fontSize:9,align:'center',color:'C0392B'}},
-       {text:pptFmt(epNETO2),options:{bold:true,fontSize:9,align:'center'}},
-       {text:pptFmt(epIVA2),options:{fontSize:9,align:'center'}},
-       {text:pptFmt(epTOT2),options:{bold:true,fontSize:9,align:'center',color:'1A3A5C'}},
-       {text:pptPct(epP.pANT*100),options:{fontSize:9,align:'center'}},
+      [{text:pptFmt(epCD2),options:{bold:true,fontSize:8,align:'center'}},
+       {text:pptFmt(epGG2),options:{fontSize:8,align:'center',color:'555555'}},
+       {text:pptFmt(epUTI2),options:{fontSize:8,align:'center',color:'555555'}},
+       {text:pptFmt(epSUB2),options:{bold:true,fontSize:8,align:'center'}},
+       {text:epDESC2>0?pptFmt(epDESC2):'—',options:{fontSize:8,align:'center',color:'C0392B'}},
+       {text:pptFmt(epNETO2),options:{bold:true,fontSize:8,align:'center'}},
+       {text:pptFmt(epIVA2),options:{fontSize:8,align:'center'}},
+       {text:pptFmt(epTOT2),options:{bold:true,fontSize:8,align:'center',color:'1A3A5C'}},
+       {text:pptPct(epP.pANT*100),options:{fontSize:8,align:'center'}},
        {text:pptPct(epP.pRET*100),options:{fontSize:9,align:'center'}}]
     ];
     var cColW=[1.0,0.9,0.9,1.0,0.85,1.0,0.85,1.05,0.85,0.85];
     var cSumW=cColW.reduce(function(a,b){return a+b;},0);
     cColW=cColW.map(function(w){return Math.round(w/cSumW*cW*1000)/1000;});
-    sEP.addTable(cRowsH,{x:CX,y:CONT_Y+0.05,w:cW,colW:cColW,
+    sEP.addTable(cRowsH,{x:CX,y:eppY0,w:cW,colW:cColW,
       fontSize:9,fontFace:FONT,align:'center',valign:'middle',rowH:0.32,
       border:{type:'solid',pt:0.5,color:'CCCCCC'},fill:{color:'FFFFFF'}});
 
     // — Tabla EEPP (debajo del contrato) —
-    var eppY = CONT_Y+0.05+0.32*2+0.15; // después de 2 filas del contrato
+    var eppY = eppY0+0.28*2+0.2; // después de título + 2 filas del contrato
     {
       var acumCD2=0,tCD2=0,tGG2=0,tUTI2=0,tS12=0,tDC2=0,tS22=0,tAT2=0,tRT2=0,tNT2=0,tIV2=0,tTT2=0;
+      // Agregar fila vacía si no hay filas ingresadas
+      if(epFilas.length === 0) epFilas = [{cd: 0, _placeholder: true}];
       var hdr2=[
         {text:'N°',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',fontSize:8}},
         {text:'CD',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:8}},
@@ -4527,4 +4536,6 @@ setTimeout(function(){
     clearTimeout(t._timer);
     t._timer = setTimeout(function(){ t.classList.remove('show','err'); }, 3200);
   }
-  // ══ FIN HISTORIAL ══════════════════════════════════════
+  // ══ FIN HISTORIAL ═════════════════════════════════════    // Limpiar placeholder
+    epFilas = epFilas.filter(function(f){ return !f._placeholder; });
+    ═
