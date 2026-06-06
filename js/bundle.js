@@ -3056,8 +3056,11 @@ function actualizarSgPreview() {
   }
 
   function importarObrasJSON(input) {
+    console.log('[IMP] Función llamada, files:', input.files.length);
     if (!input.files.length) return;
-    mostrarToast('⏳ Cargando archivo...', 'ok');
+    var file = input.files[0];
+    console.log('[IMP] Archivo:', file.name, 'tamaño:', file.size);
+    mostrarToast('⏳ Leyendo: ' + file.name, 'ok');
     var reader = new FileReader();
     reader.onerror = function(e) {
       mostrarToast('❌ Error al leer el archivo: ' + e.target.error, 'err');
@@ -4716,7 +4719,3 @@ setTimeout(function(){
     t._timer = setTimeout(function(){ t.classList.remove('show','err'); }, 3200);
   }
   // ══ FIN HISTORIAL ══
-
-  // Limpiar placeholder EEPP después de generar PPT
-    epFilas = epFilas.filter(function(f){ return !f._placeholder; });
-  //
