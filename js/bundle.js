@@ -2680,14 +2680,49 @@ function actualizarSgPreview() {
     var reader = new FileReader();
     reader.onload = function(e) {
       try {
-        var estado = JSON.parse(e.target.result);
+        var parsed = JSON.parse(e.target.result);
+        var estado = null;
+
+        // Formato 1: exportarInformeActualJSON → {obra, informe: estado}
+        if(parsed && parsed.informe && typeof parsed.informe === 'object'){
+          estado = parsed.informe;
+          // Restaurar obraActual si viene en el JSON
+          if(parsed.obra && typeof parsed.obra === 'string'){
+            // Intentar encontrar la obra en el sistema
+            var obraEncontrada = (typeof obras !== 'undefined') ?
+              obras.find(function(o){ return o.nombre === parsed.obra; }) : null;
+            if(obraEncontrada) obraActual = obraEncontrada;
+          }
+        }
+        // Formato 2: {estado: {...}} → estructura antigua anidada
+        else if(parsed && parsed.estado && typeof parsed.estado === 'object'){
+          estado = parsed.estado;
+        }
+        // Formato 3: array obras → no es un informe
+        else if(parsed && Array.isArray(parsed.obras)){
+          mostrarToast('❌ Este archivo contiene obras, no un informe. Use "Importar" desde la pantalla de obras.', 'err');
+          input.value='';
+          return;
+        }
+        // Formato 4: estado plano (exportarJSON) → usar directo
+        else if(parsed && (parsed['nro-informe'] !== undefined || parsed['nombre-obra'] !== undefined)){
+          estado = parsed;
+        }
+        // Formato desconocido
+        else {
+          throw new Error('Formato de archivo no reconocido. Asegúrate de exportar desde esta aplicación.');
+        }
+
+        if(!estado) throw new Error('No se pudo extraer el estado del informe.');
+
         restaurarEstado(estado);
         mostrarToast('✅ Informe importado correctamente', 'ok');
       } catch(ex) {
-        mostrarToast('❌ Archivo inválido: '+ex.message, 'err');
+        mostrarToast('❌ Error al importar: '+ex.message, 'err');
+        console.error('importarJSON error:', ex);
       }
     };
-    reader.readAsText(input.files[0]);
+    reader.readAsText(input.files[0], 'UTF-8');
     input.value='';
   }
 
@@ -3729,26 +3764,7 @@ function actualizarSgPreview() {
     mostrarToast('📥 Exportado', 'ok');
   }
 
-  function importarObrasJSON(input) {
-    if (!input.files.length) return;
-    var reader = new FileReader();
-    reader.onload = function(e) {
-      try {
-        var data = JSON.parse(e.target.result);
-        if (!Array.isArray(data)) throw new Error('Formato inválido');
-        var obras = cargarObras();
-        // Merge: no duplicar por id
-        data.forEach(function(o) {
-          if (!obras.find(function(x){ return x.id===o.id; })) obras.push(o);
-        });
-        guardarObras(obras);
-        renderObras();
-        mostrarToast('✅ ' + data.length + ' obras importadas', 'ok');
-      } catch(ex) { mostrarToast('❌ Archivo inválido', 'err'); }
-    };
-    reader.readAsText(input.files[0]);
-    input.value='';
-  }
+  
 
   // Sobrescribir guardarEnHistorial para guardar en obra si hay informe activo
   var _guardarEnHistorialOrig = typeof guardarEnHistorial === 'function' ? guardarEnHistorial : null;
@@ -4452,14 +4468,49 @@ setTimeout(function(){
     var reader = new FileReader();
     reader.onload = function(e) {
       try {
-        var estado = JSON.parse(e.target.result);
+        var parsed = JSON.parse(e.target.result);
+        var estado = null;
+
+        // Formato 1: exportarInformeActualJSON → {obra, informe: estado}
+        if(parsed && parsed.informe && typeof parsed.informe === 'object'){
+          estado = parsed.informe;
+          // Restaurar obraActual si viene en el JSON
+          if(parsed.obra && typeof parsed.obra === 'string'){
+            // Intentar encontrar la obra en el sistema
+            var obraEncontrada = (typeof obras !== 'undefined') ?
+              obras.find(function(o){ return o.nombre === parsed.obra; }) : null;
+            if(obraEncontrada) obraActual = obraEncontrada;
+          }
+        }
+        // Formato 2: {estado: {...}} → estructura antigua anidada
+        else if(parsed && parsed.estado && typeof parsed.estado === 'object'){
+          estado = parsed.estado;
+        }
+        // Formato 3: array obras → no es un informe
+        else if(parsed && Array.isArray(parsed.obras)){
+          mostrarToast('❌ Este archivo contiene obras, no un informe. Use "Importar" desde la pantalla de obras.', 'err');
+          input.value='';
+          return;
+        }
+        // Formato 4: estado plano (exportarJSON) → usar directo
+        else if(parsed && (parsed['nro-informe'] !== undefined || parsed['nombre-obra'] !== undefined)){
+          estado = parsed;
+        }
+        // Formato desconocido
+        else {
+          throw new Error('Formato de archivo no reconocido. Asegúrate de exportar desde esta aplicación.');
+        }
+
+        if(!estado) throw new Error('No se pudo extraer el estado del informe.');
+
         restaurarEstado(estado);
         mostrarToast('✅ Informe importado correctamente', 'ok');
       } catch(ex) {
-        mostrarToast('❌ Archivo inválido: '+ex.message, 'err');
+        mostrarToast('❌ Error al importar: '+ex.message, 'err');
+        console.error('importarJSON error:', ex);
       }
     };
-    reader.readAsText(input.files[0]);
+    reader.readAsText(input.files[0], 'UTF-8');
     input.value='';
   }
 
