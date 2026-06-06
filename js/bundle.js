@@ -2119,8 +2119,8 @@ function actualizarSgPreview() {
         {text:'Neto',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:8}},
         {text:'IVA',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:8}},
         {text:'Total',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:8}},
-        {text:'Parc%',options:{bold:true,fill:'2d7a4f',color:'FFFFFF',align:'right',fontSize:8}},
-        {text:'Acum%',options:{bold:true,fill:'2d7a4f',color:'FFFFFF',align:'right',fontSize:8}}
+        {text:'Parc%',options:{bold:true,fill:'2d7a4f',color:'FFFFFF',align:'right',fontSize:7}},
+        {text:'Acum%',options:{bold:true,fill:'2d7a4f',color:'FFFFFF',align:'right',fontSize:7}}
       ];
       var eppRows2=[hdr2];
       epFilas.forEach(function(f,i){
@@ -2138,7 +2138,7 @@ function actualizarSgPreview() {
           c(pptFmt(r.sub2),{align:'right'}), c(pptFmt(r.ant),{align:'right',color:'C0392B'}),
           c(pptFmt(r.ret),{align:'right',color:'C0392B'}), c(pptFmt(r.neto),{align:'right',bold:true}),
           c(pptFmt(r.iva),{align:'right'}), c(pptFmt(r.tot),{align:'right',bold:true}),
-          c(pptPct(pct2),{align:'right',bold:true,color:'2D7A4F',fill:'E8F5E9',fontSize:8}),
+          c(pptPct(pct2),{align:'right',bold:true,color:'2D7A4F',fill:'E8F5E9',fontSize:7}),
           c(pptPct(ap2),{align:'right',bold:true,color:'2D7A4F',fill:'E8F5E9',fontSize:7})
         ]);
       });
@@ -2151,7 +2151,7 @@ function actualizarSgPreview() {
         ct(pptFmt(tAT2),{align:'right'}),ct(pptFmt(tRT2),{align:'right'}),
         ct(pptFmt(tNT2),{align:'right'}),ct(pptFmt(tIV2),{align:'right'}),
         ct(pptFmt(tTT2),{align:'right'}),
-        ct(pptPct(acT2),{align:'right',fill:'2d7a4f',fontSize:8}),ct(pptPct(acT2),{align:'right',fill:'2d7a4f',fontSize:8})
+        ct(pptPct(acT2),{align:'right',fill:'2d7a4f',fontSize:7}),ct(pptPct(acT2),{align:'right',fill:'2d7a4f',fontSize:7})
       ]);
       // Ancho disponible: SW - CX - cW - margen_interno (0.12)
       var ew = Math.round((SW - CX - cW - 0.12)*1000)/1000;
