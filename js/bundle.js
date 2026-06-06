@@ -2877,7 +2877,9 @@ function actualizarSgPreview() {
       var perm = await handle.queryPermission({mode:'readwrite'});
       if (perm === 'granted') {
         _dbFileHandle = handle; _dbEnabled = true;
-        _obrasCache = await _dbLeerArchivo() || _obrasCache || [];
+        var fromFile = await _dbLeerArchivo();
+        if (fromFile && fromFile.length > 0) _obrasCache = fromFile;
+        else if (!_obrasCache || _obrasCache.length === 0) _obrasCache = fromFile || [];
         actualizarBtnArchivo();
         return;
       }
@@ -3039,19 +3041,47 @@ function actualizarSgPreview() {
     if (!input.files.length) return;
     mostrarToast('⏳ Cargando archivo...', 'ok');
     var reader = new FileReader();
+    reader.onerror = function(e) {
+      mostrarToast('❌ Error al leer el archivo: ' + e.target.error, 'err');
+      console.error('FileReader error:', e.target.error);
+    };
     reader.onload = function(e) {
       try {
         var raw = e.target.result;
-        var data = JSON.parse(raw);
+        console.log('[IMPORT] Archivo leído, tamaño:', raw.length, 'chars');
+
+        var data;
+        try {
+          data = JSON.parse(raw);
+        } catch(parseErr) {
+          throw new Error('JSON inválido: ' + parseErr.message);
+        }
+
+        console.log('[IMPORT] JSON parseado. Tipo:', typeof data, '| Array:', Array.isArray(data));
+        console.log('[IMPORT] Keys del objeto:', data && typeof data === 'object' ? Object.keys(data).slice(0,10) : 'N/A');
 
         // Detectar formato: array plano, {obras:[...]}, o {version,fecha,obras:[...]}
         var obras;
         if (Array.isArray(data)) {
           obras = data;
+          console.log('[IMPORT] Formato: array plano, obras:', obras.length);
         } else if (data && Array.isArray(data.obras)) {
           obras = data.obras;
+          console.log('[IMPORT] Formato: {obras:[...]}, obras:', obras.length);
+        } else if (data && typeof data === 'object') {
+          // Intentar encontrar cualquier array en el objeto
+          var keys = Object.keys(data);
+          console.log('[IMPORT] Objeto con keys:', keys);
+          var foundArr = null;
+          keys.forEach(function(k){ if(Array.isArray(data[k]) && data[k].length > 0 && !foundArr) foundArr = k; });
+          if(foundArr) {
+            obras = data[foundArr];
+            console.log('[IMPORT] Usando key "'+foundArr+'", obras:', obras.length);
+          } else {
+            throw new Error('No se encontró una lista de obras. Keys disponibles: ' + keys.join(', '));
+          }
         } else {
-          throw new Error('No se encontró una lista de obras en el archivo. ¿Es el archivo correcto?');
+          throw new Error('Formato desconocido: ' + typeof data);
         }
 
         if (obras.length === 0) {
@@ -3075,29 +3105,46 @@ function actualizarSgPreview() {
           else { existing.push(o); nuevas++; }
         });
 
-        // Guardar directamente en localStorage para garantizar disponibilidad inmediata
+        // Guardar en cache en memoria SIEMPRE
         _obrasCache = existing;
+
+        // Guardar en localStorage SIEMPRE (base de persistencia principal)
+        var savedOk = false;
         try {
           localStorage.setItem(OBRAS_KEY, JSON.stringify(existing));
+          savedOk = true;
+          console.log('[IMPORT] Guardado en localStorage OK');
         } catch(eLS) {
           // localStorage lleno — guardar sin fotos
-          var sinFotos = JSON.parse(JSON.stringify(existing, function(k,v){
-            if ((k==='dataUrl'||k==='loImgSrc') && typeof v==='string' && v.length>1000) return '';
-            return v;
-          }));
-          localStorage.setItem(OBRAS_KEY, JSON.stringify(sinFotos));
+          try {
+            var sinFotos = JSON.parse(JSON.stringify(existing, function(k,v){
+              if ((k==='dataUrl'||k==='loImgSrc'||k==='layoutImg') && typeof v==='string' && v.length>100) return '';
+              return v;
+            }));
+            localStorage.setItem(OBRAS_KEY, JSON.stringify(sinFotos));
+            savedOk = true;
+            console.log('[IMPORT] Guardado en localStorage SIN FOTOS OK');
+          } catch(eLS2) {
+            console.warn('[IMPORT] localStorage fallo total:', eLS2.message);
+          }
         }
 
         // También guardar en archivo si está conectado
         if (_dbEnabled && _dbFileHandle) {
-          _dbEscribirArchivo(existing);
+          _dbEscribirArchivo(existing).then(function(ok){
+            console.log('[IMPORT] Guardado en archivo:', ok ? 'OK' : 'FALLÓ');
+          });
         }
 
+        console.log('[IMPORT] _obrasCache antes render:', _obrasCache ? _obrasCache.length : 'null');
         renderObras();
-        mostrarToast('✅ ' + nuevas + ' obras importadas' + (actualizadas?' ('+actualizadas+' actualizadas)':''), 'ok');
+        var msg = '✅ ' + nuevas + ' obras importadas' + (actualizadas?' ('+actualizadas+' actualizadas)':'');
+        console.log('[IMPORT] Resultado:', msg);
+        mostrarToast(msg, 'ok');
       } catch(ex) {
         mostrarToast('❌ Error al importar: '+ex.message, 'err');
-        console.error('importarObrasJSON error:', ex);
+        console.error('[IMPORT] Error completo:', ex);
+        alert('Error al importar: ' + ex.message + '\n\nAbre la consola del browser (Cmd+Option+I → Console) para más detalles.');
       }
     };
     reader.readAsText(input.files[0], 'UTF-8');
@@ -4359,7 +4406,11 @@ setTimeout(function(){
       try { localStorage.setItem(OBRAS_KEY, JSON.stringify(obras)); } catch(e2) {}
     }
   }
-  mostrarPantallaObras(); iniciarSistemaArchivo().then(function(){ actualizarBtnArchivo(); });
+  mostrarPantallaObras();
+  iniciarSistemaArchivo().then(function(){
+    actualizarBtnArchivo();
+    renderObras(); // Actualizar lista después de iniciar sistema de archivo
+  });
 }, 50);
 
 
