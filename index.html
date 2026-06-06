@@ -13,12 +13,12 @@
   <div class="topbar-title">Generador de Informes ITO</div>
   <span class="topbar-badge">Habilitación de Oficinas</span>
 </div>
-<div class="hist-topbar" id="inf-topbar" style="display:none;background:#f0f4f6;border-top:1px solid #d0d8dc;border-bottom:1px solid #d0d8dc;padding:7px 28px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+<div class="hist-topbar" id="inf-topbar" style="display:none;background:#f0f4f6;border-top:1px solid #d0d8dc;border-bottom:1px solid #d0d8dc;padding:7px 28px;gap:8px;flex-wrap:wrap;align-items:center;">
   <button class="btn btn-sec" onclick="if(typeof guardarEstadoInformeActual==='function') guardarEstadoInformeActual(); mostrarPantallaObras();" style="font-size:12px;padding:5px 13px;">🏗 Mis obras</button>
   <span id="inf-topbar-titulo" style="font-size:12px;color:#5a5a5a;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
   <button class="btn btn-sec" onclick="typeof guardarEstadoInformeActual==='function'?guardarEstadoInformeActual():guardarEnHistorial()" style="font-size:12px;padding:5px 13px;border-color:#2d7a4f;color:#2d7a4f;font-weight:600">💾 Guardar</button>
   <button class="btn btn-sec" onclick="exportarInformeActualJSON()" style="font-size:12px;padding:5px 13px" title="Exportar informe actual como JSON">📥 Exportar</button>
-  <label class="btn btn-sec" style="cursor:pointer;font-size:12px;padding:5px 13px" title="Importar informe desde JSON">📤 Importar<input type="file" accept=".json" style="display:none" onchange="importarJSON(this)"></label>
+  <label class="btn btn-sec" style="cursor:pointer;font-size:12px;padding:5px 13px" title="Importar informe desde JSON">📤 Importar informe<input type="file" accept=".json" style="display:none" onchange="importarJSON(this)"></label>
 </div>
 <!-- ══ PANTALLA OBRAS ══ -->
 <div id="pantalla-obras" style="display:flex;flex-direction:column;min-height:100vh;background:#ffffff;">
