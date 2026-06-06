@@ -3178,9 +3178,20 @@ function actualizarSgPreview() {
 
   // ── Logo en pantalla obras ──
   function sincronizarLogoObras() {
-    var imgSrc = document.querySelector('.topbar img') ? document.querySelector('.topbar img').src : '';
-    var obraLogo = document.getElementById('obras-logo');
-    if (obraLogo && imgSrc) obraLogo.src = imgSrc;
+    var topbarImg = document.querySelector('.topbar img');
+    var obraLogo  = document.getElementById('obras-logo');
+    if (!obraLogo) return;
+    if (topbarImg && topbarImg.src && topbarImg.src.length > 10) {
+      obraLogo.src = topbarImg.src;
+    } else {
+      // Fallback: usar slide-logo (portada PPT) que siempre tiene el logo
+      var slideImg = document.querySelector('.slide-logo');
+      if (slideImg && slideImg.src && slideImg.src.length > 10) {
+        obraLogo.src = slideImg.src;
+        // También actualizar topbar img para sincronía futura
+        if (topbarImg) topbarImg.src = slideImg.src;
+      }
+    }
   }
 
   // ── Pantalla Obras ──
@@ -4704,6 +4715,8 @@ setTimeout(function(){
     clearTimeout(t._timer);
     t._timer = setTimeout(function(){ t.classList.remove('show','err'); }, 3200);
   }
-  // ══ FIN HISTORIAL ═════════════════════════════════════    // Limpiar placeholder
+  // ══ FIN HISTORIAL ══
+
+  // Limpiar placeholder EEPP después de generar PPT
     epFilas = epFilas.filter(function(f){ return !f._placeholder; });
-    ═
+  //
