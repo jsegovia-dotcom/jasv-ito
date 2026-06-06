@@ -2698,9 +2698,27 @@ function actualizarSgPreview() {
         else if(parsed && parsed.estado && typeof parsed.estado === 'object'){
           estado = parsed.estado;
         }
-        // Formato 3: array obras → no es un informe
-        else if(parsed && Array.isArray(parsed.obras)){
-          mostrarToast('❌ Este archivo contiene obras, no un informe. Use "Importar" desde la pantalla de obras.', 'err');
+        // Formato 3: archivo de obras → importar automáticamente como obras
+        else if(parsed && (Array.isArray(parsed.obras) || Array.isArray(parsed))){
+          mostrarToast('⏳ Detectado archivo de obras, importando...', 'ok');
+          // Simular llamada a importarObrasJSON con los datos ya parseados
+          var obrasData = Array.isArray(parsed) ? parsed : parsed.obras;
+          if(!obrasData || obrasData.length === 0){
+            mostrarToast('⚠️ El archivo no contiene obras.', 'err');
+            input.value='';
+            return;
+          }
+          obrasData.forEach(function(o,i){ if(!o.id) o.id='imp_'+Date.now()+'_'+i; if(!o.informes) o.informes=[]; });
+          var existing2 = cargarObras();
+          var nuevas2=0, actualizadas2=0;
+          obrasData.forEach(function(o){
+            var ix=existing2.findIndex(function(x){return x.id===o.id;});
+            if(ix>=0){existing2[ix]=o;actualizadas2++;}else{existing2.push(o);nuevas2++;}
+          });
+          _obrasCache = existing2;
+          try { localStorage.setItem(OBRAS_KEY, JSON.stringify(existing2)); } catch(e){}
+          if(typeof renderObras==='function') renderObras();
+          mostrarToast('✅ '+nuevas2+' obras importadas'+(actualizadas2?' ('+actualizadas2+' actualizadas)':''), 'ok');
           input.value='';
           return;
         }
