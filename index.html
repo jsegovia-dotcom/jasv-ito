@@ -144,8 +144,8 @@
   <div class="step" data-sec="1" onclick="irA(1)"><div class="step-n">2</div><div class="step-t">Datos del proyecto</div></div>
   <div class="step" data-sec="2" onclick="irA(2)"><div class="step-n">3</div><div class="step-t">Estatus documentación</div></div>
   <div class="step" data-sec="3" onclick="irA(3)"><div class="step-n">4</div><div class="step-t">Estatus proyectos</div></div>
+  <div class="step" data-sec="4" onclick="irA(4)"><div class="step-n" id="step-n-cs">4</div><div class="step-t">Control Curva S</div></div>
   <div class="step" data-sec="9" id="step-ep" onclick="irA(9)" style="display:none"><div class="step-n" id="step-ep-n">5</div><div class="step-t">Estados de Pago</div></div>
-  <div class="step" data-sec="4" onclick="irA(4)"><div class="step-n" id="step-n-cs">5</div><div class="step-t">Control Curva S</div></div>
   <div class="step" data-sec="5" onclick="irA(5)"><div class="step-n" id="step-n-sg">6</div><div class="step-t">Situación general</div></div>
   <div class="step" data-sec="6" onclick="irA(6)"><div class="step-n" id="step-n-lo">7</div><div class="step-t">Lay Out Arquitectura</div></div>
   <div class="step" data-sec="7" onclick="irA(7)"><div class="step-n" id="step-n-ft">8</div><div class="step-t">Fotografías</div></div>
@@ -327,7 +327,7 @@
       <textarea id="cs-nota" rows="2" placeholder="Ej: El retraso se debe a demora en la aprobación del proyecto eléctrico..." style="width:100%;border:1.5px solid var(--gris-b);border-radius:7px;padding:8px 11px;font-family:inherit;font-size:13px;outline:none;resize:vertical;"></textarea>
     </div>
   </div>
-  <div class="nav-btns"><button class="btn btn-sec" onclick="irA(3)">← Anterior</button><button class="btn btn-pri" onclick="irA(5)">Siguiente →</button></div>
+  <div class="nav-btns"><button class="btn btn-sec" onclick="irA(3)">← Anterior</button><button class="btn btn-pri" onclick="sigSec(5,9)">Siguiente →</button></div>
 </div>
 
 <!-- SEC 5 SITUACIÓN GENERAL -->
@@ -356,7 +356,7 @@
     <div id="sg-pendientes-list"><div style="font-size:13px;color:#aaa;font-style:italic;padding:8px 0">Los puntos no cerrados aparecerán aquí la próxima semana.</div></div>
   </div>
   <div class="card"><div class="card-title">Vista previa numerada</div><div id="sg-preview" class="sg-preview-block"></div></div>
-  <div class="nav-btns"><button class="btn btn-sec" onclick="irA(4)">← Anterior</button><button class="btn btn-pri" onclick="irA(6)">Siguiente →</button></div>
+  <div class="nav-btns"><button class="btn btn-sec" onclick="antSec(4,9)">← Anterior</button><button class="btn btn-pri" onclick="irA(6)">Siguiente →</button></div>
 </div>
 
 <!-- SECCIONES PENDIENTES -->
@@ -481,7 +481,9 @@
 
   <div class="nav-btns">
     <button class="btn btn-sec" onclick="irA(7)">← Anterior</button>
-    <button class="btn btn-pri" id="sec8-next-btn" onclick="irA(9)" style="display:none">Siguiente →</button>
+    <button class="btn btn-sec" onclick="btnGuardar()" style="font-size:14px;padding:10px 20px;border-color:#2d7a4f;color:#2d7a4f;font-weight:600">💾 Guardar informe</button>
+    <button class="btn btn-pri" onclick="try{generarPPT();}catch(e){mostrarToast('Error PPT: '+e.message,'err');}" style="font-size:14px;padding:10px 28px;">📄 Generar PPT</button>
+    <button class="btn btn-sec" onclick="abrirPreview()" style="font-size:14px;padding:10px 20px;">👁 Vista previa</button>
   </div>
 </div>
 
@@ -570,10 +572,8 @@
   </div>
 
   <div class="nav-btns">
-    <button class="btn btn-sec" onclick="irA(8)">← Anterior</button>
-    <button class="btn btn-sec" onclick="btnGuardar()" style="font-size:14px;padding:10px 20px;border-color:#2d7a4f;color:#2d7a4f;font-weight:600">💾 Guardar informe</button>
-    <button class="btn btn-pri" onclick="try{generarPPT();}catch(e){mostrarToast('Error PPT: '+e.message,'err');}" style="font-size:14px;padding:10px 28px;">📄 Generar PPT</button>
-    <button class="btn btn-sec" onclick="abrirPreview()" style="font-size:14px;padding:10px 20px;">👁 Vista previa</button>
+    <button class="btn btn-sec" onclick="irA(4)">← Anterior</button>
+    <button class="btn btn-pri" onclick="irA(5)">Siguiente →</button>
   </div>
 </div>
 
