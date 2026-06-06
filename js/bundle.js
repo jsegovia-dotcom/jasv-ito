@@ -1969,7 +1969,7 @@ function actualizarSgPreview() {
       var nRows = csTD.length;
       var espacioTotal = LIMITE_INF - tblY;
       // Padding pptxgenjs: ~0.04" por fila (2pt * 2 lados / 72)
-      var PADDING_POR_FILA = 0.04;
+      var PADDING_POR_FILA = 0.10;  // margen de seguridad por fila
       var espacioUtil = espacioTotal - (PADDING_POR_FILA * nRows);
       var rowHFinal = espacioUtil / nRows;
       rowHFinal = Math.max(rowHFinal, 0.10); // mínimo absoluto
@@ -2175,7 +2175,7 @@ function actualizarSgPreview() {
       var ex = CX + cW + 0.12;
       // 14 columnas: N°, CD, GG, UTI, Sub1, Desc, Sub2, Ant, Ret, Neto, IVA, Total, Parc%, Acum%
       // Proporciones relativas ajustadas para caber en ew (~7.27" con cW=2.5)
-      var colW2=[0.38,0.60,0.48,0.48,0.58,0.46,0.58,0.52,0.52,0.60,0.48,0.60,0.40,0.40];
+      var colW2=[0.62,0.60,0.44,0.44,0.56,0.42,0.56,0.48,0.48,0.58,0.44,0.58,0.36,0.36];
       var sumW2=colW2.reduce(function(a,b){return a+b;},0);
       colW2=colW2.map(function(w){return Math.round(w/sumW2*ew*1000)/1000;});
       var ew = EP_W;   // ancho exacto 24.74cm
