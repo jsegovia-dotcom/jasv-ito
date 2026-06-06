@@ -522,36 +522,51 @@
     </div>
   </div>
 
-  <!-- TABLA EEPP -->
-  <div class="card">
+  <!-- TABLA EEPP — sin scroll, fuente compacta -->
+  <div class="card" style="padding:12px">
     <div class="card-title">Estados de Pago aprobados
       <button class="btn-add" onclick="epAgregarFila()" style="margin-left:12px;font-size:12px;padding:4px 12px">+ Agregar EEPP</button>
     </div>
-    <div style="overflow-x:auto">
-      <table id="ep-tabla" style="width:100%;border-collapse:collapse;font-size:12px;min-width:900px">
-        <thead>
-          <tr style="background:#1a3a5c;color:#fff">
-            <th style="padding:7px 8px;text-align:left;white-space:nowrap">N°</th>
-            <th style="padding:7px 8px;text-align:right;white-space:nowrap">Costo Directo</th>
-            <th style="padding:7px 8px;text-align:right;white-space:nowrap">GG</th>
-            <th style="padding:7px 8px;text-align:right;white-space:nowrap">UTI</th>
-            <th style="padding:7px 8px;text-align:right;white-space:nowrap">Subtotal</th>
-            <th style="padding:7px 8px;text-align:right;white-space:nowrap;color:#f4a261">Desc. Comercial</th>
-            <th style="padding:7px 8px;text-align:right;white-space:nowrap">Subtotal 2</th>
-            <th style="padding:7px 8px;text-align:right;white-space:nowrap;color:#f4a261">Anticipo</th>
-            <th style="padding:7px 8px;text-align:right;white-space:nowrap;color:#f4a261">Retenciones</th>
-            <th style="padding:7px 8px;text-align:right;white-space:nowrap;font-weight:700">Neto</th>
-            <th style="padding:7px 8px;text-align:right;white-space:nowrap">IVA</th>
-            <th style="padding:7px 8px;text-align:right;white-space:nowrap;font-weight:700">Total</th>
-            <th style="padding:7px 8px;text-align:right;white-space:nowrap;background:#2d7a4f">Parcial %</th>
-            <th style="padding:7px 8px;text-align:right;white-space:nowrap;background:#2d7a4f">Acum. %</th>
-            <th style="padding:7px 8px;text-align:center">✕</th>
-          </tr>
-        </thead>
-        <tbody id="ep-tbody"></tbody>
-        <tfoot id="ep-tfoot"></tfoot>
-      </table>
-    </div>
+    <table id="ep-tabla" style="width:100%;border-collapse:collapse;font-size:10px;table-layout:fixed">
+      <colgroup>
+        <col style="width:7%">   <!-- N° -->
+        <col style="width:9%">   <!-- Costo Directo -->
+        <col style="width:6%">   <!-- GG -->
+        <col style="width:6%">   <!-- UTI -->
+        <col style="width:8%">   <!-- Subtotal -->
+        <col style="width:7%">   <!-- Desc. Comercial -->
+        <col style="width:8%">   <!-- Subtotal 2 -->
+        <col style="width:7%">   <!-- Anticipo -->
+        <col style="width:7%">   <!-- Retenciones -->
+        <col style="width:8%">   <!-- Neto -->
+        <col style="width:6%">   <!-- IVA -->
+        <col style="width:8%">   <!-- Total -->
+        <col style="width:5%">   <!-- Parcial % -->
+        <col style="width:5%">   <!-- Acum. % -->
+        <col style="width:3%">   <!-- ✕ -->
+      </colgroup>
+      <thead>
+        <tr style="background:#1a3a5c;color:#fff">
+          <th style="padding:5px 4px;text-align:left;overflow:hidden">N°</th>
+          <th style="padding:5px 4px;text-align:right;overflow:hidden">Costo Directo</th>
+          <th style="padding:5px 4px;text-align:right;overflow:hidden">GG</th>
+          <th style="padding:5px 4px;text-align:right;overflow:hidden">UTI</th>
+          <th style="padding:5px 4px;text-align:right;overflow:hidden">Subtotal</th>
+          <th style="padding:5px 4px;text-align:right;overflow:hidden;color:#f4a261">Desc.</th>
+          <th style="padding:5px 4px;text-align:right;overflow:hidden">Sub2</th>
+          <th style="padding:5px 4px;text-align:right;overflow:hidden;color:#f4a261">Anticipo</th>
+          <th style="padding:5px 4px;text-align:right;overflow:hidden;color:#f4a261">Retenc.</th>
+          <th style="padding:5px 4px;text-align:right;overflow:hidden;font-weight:700">Neto</th>
+          <th style="padding:5px 4px;text-align:right;overflow:hidden">IVA</th>
+          <th style="padding:5px 4px;text-align:right;overflow:hidden;font-weight:700">Total</th>
+          <th style="padding:5px 4px;text-align:right;overflow:hidden;background:#2d7a4f">Parc%</th>
+          <th style="padding:5px 4px;text-align:right;overflow:hidden;background:#2d7a4f">Acum%</th>
+          <th style="padding:5px 4px;text-align:center">✕</th>
+        </tr>
+      </thead>
+      <tbody id="ep-tbody"></tbody>
+      <tfoot id="ep-tfoot"></tfoot>
+    </table>
   </div>
 
   <div class="nav-btns">
