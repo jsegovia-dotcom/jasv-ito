@@ -2027,7 +2027,7 @@ function actualizarSgPreview() {
     function pptFmt(n){ return n !== 0 ? n.toLocaleString('es-CL',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—'; }
     function pptPct(n){ return n.toFixed(2)+'%'; }
 
-    // ── Slide único: Datos del contrato + Tabla EEPP ──
+    // ── Slide único: Datos del contrato + Tabla EEPP (v2.1 font7-cols) ──
     slideNum++;
     var sEP = prs.addSlide({masterName:'JASV'});
     addHF(sEP,'5. Control de Estados de Pago',slideNum);
@@ -2138,8 +2138,8 @@ function actualizarSgPreview() {
           c(pptFmt(r.sub2),{align:'right'}), c(pptFmt(r.ant),{align:'right',color:'C0392B'}),
           c(pptFmt(r.ret),{align:'right',color:'C0392B'}), c(pptFmt(r.neto),{align:'right',bold:true}),
           c(pptFmt(r.iva),{align:'right'}), c(pptFmt(r.tot),{align:'right',bold:true}),
-          c(pptPct(pct2),{align:'right',bold:true,color:'2D7A4F',fill:'E8F5E9',fontSize:7}),
-          c(pptPct(ap2),{align:'right',bold:true,color:'2D7A4F',fill:'E8F5E9',fontSize:7})
+          {text:pptPct(pct2),options:{fill:'E8F5E9',fontSize:7,align:'right',bold:true,color:'2D7A4F'}},
+          {text:pptPct(ap2),options:{fill:'E8F5E9',fontSize:7,align:'right',bold:true,color:'2D7A4F'}}
         ]);
       });
       var acT2=epP.cdC>0?(tCD2/epP.cdC*100):0;
@@ -2151,7 +2151,7 @@ function actualizarSgPreview() {
         ct(pptFmt(tAT2),{align:'right'}),ct(pptFmt(tRT2),{align:'right'}),
         ct(pptFmt(tNT2),{align:'right'}),ct(pptFmt(tIV2),{align:'right'}),
         ct(pptFmt(tTT2),{align:'right'}),
-        ct(pptPct(acT2),{align:'right',fill:'2d7a4f',fontSize:7}),ct(pptPct(acT2),{align:'right',fill:'2d7a4f',fontSize:7})
+        {text:pptPct(acT2),options:{fill:'2d7a4f',color:'FFFFFF',bold:true,fontSize:7,align:'right'}},{text:pptPct(acT2),options:{fill:'2d7a4f',color:'FFFFFF',bold:true,fontSize:7,align:'right'}}
       ]);
       // Ancho disponible: SW - CX - cW - margen_interno (0.12)
       var ew = Math.round((SW - CX - cW - 0.12)*1000)/1000;
