@@ -1270,8 +1270,8 @@ function actualizarSgPreview() {
         tctx.drawImage(layoutGlobal.img,ox,oy,Math.round(edCanvas.width*sc),Math.round(edCanvas.height*sc));
         // Tamaños fijos en px del canvas miniatura (336px = 2.8cm)
         // Tamaños fijos calibrados (canvas 336px = 2.8cm)
-        var iconR = 43;
-        var coneR = 128;  // reducido 15%
+        var iconR = 34;
+        var coneR = 102;  // reducido 20% adicional
         currentMarkers.forEach(function(m,i){
           var nx=m.x*sc+ox, ny=m.y*sc+oy;
           var ang=(m.angle-90)*Math.PI/180;
