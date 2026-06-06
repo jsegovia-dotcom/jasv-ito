@@ -941,23 +941,7 @@ function actualizarSgPreview() {
       totSub2+=r.sub2; totAnt+=r.ant; totRet+=r.ret; totNeto+=r.neto; totIva+=r.iva; totTot+=r.tot;
       var bg = i%2===0?'#f5f8fc':'#fff';
       var acumFinal = p.cdC > 0 ? (totCD / p.cdC * 100) : 0;
-      return '<tr style="background:'+bg+'">'
-        +'<td style="padding:5px 8px;font-weight:600">EEPP'+(i+1)+'</td>'
-        +'<td style="padding:5px 4px;text-align:right"><input type="text" inputmode="decimal" value="'+(f.cd||'')+'" style="width:90px;text-align:right;border:1px solid #ccc;border-radius:4px;padding:2px 4px;font-size:12px" oninput="epCdChange('+i+',this.value)" onblur="epRenderEepp()"></td>'
-        +'<td style="padding:5px 8px;text-align:right;color:#555"><span class="ep-val">'+epFmt(r.gg)+'</span></td>'
-        +'<td style="padding:5px 8px;text-align:right;color:#555"><span class="ep-val">'+epFmt(r.uti)+'</span></td>'
-        +'<td style="padding:5px 8px;text-align:right"><span class="ep-val">'+epFmt(r.sub1)+'</span></td>'
-        +'<td style="padding:5px 8px;text-align:right;color:#c0392b"><span class="ep-val">'+epFmt(r.desc)+'</span></td>'
-        +'<td style="padding:5px 8px;text-align:right"><span class="ep-val">'+epFmt(r.sub2)+'</span></td>'
-        +'<td style="padding:5px 8px;text-align:right;color:#c0392b"><span class="ep-val">'+epFmt(r.ant)+'</span></td>'
-        +'<td style="padding:5px 8px;text-align:right;color:#c0392b"><span class="ep-val">'+epFmt(r.ret)+'</span></td>'
-        +'<td style="padding:5px 8px;text-align:right;font-weight:700"><span class="ep-val">'+epFmt(r.neto)+'</span></td>'
-        +'<td style="padding:5px 8px;text-align:right"><span class="ep-val">'+epFmt(r.iva)+'</span></td>'
-        +'<td style="padding:5px 8px;text-align:right;font-weight:700"><span class="ep-val">'+epFmt(r.tot)+'</span></td>'
-        +'<td style="padding:5px 8px;text-align:right;background:#e8f5e9;color:#2d7a4f;font-weight:600"><span class="ep-val">'+epFmtPct(pct)+'</span></td>'
-        +'<td style="padding:5px 8px;text-align:right;background:#e8f5e9;color:#2d7a4f;font-weight:600"><span class="ep-val">'+epFmtPct(acumFinal)+'</span></td>'
-        +'<td style="padding:5px 8px;text-align:center"><button onclick="epEliminarFila('+i+')" style="background:none;border:none;cursor:pointer;color:#c0392b;font-size:14px">✕</button></td>'
-        +'</tr>';
+      return '<tr style="background:'+bg+'">'        +'<td style="padding:4px 3px;font-weight:600;overflow:hidden">EEPP'+(i+1)+'</td>'        +'<td style="padding:3px 2px;text-align:right"><input type="text" inputmode="decimal" value="'+(f.cd||'')+'" style="width:100%;text-align:right;border:1px solid #ccc;border-radius:3px;padding:1px 3px;font-size:10px;box-sizing:border-box" oninput="epCdChange('+i+',this.value)" onblur="epRenderEepp()"></td>'        +'<td style="padding:4px 3px;text-align:right;color:#555;overflow:hidden"><span class="ep-val">'+epFmt(r.gg)+'</span></td>'        +'<td style="padding:4px 3px;text-align:right;color:#555;overflow:hidden"><span class="ep-val">'+epFmt(r.uti)+'</span></td>'        +'<td style="padding:4px 3px;text-align:right;overflow:hidden"><span class="ep-val">'+epFmt(r.sub1)+'</span></td>'        +'<td style="padding:4px 3px;text-align:right;color:#c0392b;overflow:hidden"><span class="ep-val">'+epFmt(r.desc)+'</span></td>'        +'<td style="padding:4px 3px;text-align:right;overflow:hidden"><span class="ep-val">'+epFmt(r.sub2)+'</span></td>'        +'<td style="padding:4px 3px;text-align:right;color:#c0392b;overflow:hidden"><span class="ep-val">'+epFmt(r.ant)+'</span></td>'        +'<td style="padding:4px 3px;text-align:right;color:#c0392b;overflow:hidden"><span class="ep-val">'+epFmt(r.ret)+'</span></td>'        +'<td style="padding:4px 3px;text-align:right;font-weight:700;overflow:hidden"><span class="ep-val">'+epFmt(r.neto)+'</span></td>'        +'<td style="padding:4px 3px;text-align:right;overflow:hidden"><span class="ep-val">'+epFmt(r.iva)+'</span></td>'        +'<td style="padding:4px 3px;text-align:right;font-weight:700;overflow:hidden"><span class="ep-val">'+epFmt(r.tot)+'</span></td>'        +'<td style="padding:4px 3px;text-align:right;background:#e8f5e9;color:#2d7a4f;font-weight:600;overflow:hidden"><span class="ep-val">'+epFmtPct(pct)+'</span></td>'        +'<td style="padding:4px 3px;text-align:right;background:#e8f5e9;color:#2d7a4f;font-weight:600;overflow:hidden"><span class="ep-val">'+epFmtPct(acumFinal)+'</span></td>'        +'<td style="padding:4px 3px;text-align:center"><button onclick="epEliminarFila('+i+')" style="background:none;border:none;cursor:pointer;color:#c0392b;font-size:11px">✕</button></td>'        +'</tr>';
     }).join('');
 
     // Fila de totales
@@ -2123,20 +2107,20 @@ function actualizarSgPreview() {
       // Agregar fila vacía si no hay filas ingresadas
       if(epFilas.length === 0) epFilas = [{cd: 0, _placeholder: true}];
       var hdr2=[
-        {text:'N°',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',fontSize:10}},
-        {text:'CD',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:10}},
-        {text:'GG',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:10}},
-        {text:'UTI',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:10}},
-        {text:'Subtotal',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:10}},
-        {text:'Desc.',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:10}},
-        {text:'Sub2',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:10}},
-        {text:'Antici.',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:10}},
-        {text:'Retenc.',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:10}},
-        {text:'Neto',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:10}},
-        {text:'IVA',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:10}},
-        {text:'Total',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:10}},
-        {text:'Parc%',options:{bold:true,fill:'2d7a4f',color:'FFFFFF',align:'right',fontSize:7}},
-        {text:'Acum%',options:{bold:true,fill:'2d7a4f',color:'FFFFFF',align:'right',fontSize:7}}
+        {text:'N°',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',fontSize:8}},
+        {text:'CD',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:8}},
+        {text:'GG',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:8}},
+        {text:'UTI',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:8}},
+        {text:'Subtotal',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:8}},
+        {text:'Desc.',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:8}},
+        {text:'Sub2',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:8}},
+        {text:'Antici.',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:8}},
+        {text:'Retenc.',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:8}},
+        {text:'Neto',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:8}},
+        {text:'IVA',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:8}},
+        {text:'Total',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:8}},
+        {text:'Parc%',options:{bold:true,fill:'2d7a4f',color:'FFFFFF',align:'right',fontSize:8}},
+        {text:'Acum%',options:{bold:true,fill:'2d7a4f',color:'FFFFFF',align:'right',fontSize:8}}
       ];
       var eppRows2=[hdr2];
       epFilas.forEach(function(f,i){
@@ -2146,7 +2130,7 @@ function actualizarSgPreview() {
         var pct2=epP.cdC>0?(f.cd/epP.cdC*100):0;
         acumCD2+=f.cd; var ap2=epP.cdC>0?(acumCD2/epP.cdC*100):0;
         var bg2=i%2===0?'F5F8FC':'FFFFFF';
-        function c(v,opt){ return Object.assign({text:v,options:Object.assign({fill:bg2,fontSize:10},opt||{})}); }
+        function c(v,opt){ return Object.assign({text:v,options:Object.assign({fill:bg2,fontSize:8},opt||{})}); }
         eppRows2.push([
           c('EEPP'+(i+1),{bold:true}), c(pptFmt(r.cdEP),{align:'right'}),
           c(pptFmt(r.gg),{align:'right'}), c(pptFmt(r.uti),{align:'right'}),
@@ -2154,12 +2138,12 @@ function actualizarSgPreview() {
           c(pptFmt(r.sub2),{align:'right'}), c(pptFmt(r.ant),{align:'right',color:'C0392B'}),
           c(pptFmt(r.ret),{align:'right',color:'C0392B'}), c(pptFmt(r.neto),{align:'right',bold:true}),
           c(pptFmt(r.iva),{align:'right'}), c(pptFmt(r.tot),{align:'right',bold:true}),
-          c(pptPct(pct2),{align:'right',bold:true,color:'2D7A4F',fill:'E8F5E9',fontSize:7}),
+          c(pptPct(pct2),{align:'right',bold:true,color:'2D7A4F',fill:'E8F5E9',fontSize:8}),
           c(pptPct(ap2),{align:'right',bold:true,color:'2D7A4F',fill:'E8F5E9',fontSize:7})
         ]);
       });
       var acT2=epP.cdC>0?(tCD2/epP.cdC*100):0;
-      function ct(v,opt){ return {text:v,options:Object.assign({fill:'1a3a5c',color:'FFFFFF',bold:true,fontSize:10},opt||{})}; }
+      function ct(v,opt){ return {text:v,options:Object.assign({fill:'1a3a5c',color:'FFFFFF',bold:true,fontSize:8},opt||{})}; }
       eppRows2.push([
         ct('TOTAL'),ct(pptFmt(tCD2),{align:'right'}),ct(pptFmt(tGG2),{align:'right'}),
         ct(pptFmt(tUTI2),{align:'right'}),ct(pptFmt(tS12),{align:'right'}),
@@ -2167,7 +2151,7 @@ function actualizarSgPreview() {
         ct(pptFmt(tAT2),{align:'right'}),ct(pptFmt(tRT2),{align:'right'}),
         ct(pptFmt(tNT2),{align:'right'}),ct(pptFmt(tIV2),{align:'right'}),
         ct(pptFmt(tTT2),{align:'right'}),
-        ct(pptPct(acT2),{align:'right',fill:'2d7a4f',fontSize:7}),ct(pptPct(acT2),{align:'right',fill:'2d7a4f',fontSize:7})
+        ct(pptPct(acT2),{align:'right',fill:'2d7a4f',fontSize:8}),ct(pptPct(acT2),{align:'right',fill:'2d7a4f',fontSize:8})
       ]);
       // Ancho disponible: SW - CX - cW - margen_interno (0.12)
       var ew = Math.round((SW - CX - cW - 0.12)*1000)/1000;
@@ -2190,8 +2174,9 @@ function actualizarSgPreview() {
       colW2=colW2.map(function(w){return Math.round(w/sumW2*ew*1000)/1000;});
       // Calcular rowH dinámico para que la tabla quepa en EEPP_H_EP
       var nRowsEepp = eppRows2.length; // header + data + total
-      var rowHEepp = Math.min(EEPP_H_EP / Math.max(nRowsEepp, 1), 0.35);
-      rowHEepp = Math.max(rowHEepp, 0.18);
+      // font 8 → rowH proporcional: ~0.20" por fila es suficiente
+      var rowHEepp = Math.min(EEPP_H_EP / Math.max(nRowsEepp, 1), 0.24);
+      rowHEepp = Math.max(rowHEepp, 0.16);
       sEP.addTable(eppRows2,{x:ex,y:eppY,w:ew,h:EEPP_H_EP,colW:colW2,
         fontSize:9,fontFace:FONT,align:'right',valign:'middle',rowH:rowHEepp,
         border:{type:'solid',pt:0.3,color:'CCCCCC'},fill:{color:'FFFFFF'}});
