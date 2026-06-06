@@ -1294,7 +1294,7 @@ function actualizarSgPreview() {
           // ── ÍCONO CÁMARA ──
           // Frente de la cámara hacia -Y local → al rotar con ang, apunta igual que el cono
           var r=iconR;
-          var lw=Math.max(2.4,Math.round(r*0.096)); // +20% grosor
+          var lw=4.5; // grosor fijo visible sin redondeo
           tctx.save();
           tctx.translate(nx,ny);
           tctx.rotate(ang - Math.PI/2); // -90° para alinear lente con cono
