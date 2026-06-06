@@ -2986,7 +2986,8 @@ function actualizarSgPreview() {
 
   // ── Funciones principales de almacenamiento ──
   function cargarObras() {
-    if (!_obrasCache) {
+    if (_obrasCache !== null) return _obrasCache;
+    {
       // inicializar desde localStorage si el archivo no está listo aún
       try { _obrasCache = JSON.parse(localStorage.getItem(OBRAS_KEY) || '[]'); }
       catch(e) { _obrasCache = []; }
@@ -3036,23 +3037,70 @@ function actualizarSgPreview() {
 
   function importarObrasJSON(input) {
     if (!input.files.length) return;
+    mostrarToast('⏳ Cargando archivo...', 'ok');
     var reader = new FileReader();
     reader.onload = function(e) {
       try {
-        var data = JSON.parse(e.target.result);
-        var obras = Array.isArray(data) ? data : (data.obras || []);
-        if (!Array.isArray(obras)) throw new Error('Formato inválido');
-        var existing = cargarObras();
-        obras.forEach(function(o) {
-          if (!existing.find(function(x){ return x.id===o.id; })) existing.push(o);
+        var raw = e.target.result;
+        var data = JSON.parse(raw);
+
+        // Detectar formato: array plano, {obras:[...]}, o {version,fecha,obras:[...]}
+        var obras;
+        if (Array.isArray(data)) {
+          obras = data;
+        } else if (data && Array.isArray(data.obras)) {
+          obras = data.obras;
+        } else {
+          throw new Error('No se encontró una lista de obras en el archivo. ¿Es el archivo correcto?');
+        }
+
+        if (obras.length === 0) {
+          mostrarToast('⚠️ El archivo no contiene obras.', 'err');
+          return;
+        }
+
+        // Validar que cada elemento tenga estructura mínima
+        obras.forEach(function(o, i) {
+          if (!o || typeof o !== 'object') throw new Error('Obra '+i+' con formato inválido.');
+          if (!o.id) o.id = 'imp_' + Date.now() + '_' + i;
+          if (!o.informes) o.informes = [];
         });
-        guardarObras(existing);
+
+        // Combinar con obras existentes (no duplicar por id)
+        var existing = cargarObras();
+        var nuevas = 0, actualizadas = 0;
+        obras.forEach(function(o) {
+          var idx = existing.findIndex(function(x){ return x.id === o.id; });
+          if (idx >= 0) { existing[idx] = o; actualizadas++; }
+          else { existing.push(o); nuevas++; }
+        });
+
+        // Guardar directamente en localStorage para garantizar disponibilidad inmediata
         _obrasCache = existing;
+        try {
+          localStorage.setItem(OBRAS_KEY, JSON.stringify(existing));
+        } catch(eLS) {
+          // localStorage lleno — guardar sin fotos
+          var sinFotos = JSON.parse(JSON.stringify(existing, function(k,v){
+            if ((k==='dataUrl'||k==='loImgSrc') && typeof v==='string' && v.length>1000) return '';
+            return v;
+          }));
+          localStorage.setItem(OBRAS_KEY, JSON.stringify(sinFotos));
+        }
+
+        // También guardar en archivo si está conectado
+        if (_dbEnabled && _dbFileHandle) {
+          _dbEscribirArchivo(existing);
+        }
+
         renderObras();
-        mostrarToast('✅ ' + obras.length + ' obras importadas', 'ok');
-      } catch(ex) { mostrarToast('❌ Archivo inválido: '+ex.message, 'err'); }
+        mostrarToast('✅ ' + nuevas + ' obras importadas' + (actualizadas?' ('+actualizadas+' actualizadas)':''), 'ok');
+      } catch(ex) {
+        mostrarToast('❌ Error al importar: '+ex.message, 'err');
+        console.error('importarObrasJSON error:', ex);
+      }
     };
-    reader.readAsText(input.files[0]);
+    reader.readAsText(input.files[0], 'UTF-8');
     input.value='';
   }
   // ══ FIN ALMACENAMIENTO EN ARCHIVO ══
