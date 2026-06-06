@@ -5,6 +5,10 @@ var csChart = null;
 var sgPuntoCount = 0;
 
 // ══ NAVEGACIÓN ══
+// ── Funciones de navegación con lógica EP ──
+function sigSec(sinEP, conEP){ irA(_conEEPP ? conEP : sinEP); }
+function antSec(sinEP, conEP){ irA(_conEEPP ? conEP : sinEP); }
+
 function irA(n) {
   document.getElementById('sec-' + cur).classList.remove('active');
   // Marcar step anterior como done usando data-sec
@@ -1005,18 +1009,18 @@ function actualizarSgPreview() {
     function setTag(id, n){ var el=document.getElementById(id); if(el) el.textContent='Sección '+n+' de '+N; }
     setTag('stag-0', 1); setTag('stag-1', 2); setTag('stag-2', 3); setTag('stag-3', 4);
     if(_conEEPP){
-      setTag('stag-9', 5);  // EP = sección 5
-      setTag('stag-4', 6);  // CurvaS = 6
-      setTag('stag-5', 7);  // SitGen = 7
-      setTag('stag-6', 8);  // LO = 8
-      setTag('stag-7', 9);  // Fotos = 9
-      setTag('stag-8', 10); // Anexos = 10
-    } else {
-      setTag('stag-4', 5);  // CurvaS = 5
+      setTag('stag-4', 4);  // CurvaS = 4 (siempre)
+      setTag('stag-9', 5);  // EP = 5 (con EP)
       setTag('stag-5', 6);  // SitGen = 6
       setTag('stag-6', 7);  // LO = 7
       setTag('stag-7', 8);  // Fotos = 8
       setTag('stag-8', 9);  // Anexos = 9
+    } else {
+      setTag('stag-4', 4);  // CurvaS = 4 (siempre)
+      setTag('stag-5', 5);  // SitGen = 5
+      setTag('stag-6', 6);  // LO = 6
+      setTag('stag-7', 7);  // Fotos = 7
+      setTag('stag-8', 8);  // Anexos = 8
     }
 
     // Actualizar botón "Siguiente" de sec-8 (Anexos)
@@ -1033,18 +1037,18 @@ function actualizarSgPreview() {
     var nANX = document.getElementById('step-n-anx');
     var nEP  = document.getElementById('step-ep-n');
     if(_conEEPP){
-      if(nCS)  nCS.textContent  = '6';
-      if(nSG)  nSG.textContent  = '7';
-      if(nLO)  nLO.textContent  = '8';
-      if(nFT)  nFT.textContent  = '9';
-      if(nANX) nANX.textContent = '10';
+      if(nCS)  nCS.textContent  = '4';  // CS siempre = 4
       if(nEP)  nEP.textContent  = '5';
-    } else {
-      if(nCS)  nCS.textContent  = '5';
       if(nSG)  nSG.textContent  = '6';
       if(nLO)  nLO.textContent  = '7';
       if(nFT)  nFT.textContent  = '8';
       if(nANX) nANX.textContent = '9';
+    } else {
+      if(nCS)  nCS.textContent  = '4';  // CS siempre = 4
+      if(nSG)  nSG.textContent  = '5';
+      if(nLO)  nLO.textContent  = '6';
+      if(nFT)  nFT.textContent  = '7';
+      if(nANX) nANX.textContent = '8';
     }
 
     // sec-tags actualizados arriba
