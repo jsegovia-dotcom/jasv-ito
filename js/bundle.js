@@ -2291,7 +2291,7 @@ function actualizarSgPreview() {
 
       pendArrastre.forEach(function(p,pi){
         var semIco=p.estado==='pendiente'||p.estado==='urgente'?'🔴 ':p.estado==='proceso'?'🟡 ':p.estado==='cerrado'?'🟢 ':'';
-        var fullTxt=(pi+1)+'.  '+semIco+(p.texto||'').split('\n').join(' ');
+        var fullTxt=(pi+1)+'.  '+semIco+(p.texto||'').split('\n').join(' ')+(p.estado==='cerrado'?' (cerrado)':'');
         var nL=Math.ceil(fullTxt.length/46)+1;
         var h=Math.max(0.22,nL*0.165);
         var txtC=p.estado==='urgente'?'d93a3a':NEGRO;
