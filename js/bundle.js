@@ -3459,21 +3459,19 @@ function actualizarSgPreview() {
         Object.keys(epPreMap).forEach(function(id){ var el=document.getElementById(id); if(el && epPreMap[id]) el.value=epPreMap[id]; });
         if(typeof epRecalcContrato==='function') epRecalcContrato();
         // ══ Heredar estados de pago del informe anterior ══
-        if(prev && prev.epFilas && prev.epFilas.length>0){
-          epFilas = prev.epFilas.map(function(f){ return {cd: f.cd||0}; });
-          // También cargar datos del contrato del estado anterior si la obra no los tiene
-          ['epCD','epGG','epUTI','epDESC','epPctAnticipo','epPctRet'].forEach(function(k){
-            var htmlId = k.replace(/([A-Z])/g,function(m){ return '-'+m.toLowerCase(); })
-                          .replace('ep-','ep-').replace(/^ep/,'ep');
-            // Mapa manual
-          });
+        if(prev){
+          // Cargar filas EEPP del informe anterior
+          if(prev.epFilas && prev.epFilas.length > 0){
+            epFilas = prev.epFilas.map(function(f){ return {cd: f.cd||0}; });
+          }
+          // Cargar datos del contrato del estado anterior (más actualizado que la obra)
           var epPrevMap={
-            'ep-cd':      prev.epCD||obra.epCD,
-            'ep-gg':      prev.epGG||obra.epGG,
-            'ep-uti':     prev.epUTI||obra.epUTI,
-            'ep-desc':    prev.epDESC||obra.epDESC,
-            'ep-pct-anticipo': prev.epPctAnticipo||obra.epPctAnticipo,
-            'ep-pct-ret': prev.epPctRet||obra.epPctRet
+            'ep-cd':           prev.epCD           || obra.epCD,
+            'ep-gg':           prev.epGG           || obra.epGG,
+            'ep-uti':          prev.epUTI          || obra.epUTI,
+            'ep-desc':         prev.epDESC         || obra.epDESC,
+            'ep-pct-anticipo': prev.epPctAnticipo  || obra.epPctAnticipo,
+            'ep-pct-ret':      prev.epPctRet       || obra.epPctRet
           };
           Object.keys(epPrevMap).forEach(function(id){
             var el=document.getElementById(id);
@@ -4578,7 +4576,19 @@ setTimeout(function(){
     estado.epDESC       = (document.getElementById('ep-desc')||{}).value        || '';
     estado.epPctAnticipo= (document.getElementById('ep-pct-anticipo')||{}).value|| '';
     estado.epPctRet     = (document.getElementById('ep-pct-ret')||{}).value     || '';
-    estado.epFilas      = epFilas.map(function(f){ return {cd: f.cd}; });
+    // Leer epFilas del DOM para capturar valores no confirmados con blur
+    var epFilasDom = [];
+    document.querySelectorAll('#ep-tbody tr').forEach(function(tr){
+      var inp = tr.querySelector('input[type=text]');
+      if(inp){
+        var raw = inp.value.toString().replace(/[^0-9.,]/g,'').replace(',','.');
+        var val = parseFloat(raw) || 0;
+        epFilasDom.push({cd: val});
+      }
+    });
+    // Usar DOM si tiene datos, si no usar la variable global
+    if(epFilasDom.length > 0) epFilas = epFilasDom;
+    estado.epFilas = epFilas.map(function(f){ return {cd: f.cd||0}; });
     } catch(e){ console.error('recolectar error:',e); }
     return estado;
   }
