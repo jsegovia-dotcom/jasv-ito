@@ -1965,7 +1965,9 @@ function actualizarSgPreview() {
       // Ajustar automáticamente: desde tblY=3.1496" hasta notas y=5.9055"
       // Tabla: desde después de leyenda hasta notas
       var tblY=tblY; // posición fija según especificación
-      var tblMaxH=notaY-tblY-0.05;
+      // Límite inferior: 17.75cm = 6.988" (línea gris pie de página)
+      var LIMITE_INF = 6.988;
+      var tblMaxH = Math.min(notaY - tblY - 0.05, LIMITE_INF - tblY - 0.05);
       var nRows=csTD.length; // incluye header
       var rowH=Math.min(0.26, tblMaxH/Math.max(nRows,1));
       // Si rowH < 0.18 reducir fuente para que quepa el texto
@@ -2071,13 +2073,16 @@ function actualizarSgPreview() {
       ['% Retenciones', pptPct(epP.pRET*100)],
     ];
     // — Título sección EP —
-    sEP.addText('DATOS DEL CONTRATO',{x:CX,y:CONT_Y+0.02,w:SW-CX*2,h:0.28,
-      fontSize:10,fontFace:FONT,bold:true,color:'FFFFFF',fill:'2C4770',
+    sEP.addText('DATOS DEL CONTRATO',{x:CX,y:CONT_Y+0.02,w:(SW-CX*2)*0.42,h:0.25,
+      fontSize:9,fontFace:FONT,bold:true,color:'FFFFFF',fill:'4A6741',
+      align:'center',valign:'middle'});
+    sEP.addText('CONTROL DE ESTADOS DE PAGO',{x:CX+(SW-CX*2)*0.42+0.1,y:CONT_Y+0.02,w:(SW-CX*2)*0.57,h:0.25,
+      fontSize:9,fontFace:FONT,bold:true,color:'FFFFFF',fill:'1a3a5c',
       align:'center',valign:'middle'});
 
     // — Tabla contrato HORIZONTAL (2 filas: labels arriba, valores abajo) —
-    var cW=SW-CX*2;
-    var eppY0 = CONT_Y+0.02+0.28;  // justo debajo del título
+    var cW = (SW-CX*2)*0.42;  // 42% del ancho disponible
+    var eppY0 = CONT_Y+0.02+0.25;  // justo debajo del título (altura 0.25")
     var cRowsH=[
       // Fila de etiquetas
       [{text:'Costo Directo',options:{bold:true,fill:'2C4770',color:'FFFFFF',fontSize:8,align:'center'}},
@@ -2106,11 +2111,11 @@ function actualizarSgPreview() {
     var cSumW=cColW.reduce(function(a,b){return a+b;},0);
     cColW=cColW.map(function(w){return Math.round(w/cSumW*cW*1000)/1000;});
     sEP.addTable(cRowsH,{x:CX,y:eppY0,w:cW,colW:cColW,
-      fontSize:9,fontFace:FONT,align:'center',valign:'middle',rowH:0.32,
+      fontSize:10,fontFace:FONT,align:'center',valign:'middle',rowH:0.28,
       border:{type:'solid',pt:0.5,color:'CCCCCC'},fill:{color:'FFFFFF'}});
 
     // — Tabla EEPP (debajo del contrato) —
-    var eppY = eppY0+0.28*2+0.2; // después de título + 2 filas del contrato
+    var eppY = eppY0+0.28*2+0.25; // separación entre contrato y EEPP
     {
       var acumCD2=0,tCD2=0,tGG2=0,tUTI2=0,tS12=0,tDC2=0,tS22=0,tAT2=0,tRT2=0,tNT2=0,tIV2=0,tTT2=0;
       // Agregar fila vacía si no hay filas ingresadas
@@ -2171,9 +2176,9 @@ function actualizarSgPreview() {
       var colW2=[0.38,0.60,0.48,0.48,0.58,0.46,0.58,0.52,0.52,0.60,0.48,0.60,0.40,0.40];
       var sumW2=colW2.reduce(function(a,b){return a+b;},0);
       colW2=colW2.map(function(w){return Math.round(w/sumW2*ew*1000)/1000;});
-      var ew=SW-CX*2;
-      var ex=CX;
-      // 14 columnas para tabla EEPP, ancho completo
+      var ew = (SW-CX*2)*0.57 - 0.05;  // 57% menos margen
+      var ex = CX + cW + 0.1;           // después de tabla contrato + margen
+      // 14 columnas para tabla EEPP
       var colW2=[0.38,0.60,0.48,0.48,0.58,0.46,0.58,0.52,0.52,0.60,0.48,0.60,0.40,0.40];
       var sumW2=colW2.reduce(function(a,b){return a+b;},0);
       colW2=colW2.map(function(w){return Math.round(w/sumW2*ew*1000)/1000;});
@@ -2564,7 +2569,12 @@ function actualizarSgPreview() {
     // Situación general
     if(estado.partidas){
       var pList2=document.getElementById('partidas-list'); if(pList2) pList2.innerHTML='';
-      estado.partidas.forEach(function(p){ if(typeof addPartida==='function') addPartida(); var last=document.querySelector('#partidas-list .partida-input:last-of-type'); if(last) last.value=p; });
+      estado.partidas.forEach(function(p){
+        if(typeof addPartida==='function') addPartida();
+        var allInputs=document.querySelectorAll('#partidas-list .partida-input');
+        var last=allInputs[allInputs.length-1];
+        if(last) last.value=p;
+      });
     }
     if(estado.sgPuntos){
       var sgList=document.getElementById('sg-puntos-list'); if(sgList) sgList.innerHTML=''; sgPuntoCount=0;
