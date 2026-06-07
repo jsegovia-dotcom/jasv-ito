@@ -47,6 +47,8 @@ function irA(n) {
         if(!inf) return;
         inf.estado=recolectarEstado();
         inf.semana=document.getElementById('semana-informe')?document.getElementById('semana-informe').value:'';
+        var _plEl=document.getElementById('plazo-dias'); if(_plEl&&_plEl.value) obra.plazo=_plEl.value;
+        var _fiEl=document.getElementById('fecha-inicio'); if(_fiEl&&_fiEl.value) obra.fechaInicio=_fiEl.value;
         obraActual=obra;
         guardarObras(obras);
       })();
@@ -3812,6 +3814,11 @@ function actualizarSgPreview() {
     var lastReal = null;
     document.querySelectorAll('#cs-tbody .cs-real').forEach(function(el){ if(el.value!=='') lastReal=el.value; });
     if(lastReal !== null) inf.avanceReal = parseFloat(lastReal).toFixed(1);
+    // Sincronizar datos fijos de la obra con lo ingresado en el formulario
+    var plazoDiasEl = document.getElementById('plazo-dias');
+    if(plazoDiasEl && plazoDiasEl.value) obra.plazo = plazoDiasEl.value;
+    var fechaInicioEl = document.getElementById('fecha-inicio');
+    if(fechaInicioEl && fechaInicioEl.value) obra.fechaInicio = fechaInicioEl.value;
     obraActual = obra;
     guardarObras(obras);
     mostrarToast('💾 Informe guardado', 'ok');
