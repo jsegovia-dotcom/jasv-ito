@@ -1639,7 +1639,7 @@ function actualizarSgPreview() {
     var CONT_Y=CY+CH+0.12;                      // inicio contenido
     var MAX_Y=PIE_Y-0.1;
     var FOTO_W=3.9488, FOTO_H=2.9606;           // ancho=10.03cm, alto=7.52cm
-    var FOTO_L_X=0.5236, FOTO_R_X=4.9882, FOTO_Y2=1.9528; // posiciones fotos (izq:1.33cm, der:12.67cm, Y:4.96cm)
+    var FOTO_L_X=0.622, FOTO_R_X=5.0591, FOTO_Y2=2.3622;  // posiciones fotos (izq:1.58cm, der:12.85cm, Y:6cm)
 
     // Date formatter: dd/mm/yyyy
     function fmtDate(val) {
@@ -2221,8 +2221,8 @@ function actualizarSgPreview() {
         {text:'Neto',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:8}},
         {text:'IVA',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:8}},
         {text:'Total',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:8}},
-        {text:'Parc.',options:{bold:true,fill:'2d7a4f',color:'FFFFFF',align:'right',fontSize:7}},
-        {text:'Acum.',options:{bold:true,fill:'2d7a4f',color:'FFFFFF',align:'right',fontSize:7}}
+        {text:'Parc.',options:{bold:true,fill:'2d7a4f',color:'FFFFFF',align:'right',fontSize:6}},
+        {text:'Acum.',options:{bold:true,fill:'2d7a4f',color:'FFFFFF',align:'right',fontSize:6}}
       ];
       var eppRows2=[hdr2];
       epFilas.forEach(function(f,i){
@@ -2240,8 +2240,8 @@ function actualizarSgPreview() {
           c(pptFmt(r.sub2),{align:'right'}), c(pptFmt(r.ant),{align:'right',color:'C0392B'}),
           c(pptFmt(r.ret),{align:'right',color:'C0392B'}), c(pptFmt(r.neto),{align:'right',bold:true}),
           c(pptFmt(r.iva),{align:'right'}), c(pptFmt(r.tot),{align:'right',bold:true}),
-          {text:pptPct(pct2),options:{fill:'E8F5E9',fontSize:7,align:'right',bold:true,color:'2D7A4F'}},
-          {text:pptPct(ap2),options:{fill:'E8F5E9',fontSize:7,align:'right',bold:true,color:'2D7A4F'}}
+          {text:pptPct(pct2),options:{fill:'E8F5E9',fontSize:6,align:'right',bold:true,color:'2D7A4F'}},
+          {text:pptPct(ap2),options:{fill:'E8F5E9',fontSize:6,align:'right',bold:true,color:'2D7A4F'}}
         ]);
       });
       var acT2=epP.cdC>0?(tCD2/epP.cdC*100):0;
@@ -2253,7 +2253,7 @@ function actualizarSgPreview() {
         ct(pptFmt(tAT2),{align:'right'}),ct(pptFmt(tRT2),{align:'right'}),
         ct(pptFmt(tNT2),{align:'right'}),ct(pptFmt(tIV2),{align:'right'}),
         ct(pptFmt(tTT2),{align:'right'}),
-        {text:pptPct(acT2),options:{fill:'2d7a4f',color:'FFFFFF',bold:true,fontSize:7,align:'right'}},{text:pptPct(acT2),options:{fill:'2d7a4f',color:'FFFFFF',bold:true,fontSize:7,align:'right'}}
+        {text:pptPct(acT2),options:{fill:'2d7a4f',color:'FFFFFF',bold:true,fontSize:6,align:'right'}},{text:pptPct(acT2),options:{fill:'2d7a4f',color:'FFFFFF',bold:true,fontSize:6,align:'right'}}
       ]);
       // Ancho disponible y posición
       var ew = EP_W;
@@ -2265,7 +2265,7 @@ function actualizarSgPreview() {
       // Autoajuste de anchos: calcular el texto más largo en cada columna
       // Columnas: N°, CD, GG, UTI, Sub1, Desc, Sub2, Ant, Ret, Neto, IVA, Total, Parc, Acum
       // Usamos el largo de string como proxy del ancho necesario
-      var colMaxLen=[6,0,0,0,0,0,0,0,0,0,0,0,6,6]; // mínimos (N°=6 para "EEPP 1", Parc/Acum=6 para "100.00%")
+      var colMaxLen=[5,0,0,0,0,0,0,0,0,0,0,0,6,6]; // mínimos (N°=5 para "TOTAL", Parc/Acum=6 para "100.00%")
       var allRows=eppRows2.slice(1); // excluir header
       allRows.forEach(function(row){
         row.forEach(function(cell,ci){
@@ -2475,7 +2475,8 @@ function actualizarSgPreview() {
         var batch=fotos.slice(fi3,fi3+2);
         batch.forEach(function(foto,bi){
           var fx=bi===0?FOTO_L_X:FOTO_R_X;
-          var descX=bi===0?0.622:5.0591; // X descripción: izq=1.58cm, der=12.85cm
+          var grupoX=bi===0?0.622:5.0591;  // X grupo: izq=1.58cm, der=12.85cm
+          var descX=bi===0?0.622:5.0591;   // X descripción: izq=1.58cm, der=12.85cm
           var fy=FOTO_Y2;
           // Imagen ya convertida a JPEG al cargar — insertar directamente
           sf.addImage({data:foto.dataUrl,x:fx,y:fy,w:FOTO_W,h:FOTO_H,
@@ -2498,9 +2499,9 @@ function actualizarSgPreview() {
           var pY=5.3622; // Y fija descripción: 13.62cm
           var gN='';
           if(foto.grupo!==''&&fotoGrupos[foto.grupo]) gN=fotoGrupos[foto.grupo].nombre;
-          if(gN) sf.addText(gN,{x:descX,y:pY,w:FOTO_W,h:0.28,fontSize:14,fontFace:FONT,bold:true,color:ROJO});
-          if(foto.pie) sf.addText(foto.pie,{x:descX,y:pY+(gN?0.22:0),w:FOTO_W,h:0.44,fontSize:12,fontFace:FONT,color:NEGRO,wrap:true});
-          var dY=pY+(gN?0.22:0)+(foto.pie?0.4:0);
+          if(gN) sf.addText(gN,{x:grupoX,y:2.3622,w:FOTO_W,h:0.28,fontSize:14,fontFace:FONT,bold:true,color:ROJO});
+          if(foto.pie) sf.addText(foto.pie,{x:descX,y:pY,w:FOTO_W,h:0.44,fontSize:12,fontFace:FONT,color:NEGRO,wrap:true});
+          var dY=pY+(foto.pie?0.4:0);
           if(foto.warning&&foto.warningTxt&&dY<MAX_Y)
             sf.addText('⚠ '+foto.warningTxt,{x:descX,y:dY,w:FOTO_W,h:0.28,fontSize:12,fontFace:FONT,color:'7a6010',italic:true,wrap:true});
           if(foto.resuelto&&foto.resueltoTxt&&dY<MAX_Y)
