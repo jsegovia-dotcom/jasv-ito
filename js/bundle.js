@@ -2221,7 +2221,6 @@ function actualizarSgPreview() {
         {text:'Neto',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:8}},
         {text:'IVA',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:8}},
         {text:'Total',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:8}},
-        {text:'Parc.',options:{bold:true,fill:'2d7a4f',color:'FFFFFF',align:'right',fontSize:6}},
         {text:'Acum.',options:{bold:true,fill:'2d7a4f',color:'FFFFFF',align:'right',fontSize:6}}
       ];
       var eppRows2=[hdr2];
@@ -2240,7 +2239,6 @@ function actualizarSgPreview() {
           c(pptFmt(r.sub2),{align:'right'}), c(pptFmt(r.ant),{align:'right',color:'C0392B'}),
           c(pptFmt(r.ret),{align:'right',color:'C0392B'}), c(pptFmt(r.neto),{align:'right',bold:true}),
           c(pptFmt(r.iva),{align:'right'}), c(pptFmt(r.tot),{align:'right',bold:true}),
-          {text:pptPct(pct2),options:{fill:'E8F5E9',fontSize:6,align:'right',bold:true,color:'2D7A4F'}},
           {text:pptPct(ap2),options:{fill:'E8F5E9',fontSize:6,align:'right',bold:true,color:'2D7A4F'}}
         ]);
       });
@@ -2253,7 +2251,7 @@ function actualizarSgPreview() {
         ct(pptFmt(tAT2),{align:'right'}),ct(pptFmt(tRT2),{align:'right'}),
         ct(pptFmt(tNT2),{align:'right'}),ct(pptFmt(tIV2),{align:'right'}),
         ct(pptFmt(tTT2),{align:'right'}),
-        {text:pptPct(acT2),options:{fill:'2d7a4f',color:'FFFFFF',bold:true,fontSize:6,align:'right'}},{text:pptPct(acT2),options:{fill:'2d7a4f',color:'FFFFFF',bold:true,fontSize:6,align:'right'}}
+        {text:pptPct(acT2),options:{fill:'2d7a4f',color:'FFFFFF',bold:true,fontSize:6,align:'right'}}
       ]);
       // Ancho disponible y posición
       var ew = EP_W;
@@ -2265,7 +2263,7 @@ function actualizarSgPreview() {
       // Autoajuste de anchos: calcular el texto más largo en cada columna
       // Columnas: N°, CD, GG, UTI, Sub1, Desc, Sub2, Ant, Ret, Neto, IVA, Total, Parc, Acum
       // Usamos el largo de string como proxy del ancho necesario
-      var colMaxLen=[5,0,0,0,0,0,0,0,0,0,0,0,6,6]; // mínimos (N°=5 para "TOTAL", Parc/Acum=6 para "100.00%")
+      var colMaxLen=[5,0,0,0,0,0,0,0,0,0,0,0,6]; // mínimos (N°=5 para "TOTAL", Acum=6 para "100.00%")
       var allRows=eppRows2.slice(1); // excluir header
       allRows.forEach(function(row){
         row.forEach(function(cell,ci){
@@ -2275,7 +2273,7 @@ function actualizarSgPreview() {
       });
       // Peso proporcional: columnas 12,13 (porcentajes) tienen peso fijo menor
       // Col 5=Desc forzar mínimo 5 para que no se apile; cols Parc/Acum peso reducido
-      var weights=colMaxLen.map(function(l,i){ return i>=12 ? Math.max(l,5)*0.7 : (i===5 ? Math.max(l,5) : Math.max(l,3)); });
+      var weights=colMaxLen.map(function(l,i){ return i===12 ? Math.max(l,5)*0.7 : (i===5 ? Math.max(l,5) : Math.max(l,3)); });
       var sumW=weights.reduce(function(a,b){return a+b;},0);
       var _epFontSize = _monedaObra === '$' ? 6 : 8;
       var colW2=weights.map(function(w){ return Math.round(w/sumW*ew*1000)/1000; });
@@ -2499,7 +2497,7 @@ function actualizarSgPreview() {
           var pY=5.3622; // Y fija descripción: 13.62cm
           var gN='';
           if(foto.grupo!==''&&fotoGrupos[foto.grupo]) gN=fotoGrupos[foto.grupo].nombre;
-          if(gN) sf.addText(gN,{x:grupoX,y:2.3622,w:FOTO_W,h:0.28,fontSize:14,fontFace:FONT,bold:true,color:ROJO});
+          if(gN) sf.addText(gN,{x:grupoX,y:1.9843,w:FOTO_W,h:0.28,fontSize:14,fontFace:FONT,bold:true,color:ROJO});
           if(foto.pie) sf.addText(foto.pie,{x:descX,y:pY,w:FOTO_W,h:0.44,fontSize:12,fontFace:FONT,color:NEGRO,wrap:true});
           var dY=pY+(foto.pie?0.4:0);
           if(foto.warning&&foto.warningTxt&&dY<MAX_Y)
