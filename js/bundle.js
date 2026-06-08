@@ -828,6 +828,7 @@ function actualizarSgPreview() {
     var diff=el.value.length-prevLen;
     try{el.setSelectionRange(pos+diff,pos+diff);}catch(e){}
   }
+  function _epMoneda(){
     var v=(document.getElementById('mo-moneda')||document.getElementById('moneda')||{}).value||'UF';
     return (v==='CLP'||v==='$') ? '$' : v;
   }
