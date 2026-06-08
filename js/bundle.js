@@ -99,8 +99,30 @@ function toggleAumento() {
   if (!chk) { document.getElementById('aumento-dias').value = ''; document.getElementById('fecha-termino-nueva').value = ''; }
 }
 function actualizarPlaceholderMonto() {
-  document.getElementById('monto-valor').placeholder = document.getElementById('moneda').value === 'UF' ? 'Ej: 1.250,00' : 'Ej: 42.000.000';
+  var m=document.getElementById('moneda').value;
+  document.getElementById('monto-valor').placeholder = m==='UF' ? 'Ej: 1.250,00' : 'Ej: 42.000.000';
 }
+function fmtMontoModal(){
+  var m=(document.getElementById('mo-moneda')||{}).value||'UF';
+  var el=document.getElementById('mo-monto'); if(!el) return;
+  if(m==='CLP'||m==='$') _fmtInputAuto_clp(el); else _fmtInputAuto(el);
+}
+function fmtMontoInforme(){
+  var m=(document.getElementById('moneda')||{}).value||'UF';
+  var el=document.getElementById('monto-valor'); if(!el) return;
+  if(m==='$') _fmtInputAuto_clp(el); else _fmtInputAuto(el);
+}
+function _fmtInputAuto_clp(el){
+  if(!el||el.readOnly) return;
+  var raw=el.value.replace(/\./g,'').replace(/[^0-9]/g,'');
+  if(raw===''){el.value='';return;}
+  var n=parseInt(raw,10);
+  var pos=el.selectionStart; var prevLen=el.value.length;
+  el.value=n.toLocaleString('es-CL',{minimumFractionDigits:0,maximumFractionDigits:0});
+  var diff=el.value.length-prevLen;
+  try{el.setSelectionRange(pos+diff,pos+diff);}catch(e){}
+}
+
 
 // ══ PROFESIONALES ══
 function addProf(id, cargo) {
@@ -830,7 +852,7 @@ function actualizarSgPreview() {
   }
   function _epMoneda(){
     var v=(document.getElementById('mo-moneda')||document.getElementById('moneda')||{}).value||'UF';
-    return (v==='CLP'||v==='$') ? '$' : v;
+    return v;
   }
   function epSet(id, v){
     var el=document.getElementById(id);
@@ -912,11 +934,21 @@ function actualizarSgPreview() {
     epRenderEepp();
   }
 
-  function epCdChange(i, val){
-    // Limpiar y parsear el valor (acepta comas y puntos como separador)
-    var cleaned = (val||'').toString().replace(/[^0-9.,]/g,'').replace(',','.');
+  function epCdChange(i, val, inputEl){
+    // Formatear con separadores de miles en tiempo real
+    if(inputEl && _epMoneda()==='$'){
+      var raw=(val||'').toString().replace(/\./g,'').replace(/[^0-9]/g,'');
+      if(raw!==''){
+        var n=parseInt(raw,10);
+        var pos=inputEl.selectionStart; var prevLen=inputEl.value.length;
+        inputEl.value=n.toLocaleString('es-CL',{minimumFractionDigits:0,maximumFractionDigits:0});
+        var diff=inputEl.value.length-prevLen;
+        try{inputEl.setSelectionRange(pos+diff,pos+diff);}catch(e){}
+        val=inputEl.value;
+      }
+    } else if(inputEl){ _fmtInputAuto(inputEl); val=inputEl.value; }
+    var cleaned = (val||'').toString().replace(/\./g,'').replace(',','.');
     epFilas[i].cd = parseFloat(cleaned) || 0;
-    // NO re-renderizar (perdería el foco). Solo actualizar los totales visibles.
     epActualizarTotales();
   }
 
@@ -3380,7 +3412,7 @@ function actualizarSgPreview() {
     var nroSugerido = (obra.informes || []).length > 0
       ? Math.max.apply(null, obra.informes.map(function(i){ return i.nro || 1; })) + 1
       : 1;
-    var nroInput = window.prompt('Número de informe:', String(nroSugerido));
+    var nroInput = window.prompt('N° de informe (sugerido: '+nroSugerido+'):', String(nroSugerido));
     if (nroInput === null) return; // cancelado
     var nro = parseInt(nroInput, 10);
     if (isNaN(nro) || nro < 1) { mostrarToast('Número de informe inválido', 'err'); return; }
@@ -3514,6 +3546,9 @@ function actualizarSgPreview() {
       });
       var monSel=document.getElementById('moneda');
       if(monSel && obra.moneda) monSel.value=obra.moneda;
+      actualizarPlaceholderMonto();
+      // Formatear monto-valor según moneda
+      setTimeout(function(){ fmtMontoInforme(); }, 0);
       // N° informe y fecha emisión
       var nroEl=document.getElementById('nro-informe'); if(nroEl) nroEl.value=inf.nro;
       var fechaEl=document.getElementById('fecha-emision'); if(fechaEl) fechaEl.value=new Date().toISOString().split('T')[0];
