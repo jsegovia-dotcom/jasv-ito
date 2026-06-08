@@ -1639,7 +1639,7 @@ function actualizarSgPreview() {
     var CONT_Y=CY+CH+0.12;                      // inicio contenido
     var MAX_Y=PIE_Y-0.1;
     var FOTO_W=3.9488, FOTO_H=2.9606;           // ancho=10.03cm, alto=7.52cm
-    var FOTO_L_X=0.622, FOTO_R_X=5.0591, FOTO_Y2=2.3622; // posiciones fotos
+    var FOTO_L_X=0.5236, FOTO_R_X=4.9882, FOTO_Y2=1.9528; // posiciones fotos (izq:1.33cm, der:12.67cm, Y:4.96cm)
 
     // Date formatter: dd/mm/yyyy
     function fmtDate(val) {
@@ -2475,6 +2475,7 @@ function actualizarSgPreview() {
         var batch=fotos.slice(fi3,fi3+2);
         batch.forEach(function(foto,bi){
           var fx=bi===0?FOTO_L_X:FOTO_R_X;
+          var descX=bi===0?0.622:5.0591; // X descripción: izq=1.58cm, der=12.85cm
           var fy=FOTO_Y2;
           // Imagen ya convertida a JPEG al cargar — insertar directamente
           sf.addImage({data:foto.dataUrl,x:fx,y:fy,w:FOTO_W,h:FOTO_H,
@@ -2494,16 +2495,16 @@ function actualizarSgPreview() {
               fontSize:7,fontFace:FONT,bold:true,color:'000000',fill:{color:bC}});
           }
           // Textos bajo la foto
-          var pY=fy+FOTO_H+0.06;
+          var pY=5.3622; // Y fija descripción: 13.62cm
           var gN='';
           if(foto.grupo!==''&&fotoGrupos[foto.grupo]) gN=fotoGrupos[foto.grupo].nombre;
-          if(gN) sf.addText(gN,{x:fx,y:pY,w:FOTO_W,h:0.28,fontSize:14,fontFace:FONT,bold:true,color:ROJO});
-          if(foto.pie) sf.addText(foto.pie,{x:fx,y:pY+(gN?0.22:0),w:FOTO_W,h:0.44,fontSize:12,fontFace:FONT,color:NEGRO,wrap:true});
+          if(gN) sf.addText(gN,{x:descX,y:pY,w:FOTO_W,h:0.28,fontSize:14,fontFace:FONT,bold:true,color:ROJO});
+          if(foto.pie) sf.addText(foto.pie,{x:descX,y:pY+(gN?0.22:0),w:FOTO_W,h:0.44,fontSize:12,fontFace:FONT,color:NEGRO,wrap:true});
           var dY=pY+(gN?0.22:0)+(foto.pie?0.4:0);
           if(foto.warning&&foto.warningTxt&&dY<MAX_Y)
-            sf.addText('⚠ '+foto.warningTxt,{x:fx,y:dY,w:FOTO_W,h:0.28,fontSize:12,fontFace:FONT,color:'7a6010',italic:true,wrap:true});
+            sf.addText('⚠ '+foto.warningTxt,{x:descX,y:dY,w:FOTO_W,h:0.28,fontSize:12,fontFace:FONT,color:'7a6010',italic:true,wrap:true});
           if(foto.resuelto&&foto.resueltoTxt&&dY<MAX_Y)
-            sf.addText('✓ '+foto.resueltoTxt,{x:fx,y:dY+(foto.warning&&foto.warningTxt?0.3:0),w:FOTO_W,h:0.28,fontSize:12,fontFace:FONT,color:'2d7a4f',italic:true,wrap:true});
+            sf.addText('✓ '+foto.resueltoTxt,{x:descX,y:dY+(foto.warning&&foto.warningTxt?0.3:0),w:FOTO_W,h:0.28,fontSize:12,fontFace:FONT,color:'2d7a4f',italic:true,wrap:true});
           // Miniatura lay out (posición en plano) — esquina inferior derecha de la foto
           if(foto.layoutImg){
             // Miniatura plano: 2.8x2.8cm = 1.1024"
@@ -4737,7 +4738,8 @@ setTimeout(function(){
     document.querySelectorAll('#ep-tbody tr').forEach(function(tr){
       var inp = tr.querySelector('input[type=text]');
       if(inp){
-        var raw = inp.value.toString().replace(/[^0-9.,]/g,'').replace(',','.');
+        // es-CL: miles=punto, decimal=coma → quitar puntos de miles, luego coma→punto
+        var raw = inp.value.toString().replace(/\./g,'').replace(',','.');
         var val = parseFloat(raw) || 0;
         epFilasDom.push({cd: val});
       }
