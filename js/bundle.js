@@ -813,7 +813,10 @@ function actualizarSgPreview() {
   var epFilas = []; // [{cd: número}]
 
   function epVal(id){ return parseFloat(((document.getElementById(id)||{}).value||'').replace(/\./g,'').replace(',','.')) || 0; }
-  function _epMoneda(){ return (document.getElementById('mo-moneda')||document.getElementById('moneda')||{}).value||'UF'; }
+  function _epMoneda(){
+    var v=(document.getElementById('mo-moneda')||document.getElementById('moneda')||{}).value||'UF';
+    return (v==='CLP'||v==='$') ? '$' : v;
+  }
   function epSet(id, v){
     var el=document.getElementById(id);
     if(!el) return;
