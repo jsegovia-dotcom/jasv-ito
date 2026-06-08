@@ -812,9 +812,24 @@ function actualizarSgPreview() {
   // ══ ESTADOS DE PAGO ══
   var epFilas = []; // [{cd: número}]
 
-  function epVal(id){ return parseFloat((document.getElementById(id)||{}).value) || 0; }
-  function epSet(id, v){ var el=document.getElementById(id); if(el) el.value = v > 0 ? Math.round(v*100)/100 : ''; }
-  function epFmt(n){ return n !== 0 ? n.toLocaleString('es-CL',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—'; }
+  function epVal(id){ return parseFloat(((document.getElementById(id)||{}).value||'').replace(/\./g,'').replace(',','.')) || 0; }
+  function _epMoneda(){ return (document.getElementById('mo-moneda')||document.getElementById('moneda')||{}).value||'UF'; }
+  function epSet(id, v){
+    var el=document.getElementById(id);
+    if(!el) return;
+    if(!(v > 0)){ el.value=''; return; }
+    var m=_epMoneda();
+    el.value = m==='$'
+      ? Math.round(v).toLocaleString('es-CL',{minimumFractionDigits:0,maximumFractionDigits:0})
+      : (Math.round(v*100)/100).toLocaleString('es-CL',{minimumFractionDigits:2,maximumFractionDigits:2});
+  }
+  function epFmt(n){
+    if(n===0) return '—';
+    var m=_epMoneda();
+    return m==='$'
+      ? Math.round(n).toLocaleString('es-CL',{minimumFractionDigits:0,maximumFractionDigits:0})
+      : n.toLocaleString('es-CL',{minimumFractionDigits:2,maximumFractionDigits:2});
+  }
   function epFmtPct(n){ return n.toFixed(2)+'%'; }
 
   function epRecalcContrato(){
@@ -834,7 +849,10 @@ function actualizarSgPreview() {
   }
 
   function epFmtN(n){
-    return (n||0).toLocaleString('es-CL',{minimumFractionDigits:2,maximumFractionDigits:2});
+    var m=_epMoneda();
+    return m==='$'
+      ? Math.round(n||0).toLocaleString('es-CL',{minimumFractionDigits:0,maximumFractionDigits:0})
+      : (n||0).toLocaleString('es-CL',{minimumFractionDigits:2,maximumFractionDigits:2});
   }
   function epPcts(){
     var cd   = epVal('ep-cd');
@@ -979,15 +997,24 @@ function actualizarSgPreview() {
   }
 
   function moEpRecalc() {
-    var cd  = parseFloat((document.getElementById('mo-ep-cd')||{}).value)   || 0;
-    var gg  = parseFloat((document.getElementById('mo-ep-gg')||{}).value)   || 0;
-    var uti = parseFloat((document.getElementById('mo-ep-uti')||{}).value)  || 0;
-    var dc  = parseFloat((document.getElementById('mo-ep-desc')||{}).value) || 0;
+    function _parseEp(id){ return parseFloat(((document.getElementById(id)||{}).value||'').replace(/\./g,'').replace(',','.')) || 0; }
+    var cd  = _parseEp('mo-ep-cd');
+    var gg  = _parseEp('mo-ep-gg');
+    var uti = _parseEp('mo-ep-uti');
+    var dc  = _parseEp('mo-ep-desc');
     var sub = cd + gg + uti;
     var net = sub - dc;
     var iva = net * 0.19;
     var tot = net + iva;
-    function setV(id,v){ var el=document.getElementById(id); if(el) el.value=v>0?Math.round(v*100)/100:''; }
+    var m=_epMoneda();
+    function setV(id,v){
+      var el=document.getElementById(id);
+      if(!el) return;
+      if(!(v>0)){ el.value=''; return; }
+      el.value = m==='$'
+        ? Math.round(v).toLocaleString('es-CL',{minimumFractionDigits:0,maximumFractionDigits:0})
+        : (Math.round(v*100)/100).toLocaleString('es-CL',{minimumFractionDigits:2,maximumFractionDigits:2});
+    }
     setV('mo-ep-subtotal', sub); setV('mo-ep-neto', net);
     setV('mo-ep-iva', iva);      setV('mo-ep-total', tot);
   }
