@@ -2109,8 +2109,10 @@ function actualizarSgPreview() {
     // Nota en negrita con prefijo
     var csNota=document.getElementById('cs-nota').value;
     if(csNota){
+      // Posición: x=8.21cm=3.2323" y=14.7cm=5.7874" ancho hasta borde derecho
       s6.addText([{text:'Comentarios: ',options:{bold:true}},{text:csNota,options:{bold:false}}],
-        {x:3.252,y:notaY+0.1,w:SW-3.252-0.1,h:0.4,fontSize:10,fontFace:FONT,color:GRIS,wrap:true,valign:'top'});
+        {x:3.2323,y:5.7874,w:SW-3.2323-0.1,h:0.55,fontSize:10,fontFace:FONT,color:GRIS,
+         wrap:true,valign:'top',align:'justify'});
     }
 
     // ══ CONTROL CURVA S ══
@@ -2219,8 +2221,8 @@ function actualizarSgPreview() {
         {text:'Neto',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:8}},
         {text:'IVA',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:8}},
         {text:'Total',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:8}},
-        {text:'Parc%',options:{bold:true,fill:'2d7a4f',color:'FFFFFF',align:'right',fontSize:7}},
-        {text:'Acum%',options:{bold:true,fill:'2d7a4f',color:'FFFFFF',align:'right',fontSize:7}}
+        {text:'Parc.',options:{bold:true,fill:'2d7a4f',color:'FFFFFF',align:'right',fontSize:6}},
+        {text:'Acum.',options:{bold:true,fill:'2d7a4f',color:'FFFFFF',align:'right',fontSize:6}}
       ];
       var eppRows2=[hdr2];
       epFilas.forEach(function(f,i){
@@ -2253,26 +2255,29 @@ function actualizarSgPreview() {
         ct(pptFmt(tTT2),{align:'right'}),
         {text:pptPct(acT2),options:{fill:'2d7a4f',color:'FFFFFF',bold:true,fontSize:7,align:'right'}},{text:pptPct(acT2),options:{fill:'2d7a4f',color:'FFFFFF',bold:true,fontSize:7,align:'right'}}
       ]);
-      // Ancho disponible: SW - CX - cW - margen_interno (0.12)
-      var ew = Math.round((SW - CX - cW - 0.12)*1000)/1000;
-      // x inicio de tabla EEPP
-      var ex = CX + cW + 0.12;
-      // 14 columnas: N°, CD, GG, UTI, Sub1, Desc, Sub2, Ant, Ret, Neto, IVA, Total, Parc%, Acum%
-      // Proporciones relativas ajustadas para caber en ew (~7.27" con cW=2.5)
-      var colW2=[0.62,0.60,0.44,0.44,0.56,0.42,0.56,0.48,0.48,0.58,0.44,0.58,0.36,0.36];
-      var sumW2=colW2.reduce(function(a,b){return a+b;},0);
-      colW2=colW2.map(function(w){return Math.round(w/sumW2*ew*1000)/1000;});
-      var ew = EP_W;   // ancho exacto 24.74cm
-      var ex = EP_X;   // posición exacta 0.3cm
-      // Título "CONTROL DE ESTADOS DE PAGO" encima de tabla EEPP
+      // Ancho disponible y posición
+      var ew = EP_W;
+      var ex = EP_X;
+      // Título "CONTROL DE ESTADOS DE PAGO"
       sEP.addText('CONTROL DE ESTADOS DE PAGO ('+_monedaLabel+')',{x:EP_X,y:EEPP_Y_EP-TITLE_H-0.02,w:EP_W,h:TITLE_H,
         fontSize:10,fontFace:FONT,bold:true,color:'FFFFFF',fill:'1a3a5c',
         align:'center',valign:'middle'});
-      // 14 columnas para tabla EEPP — font más pequeño para cifras $ (más dígitos)
-      var _epFontSize = _monedaObra === '$' ? 6 : 9;
-      var colW2=[0.38,0.60,0.48,0.48,0.58,0.46,0.58,0.52,0.52,0.60,0.48,0.60,0.40,0.40];
-      var sumW2=colW2.reduce(function(a,b){return a+b;},0);
-      colW2=colW2.map(function(w){return Math.round(w/sumW2*ew*1000)/1000;});
+      // Autoajuste de anchos: calcular el texto más largo en cada columna
+      // Columnas: N°, CD, GG, UTI, Sub1, Desc, Sub2, Ant, Ret, Neto, IVA, Total, Parc, Acum
+      // Usamos el largo de string como proxy del ancho necesario
+      var colMaxLen=[3,0,0,0,0,0,0,0,0,0,0,0,6,6]; // mínimos iniciales (N°=3, Parc/Acum=6 para "100.00%")
+      var allRows=eppRows2.slice(1); // excluir header
+      allRows.forEach(function(row){
+        row.forEach(function(cell,ci){
+          var t=(cell.text||'').toString().length;
+          if(t>colMaxLen[ci]) colMaxLen[ci]=t;
+        });
+      });
+      // Peso proporcional: columnas 12,13 (porcentajes) tienen peso fijo menor
+      var weights=colMaxLen.map(function(l,i){ return i>=12 ? Math.max(l,5)*0.7 : Math.max(l,3); });
+      var sumW=weights.reduce(function(a,b){return a+b;},0);
+      var _epFontSize = _monedaObra === '$' ? 6 : 8;
+      var colW2=weights.map(function(w){ return Math.round(w/sumW*ew*1000)/1000; });
       // Calcular rowH dinámico para que la tabla quepa en EEPP_H_EP
       var nRowsEepp = eppRows2.length; // header + data + total
       // font 8 → rowH proporcional: ~0.20" por fila es suficiente
@@ -3412,18 +3417,37 @@ function actualizarSgPreview() {
     var nroSugerido = (obra.informes || []).length > 0
       ? Math.max.apply(null, obra.informes.map(function(i){ return i.nro || 1; })) + 1
       : 1;
-    var nroInput = window.prompt('N° de informe (sugerido: '+nroSugerido+'):', String(nroSugerido));
-    if (nroInput === null) return; // cancelado
-    var nro = parseInt(nroInput, 10);
-    if (isNaN(nro) || nro < 1) { mostrarToast('Número de informe inválido', 'err'); return; }
-    var infId = 'inf_' + Date.now();
-    var newInf = { id: infId, nro: nro, semana: '', fechaCreacion: new Date().toISOString(), estado: {} };
-    obra.informes = obra.informes || [];
-    obra.informes.push(newInf);
-    obraActual = obra;
-    guardarObras(obras);
-    // Abrir formulario con datos fijos de la obra pre-cargados
-    abrirFormulario(obra, newInf, true);
+    // Modal propio para ingresar N° de informe con formato
+    (function(nroSug, callback){
+      var overlay=document.createElement('div');
+      overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:9999;display:flex;align-items:center;justify-content:center';
+      overlay.innerHTML='<div style="background:#fff;border-radius:10px;padding:28px 32px;min-width:280px;box-shadow:0 8px 32px rgba(0,0,0,0.2)">'
+        +'<div style="font-weight:700;font-size:15px;color:#1a3a5c;margin-bottom:14px">N° de informe</div>'
+        +'<input id="_nro_inf_inp" type="text" inputmode="numeric" value="'+nroSug+'" style="width:100%;box-sizing:border-box;font-size:22px;font-weight:700;text-align:center;border:2px solid #7B1A1A;border-radius:6px;padding:8px;color:#1a3a5c;outline:none">'
+        +'<div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end">'
+        +'<button id="_nro_cancel" style="padding:8px 18px;border:1px solid #ccc;border-radius:6px;background:#fff;cursor:pointer;font-size:13px">Cancelar</button>'
+        +'<button id="_nro_ok" style="padding:8px 22px;border:none;border-radius:6px;background:#7B1A1A;color:#fff;cursor:pointer;font-size:13px;font-weight:700">Crear</button>'
+        +'</div></div>';
+      document.body.appendChild(overlay);
+      var inp=document.getElementById('_nro_inf_inp');
+      inp.select();
+      function close(val){ document.body.removeChild(overlay); callback(val); }
+      document.getElementById('_nro_cancel').onclick=function(){ close(null); };
+      document.getElementById('_nro_ok').onclick=function(){ close(inp.value); };
+      inp.addEventListener('keydown',function(e){ if(e.key==='Enter') close(inp.value); if(e.key==='Escape') close(null); });
+    })(nroSugerido, function(nroInput){
+      if (nroInput === null) return;
+      var nro = parseInt(nroInput, 10);
+      if (isNaN(nro) || nro < 1) { mostrarToast('Número de informe inválido', 'err'); return; }
+      var infId = 'inf_' + Date.now();
+      var newInf = { id: infId, nro: nro, semana: '', fechaCreacion: new Date().toISOString(), estado: {} };
+      obra.informes = obra.informes || [];
+      obra.informes.push(newInf);
+      obraActual = obra;
+      guardarObras(obras);
+      abrirFormulario(obra, newInf, true);
+    });
+    return; // la lógica continúa en el callback
   }
 
   // ── Abrir informe existente ──
