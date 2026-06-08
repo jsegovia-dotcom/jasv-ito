@@ -1016,7 +1016,7 @@ function actualizarSgPreview() {
       totSub2+=r.sub2; totAnt+=r.ant; totRet+=r.ret; totNeto+=r.neto; totIva+=r.iva; totTot+=r.tot;
       var bg = i%2===0?'#f5f8fc':'#fff';
       var acumFinal = p.cdC > 0 ? (totCD / p.cdC * 100) : 0;
-      return '<tr style="background:'+bg+'">'        +'<td style="padding:4px 3px;font-weight:600;overflow:hidden">EEPP'+(i+1)+'</td>'        +'<td style="padding:3px 2px;text-align:right"><input type="text" inputmode="decimal" value="'+(f.cd||'')+'" style="width:100%;text-align:right;border:1px solid #ccc;border-radius:3px;padding:1px 3px;font-size:10px;box-sizing:border-box" oninput="epCdChange('+i+',this.value)" onblur="epRenderEepp()"></td>'        +'<td style="padding:4px 3px;text-align:right;color:#555;overflow:hidden"><span class="ep-val">'+epFmt(r.gg)+'</span></td>'        +'<td style="padding:4px 3px;text-align:right;color:#555;overflow:hidden"><span class="ep-val">'+epFmt(r.uti)+'</span></td>'        +'<td style="padding:4px 3px;text-align:right;overflow:hidden"><span class="ep-val">'+epFmt(r.sub1)+'</span></td>'        +'<td style="padding:4px 3px;text-align:right;color:#c0392b;overflow:hidden"><span class="ep-val">'+epFmt(r.desc)+'</span></td>'        +'<td style="padding:4px 3px;text-align:right;overflow:hidden"><span class="ep-val">'+epFmt(r.sub2)+'</span></td>'        +'<td style="padding:4px 3px;text-align:right;color:#c0392b;overflow:hidden"><span class="ep-val">'+epFmt(r.ant)+'</span></td>'        +'<td style="padding:4px 3px;text-align:right;color:#c0392b;overflow:hidden"><span class="ep-val">'+epFmt(r.ret)+'</span></td>'        +'<td style="padding:4px 3px;text-align:right;font-weight:700;overflow:hidden"><span class="ep-val">'+epFmt(r.neto)+'</span></td>'        +'<td style="padding:4px 3px;text-align:right;overflow:hidden"><span class="ep-val">'+epFmt(r.iva)+'</span></td>'        +'<td style="padding:4px 3px;text-align:right;font-weight:700;overflow:hidden"><span class="ep-val">'+epFmt(r.tot)+'</span></td>'        +'<td style="padding:4px 3px;text-align:right;background:#e8f5e9;color:#2d7a4f;font-weight:600;overflow:hidden"><span class="ep-val">'+epFmtPct(pct)+'</span></td>'        +'<td style="padding:4px 3px;text-align:right;background:#e8f5e9;color:#2d7a4f;font-weight:600;overflow:hidden"><span class="ep-val">'+epFmtPct(acumFinal)+'</span></td>'        +'<td style="padding:4px 3px;text-align:center"><button onclick="epEliminarFila('+i+')" style="background:none;border:none;cursor:pointer;color:#c0392b;font-size:11px">✕</button></td>'        +'</tr>';
+      return '<tr style="background:'+bg+'">'        +'<td style="padding:4px 3px;font-weight:600;overflow:hidden">EEPP'+(i+1)+'</td>'        +'<td style="padding:3px 2px;text-align:right"><input type="text" inputmode="decimal" value="'+(f.cd?epFmt(f.cd):'')+'" style="width:100%;text-align:right;border:1px solid #ccc;border-radius:3px;padding:1px 3px;font-size:10px;box-sizing:border-box" oninput="epCdChange('+i+',this.value,this)" onblur="epRenderEepp()"></td>'        +'<td style="padding:4px 3px;text-align:right;color:#555;overflow:hidden"><span class="ep-val">'+epFmt(r.gg)+'</span></td>'        +'<td style="padding:4px 3px;text-align:right;color:#555;overflow:hidden"><span class="ep-val">'+epFmt(r.uti)+'</span></td>'        +'<td style="padding:4px 3px;text-align:right;overflow:hidden"><span class="ep-val">'+epFmt(r.sub1)+'</span></td>'        +'<td style="padding:4px 3px;text-align:right;color:#c0392b;overflow:hidden"><span class="ep-val">'+epFmt(r.desc)+'</span></td>'        +'<td style="padding:4px 3px;text-align:right;overflow:hidden"><span class="ep-val">'+epFmt(r.sub2)+'</span></td>'        +'<td style="padding:4px 3px;text-align:right;color:#c0392b;overflow:hidden"><span class="ep-val">'+epFmt(r.ant)+'</span></td>'        +'<td style="padding:4px 3px;text-align:right;color:#c0392b;overflow:hidden"><span class="ep-val">'+epFmt(r.ret)+'</span></td>'        +'<td style="padding:4px 3px;text-align:right;font-weight:700;overflow:hidden"><span class="ep-val">'+epFmt(r.neto)+'</span></td>'        +'<td style="padding:4px 3px;text-align:right;overflow:hidden"><span class="ep-val">'+epFmt(r.iva)+'</span></td>'        +'<td style="padding:4px 3px;text-align:right;font-weight:700;overflow:hidden"><span class="ep-val">'+epFmt(r.tot)+'</span></td>'        +'<td style="padding:4px 3px;text-align:right;background:#e8f5e9;color:#2d7a4f;font-weight:600;overflow:hidden"><span class="ep-val">'+epFmtPct(pct)+'</span></td>'        +'<td style="padding:4px 3px;text-align:right;background:#e8f5e9;color:#2d7a4f;font-weight:600;overflow:hidden"><span class="ep-val">'+epFmtPct(acumFinal)+'</span></td>'        +'<td style="padding:4px 3px;text-align:center"><button onclick="epEliminarFila('+i+')" style="background:none;border:none;cursor:pointer;color:#c0392b;font-size:11px">✕</button></td>'        +'</tr>';
     }).join('');
 
     // Fila de totales
@@ -2221,8 +2221,8 @@ function actualizarSgPreview() {
         {text:'Neto',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:8}},
         {text:'IVA',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:8}},
         {text:'Total',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:8}},
-        {text:'Parc.',options:{bold:true,fill:'2d7a4f',color:'FFFFFF',align:'right',fontSize:6}},
-        {text:'Acum.',options:{bold:true,fill:'2d7a4f',color:'FFFFFF',align:'right',fontSize:6}}
+        {text:'Parc.',options:{bold:true,fill:'2d7a4f',color:'FFFFFF',align:'right',fontSize:7}},
+        {text:'Acum.',options:{bold:true,fill:'2d7a4f',color:'FFFFFF',align:'right',fontSize:7}}
       ];
       var eppRows2=[hdr2];
       epFilas.forEach(function(f,i){
@@ -2265,7 +2265,7 @@ function actualizarSgPreview() {
       // Autoajuste de anchos: calcular el texto más largo en cada columna
       // Columnas: N°, CD, GG, UTI, Sub1, Desc, Sub2, Ant, Ret, Neto, IVA, Total, Parc, Acum
       // Usamos el largo de string como proxy del ancho necesario
-      var colMaxLen=[3,0,0,0,0,0,0,0,0,0,0,0,6,6]; // mínimos iniciales (N°=3, Parc/Acum=6 para "100.00%")
+      var colMaxLen=[6,0,0,0,0,0,0,0,0,0,0,0,6,6]; // mínimos (N°=6 para "EEPP 1", Parc/Acum=6 para "100.00%")
       var allRows=eppRows2.slice(1); // excluir header
       allRows.forEach(function(row){
         row.forEach(function(cell,ci){
@@ -2274,7 +2274,8 @@ function actualizarSgPreview() {
         });
       });
       // Peso proporcional: columnas 12,13 (porcentajes) tienen peso fijo menor
-      var weights=colMaxLen.map(function(l,i){ return i>=12 ? Math.max(l,5)*0.7 : Math.max(l,3); });
+      // Col 5=Desc forzar mínimo 5 para que no se apile; cols Parc/Acum peso reducido
+      var weights=colMaxLen.map(function(l,i){ return i>=12 ? Math.max(l,5)*0.7 : (i===5 ? Math.max(l,5) : Math.max(l,3)); });
       var sumW=weights.reduce(function(a,b){return a+b;},0);
       var _epFontSize = _monedaObra === '$' ? 6 : 8;
       var colW2=weights.map(function(w){ return Math.round(w/sumW*ew*1000)/1000; });
