@@ -1577,7 +1577,11 @@ function actualizarSgPreview() {
       s = s.replace(/\./g,'').replace(',','.');  // quitar puntos de miles, coma→punto decimal
       var n = parseFloat(s);
       if (isNaN(n)) return val.toString();
-      // Formatear: separador de miles = punto, decimal = coma (es-CL)
+      // Para moneda $ no usar decimales; para UF usar hasta 2 decimales
+      var moneda = (document.getElementById('moneda')||{}).value||'UF';
+      if (moneda === '$') {
+        return Math.round(n).toLocaleString('es-CL', {minimumFractionDigits:0, maximumFractionDigits:0});
+      }
       return n.toLocaleString('es-CL', {minimumFractionDigits:0, maximumFractionDigits:2});
     }
     var nroInf   = document.getElementById('nro-informe').value||'—';
@@ -2030,7 +2034,15 @@ function actualizarSgPreview() {
     // ══ CONTROL CURVA S ══
     if(_conEEPP){
     var epP = epPcts();
-    function pptFmt(n){ return n !== 0 ? n.toLocaleString('es-CL',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—'; }
+    var _monedaObra = (obraActual && obraActual.moneda) ? obraActual.moneda : 'UF';
+    var _monedaLabel = _monedaObra === '$' ? 'CLP ($)' : 'UF';
+    function pptFmt(n){
+      if (n === 0) return '—';
+      if (_monedaObra === '$') {
+        return Math.round(n).toLocaleString('es-CL', {minimumFractionDigits:0, maximumFractionDigits:0});
+      }
+      return n.toLocaleString('es-CL',{minimumFractionDigits:2,maximumFractionDigits:2});
+    }
     function pptPct(n){ return n.toFixed(2)+'%'; }
 
     // ── Slide único: Datos del contrato + Tabla EEPP (v2.1 font7-cols) ──
@@ -2068,7 +2080,7 @@ function actualizarSgPreview() {
     var TITLE_H = 0.22;
 
     // Título "DATOS DEL CONTRATO"
-    sEP.addText('DATOS DEL CONTRATO',{x:EP_X,y:CONT_Y_EP-TITLE_H-0.02,w:EP_W,h:TITLE_H,
+    sEP.addText('DATOS DEL CONTRATO ('+_monedaLabel+')',{x:EP_X,y:CONT_Y_EP-TITLE_H-0.02,w:EP_W,h:TITLE_H,
       fontSize:10,fontFace:FONT,bold:true,color:'FFFFFF',fill:'4A6741',
       align:'center',valign:'middle'});
 
@@ -2103,7 +2115,7 @@ function actualizarSgPreview() {
     var cSumW=cColW.reduce(function(a,b){return a+b;},0);
     cColW=cColW.map(function(w){return Math.round(w/cSumW*cW*1000)/1000;});
     sEP.addTable(cRowsH,{x:EP_X,y:eppY0,w:EP_W,h:CONT_H_EP,colW:cColW,
-      fontSize:10,fontFace:FONT,align:'center',valign:'middle',rowH:CONT_H_EP/2,
+      fontSize:_monedaObra==='$'?7:10,fontFace:FONT,align:'center',valign:'middle',rowH:CONT_H_EP/2,
       border:{type:'solid',pt:0.5,color:'CCCCCC'},fill:{color:'FFFFFF'}});
 
     // — Tabla EEPP (debajo del contrato) —
@@ -2171,10 +2183,11 @@ function actualizarSgPreview() {
       var ew = EP_W;   // ancho exacto 24.74cm
       var ex = EP_X;   // posición exacta 0.3cm
       // Título "CONTROL DE ESTADOS DE PAGO" encima de tabla EEPP
-      sEP.addText('CONTROL DE ESTADOS DE PAGO',{x:EP_X,y:EEPP_Y_EP-TITLE_H-0.02,w:EP_W,h:TITLE_H,
+      sEP.addText('CONTROL DE ESTADOS DE PAGO ('+_monedaLabel+')',{x:EP_X,y:EEPP_Y_EP-TITLE_H-0.02,w:EP_W,h:TITLE_H,
         fontSize:10,fontFace:FONT,bold:true,color:'FFFFFF',fill:'1a3a5c',
         align:'center',valign:'middle'});
-      // 14 columnas para tabla EEPP
+      // 14 columnas para tabla EEPP — font más pequeño para cifras $ (más dígitos)
+      var _epFontSize = _monedaObra === '$' ? 6 : 9;
       var colW2=[0.38,0.60,0.48,0.48,0.58,0.46,0.58,0.52,0.52,0.60,0.48,0.60,0.40,0.40];
       var sumW2=colW2.reduce(function(a,b){return a+b;},0);
       colW2=colW2.map(function(w){return Math.round(w/sumW2*ew*1000)/1000;});
@@ -2184,7 +2197,7 @@ function actualizarSgPreview() {
       var rowHEepp = Math.min(EEPP_H_EP / Math.max(nRowsEepp, 1), 0.24);
       rowHEepp = Math.max(rowHEepp, 0.16);
       sEP.addTable(eppRows2,{x:ex,y:eppY,w:ew,h:EEPP_H_EP,colW:colW2,
-        fontSize:9,fontFace:FONT,align:'right',valign:'middle',rowH:rowHEepp,
+        fontSize:_epFontSize,fontFace:FONT,align:'right',valign:'middle',rowH:rowHEepp,
         border:{type:'solid',pt:0.3,color:'CCCCCC'},fill:{color:'FFFFFF'}});
     }
     } // fin if(_conEEPP)
@@ -3314,9 +3327,13 @@ function actualizarSgPreview() {
     var obras = cargarObras();
     var obra = obras.find(function(o){ return o.id === obraActual.id; });
     if (!obra) return;
-    var nro = (obra.informes || []).length > 0
+    var nroSugerido = (obra.informes || []).length > 0
       ? Math.max.apply(null, obra.informes.map(function(i){ return i.nro || 1; })) + 1
       : 1;
+    var nroInput = window.prompt('Número de informe:', String(nroSugerido));
+    if (nroInput === null) return; // cancelado
+    var nro = parseInt(nroInput, 10);
+    if (isNaN(nro) || nro < 1) { mostrarToast('Número de informe inválido', 'err'); return; }
     var infId = 'inf_' + Date.now();
     var newInf = { id: infId, nro: nro, semana: '', fechaCreacion: new Date().toISOString(), estado: {} };
     obra.informes = obra.informes || [];
