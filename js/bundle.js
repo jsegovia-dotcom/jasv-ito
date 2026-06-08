@@ -2209,19 +2209,19 @@ function actualizarSgPreview() {
       // Agregar fila vacía si no hay filas ingresadas
       if(epFilas.length === 0) epFilas = [{cd: 0, _placeholder: true}];
       var hdr2=[
-        {text:'N°',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',fontSize:8}},
-        {text:'CD',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:8}},
-        {text:'GG',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:8}},
-        {text:'UTI',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:8}},
-        {text:'Subtotal',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:8}},
-        {text:'Desc.',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:8}},
-        {text:'Sub2',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:8}},
-        {text:'Antici.',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:8}},
-        {text:'Retenc.',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:8}},
-        {text:'Neto',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:8}},
-        {text:'IVA',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:8}},
-        {text:'Total',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'right',fontSize:8}},
-        {text:'Acum.',options:{bold:true,fill:'2d7a4f',color:'FFFFFF',align:'right',fontSize:6}}
+        {text:'N°',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'center',fontSize:8}},
+        {text:'CD',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'center',fontSize:8}},
+        {text:'GG',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'center',fontSize:8}},
+        {text:'UTI',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'center',fontSize:8}},
+        {text:'Subtotal',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'center',fontSize:8}},
+        {text:'Desc.',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'center',fontSize:8}},
+        {text:'Sub2',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'center',fontSize:8}},
+        {text:'Antici.',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'center',fontSize:8}},
+        {text:'Retenc.',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'center',fontSize:8}},
+        {text:'Neto',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'center',fontSize:8}},
+        {text:'IVA',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'center',fontSize:8}},
+        {text:'Total',options:{bold:true,fill:'1a3a5c',color:'FFFFFF',align:'center',fontSize:8}},
+        {text:'Acum.',options:{bold:true,fill:'2d7a4f',color:'FFFFFF',align:'center',fontSize:6}}
       ];
       var eppRows2=[hdr2];
       epFilas.forEach(function(f,i){
@@ -2260,23 +2260,28 @@ function actualizarSgPreview() {
       sEP.addText('CONTROL DE ESTADOS DE PAGO ('+_monedaLabel+')',{x:EP_X,y:EEPP_Y_EP-TITLE_H-0.02,w:EP_W,h:TITLE_H,
         fontSize:10,fontFace:FONT,bold:true,color:'FFFFFF',fill:'1a3a5c',
         align:'center',valign:'middle'});
-      // Autoajuste de anchos: calcular el texto más largo en cada columna
-      // Columnas: N°, CD, GG, UTI, Sub1, Desc, Sub2, Ant, Ret, Neto, IVA, Total, Parc, Acum
-      // Usamos el largo de string como proxy del ancho necesario
-      var colMaxLen=[5,0,0,0,0,0,0,0,0,0,0,0,6]; // mínimos (N°=5 para "TOTAL", Acum=6 para "100.00%")
-      var allRows=eppRows2.slice(1); // excluir header
-      allRows.forEach(function(row){
-        row.forEach(function(cell,ci){
-          var t=(cell.text||'').toString().length;
-          if(t>colMaxLen[ci]) colMaxLen[ci]=t;
-        });
-      });
-      // Peso proporcional: columnas 12,13 (porcentajes) tienen peso fijo menor
-      // Col 5=Desc forzar mínimo 5 para que no se apile; cols Parc/Acum peso reducido
-      var weights=colMaxLen.map(function(l,i){ return i===12 ? Math.max(l,5)*0.7 : (i===5 ? Math.max(l,5) : Math.max(l,3)); });
-      var sumW=weights.reduce(function(a,b){return a+b;},0);
+      // Anchos fijos por tipo de columna (pulgadas), suman exactamente EP_W
+      // N°(0.55) + 10 cols numéricas(0.829 c/u) + Desc(0.38) + Acum(0.52) = 9.7402"
+      var _numW = Math.round((ew - 0.55 - 0.38 - 0.52) / 10 * 1000) / 1000;
+      var colW2 = [
+        0.55,       // N°
+        _numW,      // CD
+        _numW,      // GG
+        _numW,      // UTI
+        _numW,      // Subtotal
+        0.38,       // Desc.
+        _numW,      // Sub2
+        _numW,      // Anticipo
+        _numW,      // Retenc.
+        _numW,      // Neto
+        _numW,      // IVA
+        _numW,      // Total
+        0.52        // Acum.
+      ];
+      // Ajustar último para que sumen exactamente ew (evitar redondeo)
+      var _sumColW = colW2.reduce(function(a,b){return a+b;},0);
+      colW2[11] = Math.round((colW2[11] + (ew - _sumColW)) * 1000) / 1000;
       var _epFontSize = _monedaObra === '$' ? 6 : 8;
-      var colW2=weights.map(function(w){ return Math.round(w/sumW*ew*1000)/1000; });
       // Calcular rowH dinámico para que la tabla quepa en EEPP_H_EP
       var nRowsEepp = eppRows2.length; // header + data + total
       // font 8 → rowH proporcional: ~0.20" por fila es suficiente
