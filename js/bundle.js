@@ -813,7 +813,21 @@ function actualizarSgPreview() {
   var epFilas = []; // [{cd: número}]
 
   function epVal(id){ return parseFloat(((document.getElementById(id)||{}).value||'').replace(/\./g,'').replace(',','.')) || 0; }
-  function _epMoneda(){
+  function _fmtInputAuto(el){
+    if(!el||el.readOnly) return;
+    var raw=el.value;
+    // Separar parte entera y decimal (la coma es separador decimal en es-CL)
+    var parts=raw.split(',');
+    var intPart=parts[0].replace(/\./g,'').replace(/[^0-9]/g,'');
+    var decPart=parts.length>1?','+parts[1].replace(/[^0-9]/g,''):'';
+    if(intPart===''){el.value=decPart?'0'+decPart:'';return;}
+    var n=parseInt(intPart,10);
+    var pos=el.selectionStart;
+    var prevLen=el.value.length;
+    el.value=n.toLocaleString('es-CL',{minimumFractionDigits:0,maximumFractionDigits:0})+decPart;
+    var diff=el.value.length-prevLen;
+    try{el.setSelectionRange(pos+diff,pos+diff);}catch(e){}
+  }
     var v=(document.getElementById('mo-moneda')||document.getElementById('moneda')||{}).value||'UF';
     return (v==='CLP'||v==='$') ? '$' : v;
   }
@@ -836,6 +850,7 @@ function actualizarSgPreview() {
   function epFmtPct(n){ return n.toFixed(2)+'%'; }
 
   function epRecalcContrato(){
+    ['ep-cd','ep-gg','ep-uti','ep-desc'].forEach(function(id){_fmtInputAuto(document.getElementById(id));});
     var cd  = epVal('ep-cd');
     var gg  = epVal('ep-gg');
     var uti = epVal('ep-uti');
@@ -1000,7 +1015,12 @@ function actualizarSgPreview() {
   }
 
   function moEpRecalc() {
-    function _parseEp(id){ return parseFloat(((document.getElementById(id)||{}).value||'').replace(/\./g,'').replace(',','.')) || 0; }
+    function _parseEp(id){
+      var raw=((document.getElementById(id)||{}).value||'').replace(/\./g,'').replace(',','.');
+      return parseFloat(raw)||0;
+    }
+    var m=_epMoneda();
+    ['mo-ep-cd','mo-ep-gg','mo-ep-uti','mo-ep-desc'].forEach(function(id){_fmtInputAuto(document.getElementById(id));});
     var cd  = _parseEp('mo-ep-cd');
     var gg  = _parseEp('mo-ep-gg');
     var uti = _parseEp('mo-ep-uti');
@@ -1009,7 +1029,6 @@ function actualizarSgPreview() {
     var net = sub - dc;
     var iva = net * 0.19;
     var tot = net + iva;
-    var m=_epMoneda();
     function setV(id,v){
       var el=document.getElementById(id);
       if(!el) return;
